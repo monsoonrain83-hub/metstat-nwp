@@ -1,0 +1,8 @@
+omfiles[fsspec]
+s3fs
+requests
+numpy
+scipy
+pillow
+matplotlib
+netCDF4
