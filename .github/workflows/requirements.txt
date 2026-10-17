@@ -1,9 +1,0 @@
-omfiles[fsspec]
-s3fs
-requests
-numpy
-scipy
-pillow
-matplotlib
-netCDF4
-cdsapi>=0.7.2
