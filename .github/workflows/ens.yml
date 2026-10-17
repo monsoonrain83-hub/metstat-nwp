@@ -1,0 +1,24 @@
+name: metstat-ens
+on:
+  schedule:
+    - cron: "50 1,7,9,13,19,21 * * *"
+  workflow_dispatch:
+concurrency:
+  group: ens
+  cancel-in-progress: false
+jobs:
+  ens:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: install
+        run: |
+          sudo apt-get update -y && sudo apt-get install -y libeccodes-dev || true
+          pip install eccodes s3fs requests numpy scipy pillow matplotlib netCDF4
+          python -c "import eccodes; print('eccodes', eccodes.__version__)"
+      - name: ensemble maps
+        run: python ens_maps.py --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}"
