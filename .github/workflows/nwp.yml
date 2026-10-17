@@ -14,7 +14,7 @@
         {"uses": "actions/setup-python@v5", "with": {"python-version": "3.12"}},
         {"name": "install", "run": "pip install -r requirements.txt"},
         {"name": "probe", "continue-on-error": true, "run": "python nwp_maps.py --host \"${{ secrets.MX_HOST }}\" --key \"${{ secrets.MX_KEY }}\" --probe"},
-        {"name": "maps", "run": "python nwp_maps.py --host \"${{ secrets.MX_HOST }}\" --key \"${{ secrets.MX_KEY }}\" --loop --max-minutes 340"}
+        {"name": "maps", "run": "python nwp_maps.py --host \"${{ secrets.MX_HOST }}\" --key \"${{ secrets.MX_KEY }}\" --loop --max-minutes 340 --mm mmcache"}
       ]
     }
   }
