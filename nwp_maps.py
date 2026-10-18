@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-MetStat — ساخت خودکار نقشه‌های مدل‌های عددی (ECMWF، GFS، ICON، UKMO، GEM، ARPEGE، ACCESS-G) برای «تحلیل نقشه‌های آنلاین»
+MetStat — ساخت خودکار نقشه‌های مدل‌های عددی (ECMWF، GFS، ICON، UKMO، GEM، ARPEGE) برای «تحلیل نقشه‌های آنلاین»
 
 منبع داده: داده‌های باز مدل‌ها در Open-Meteo روی Amazon S3 (s3://openmeteo/data_spatial، مجوز CC-BY 4.0) با بهترین
 رزولوشن رایگان هر مدل. هر گام زمانی به‌محض انتشار خوانده می‌شود (فقط محدودهٔ ایران)، پارامترهای مشتق (شاخص K، GDI،
@@ -19,7 +19,7 @@ from datetime import datetime, timedelta, timezone
 import numpy as np
 from scipy.ndimage import map_coordinates, gaussian_filter
 from PIL import Image, ImageDraw, ImageFont
-import styles, secondary, warn_icons
+import styles, secondary, warn_icons, id_points, wind_tile
 styles.SC.update(secondary.SECSC)
 
 UTC = timezone.utc
@@ -40,7 +40,6 @@ GRIDS = {
     'cmc_gem_gdps_15km': (2400, 1201, -90, -180, 0.15, 0.15),
     'cmc_gem_gdps': (2400, 1201, -90, -180, 0.15, 0.15),
     'meteofrance_arpege_world025': (1440, 721, -90, -180, 0.25, 0.25),
-    'bom_access_global': (2048, 1536, -89.941406, -179.912109, 360 / 2048, 180 / 1536),
 }
 BBOX = (17.0, 68.0, 9.0, 45.0)         # lon0, lon1, lat0, lat1 — پوشش کادرهای ایران و فارس و خاورمیانه (نمایشگر) با حاشیه
 ME_EXT = (20.0, 65.0, 12.0, 42.0)      # کادر «خاورمیانه» نمایشگر (همان کادر Tropical Tidbits)
@@ -55,7 +54,6 @@ MODELS = {
     'ukmo':   dict(name='UKMO', label='UKMO Global 10 km', dom=['ukmo_global_deterministic_10km'], prov='Met Office', hz=168, res='10 km', cyc='00/06/12/18'),
     'gem':    dict(name='GEM', label='GEM GDPS 15 km', dom=['cmc_gem_gdps_15km', 'cmc_gem_gdps'], prov='ECCC', hz=240, res='15 km', cyc='00/12'),
     'arpege': dict(name='ARPEGE', label='ARPEGE 0.25°', dom=['meteofrance_arpege_world025'], prov='Météo-France', hz=102, res='0.25°', cyc='00/06/12/18'),
-    'access': dict(name='ACCESS', label='ACCESS-G (BoM)', dom=['bom_access_global'], prov='BoM', hz=240, res='0.17°', cyc='00/12'),
 }
 REGIONS = {'iran': dict(geo=(-1506.432, 35.07327, 1611.463, -40.47955), en='Iran', fa='ایران'),
            'fars': dict(geo=(-4387.15, 89.808, 3366.55, -103.991), en='Fars', fa='فارس')}
@@ -79,7 +77,7 @@ for pid, hh, ev, mx, v in SN_WIN:
     PARAMS[pid] = dict(kind='win', var='snow', h=hh, every=ev, maxlead=mx, sc='pr_' + v, wv=v, models=ALL, unit='mm', skip_empty=True,
                        en=(f'Snowfall (water equivalent), {hh}h (mm)' if hh else 'Total snowfall (water equivalent) (mm)'),
                        fa=(f'بارش برف {hh} ساعته (آب معادل)'.translate(FAD) if hh else 'برف تجمعی (آب معادل)'))
-I_EC = ['ecmwf']; I_ECA = ['ecmwf', 'access']; I_ECG = ['ecmwf', 'gfs', 'gfs25']
+I_EC = ['ecmwf']; I_ECA = ['ecmwf']; I_ECG = ['ecmwf', 'gfs', 'gfs25']
 I_CV = ['ecmwf', 'gfs', 'gfs25', 'icon', 'ukmo', 'arpege']      # مدل‌هایی که CAPE دارند (نتیجهٔ probe)؛ شاخص‌های ترازی از ترازهای فشاری همان مدل
 PARAMS.update({
     't2m':   dict(kind='inst', sc='temp', models=I_ECA, unit='°C', en='Temperature 2m (°C)', fa='دمای ۲ متری', lapse=True),
@@ -485,12 +483,17 @@ VAL_STRIDE = 4                          # شبکهٔ مقدار: هر ۴ پیک�
 VAL_CATS = ('pr', 'sn', 'tp')           # بارش، برف، دما: مقدار دقیق با یک رقم اعشار
 VAL_IDS = ('gust', 'w10', 'w200', 'w250', 'w300', 'w500')   # باد: مقدار دقیق بدون اعشار
 def wants_value(pid, P): return P.get('cat') in VAL_CATS or pid in VAL_IDS
-def value_tile(field):
-    """کاشی مقدار (برای ابزار شناسایی): WebP بدون‌اتلاف، شبکهٔ کم‌رزولوشن؛ مقدار = (R*256+G)/10 − ۱۰۰ ؛ ۰ = بدون داده."""
-    f = np.asarray(field, dtype=np.float64)[VAL_STRIDE // 2::VAL_STRIDE, VAL_STRIDE // 2::VAL_STRIDE]
-    q = np.where(np.isfinite(f), np.clip(np.round((f + 100.0) * 10.0), 1, 65535), 0).astype(np.uint16)
-    a = np.zeros(q.shape + (3,), np.uint8); a[..., 0] = q >> 8; a[..., 1] = q & 255
-    b = io.BytesIO(); Image.fromarray(a, 'RGB').save(b, 'WEBP', lossless=True, quality=100, method=4); return b.getvalue()
+WIND_SCALE = {'w10': 0.5, 'w300': 1.0, 'w500': 1.0, 'w250': 2.0, 'w200': 2.0}      # گام کوانتیزه (گره) کاشی باد هر پارامتر؛ بازهٔ ±(۱۲۷×گام)
+ID_PTS, ID_CRC = None, 0        # فهرست نقاط «شناسایی مقدار» (id_points.py)؛ در main ساخته می‌شود
+def id_init(host):
+    """مراکز استان/شهرستان + نقاط مهم روستایی (geo.json هاست). اگر geo.json نبود فقط مراکز؛ سایت با crc ناهمخوان فقط بازهٔ طبقه را نشان می‌دهد."""
+    global ID_PTS, ID_CRC
+    places = []
+    if host:
+        try: places = id_points.fetch_places(host)
+        except Exception as e: log(f'  ! geo.json خوانده نشد ({type(e).__name__}): نقاط روستایی بدون؛ شناسایی عددی فقط اگر سایت هم همین فهرست را بسازد')
+    ID_PTS = id_points.build(id_points.load_seats(), places); ID_CRC = id_points.crc16(ID_PTS)
+    log(f'نقاط شناسایی: {len(ID_PTS)} (crc {ID_CRC:04x})')
 
 def render_me(R, field, sc_key, cont=None, cont_lvls=None, cont_fmt='%d', barbs=None, stream=None, lows=None, bold=None):
     """کاشی نمایشگر: فقط لایهٔ رنگیِ گسسته + خطوط (هم‌مقدار، بردار باد، خط جریان)؛ بدون قاب/عنوان/نوار رنگ (سایت می‌کشد). خروجی WebP بدون اتلاف."""
@@ -716,7 +719,7 @@ SEC_UPPER = {f'{q}_{p}hPa' for q in ('temperature', 'relative_humidity', 'geopot
 MM_ON = False       # با --mm روشن می‌شود (مالتی‌مدل)
 def needed_vars(mkey, pids, kind):
     v = {'precipitation', 'snowfall_water_equivalent'}
-    if mkey in ('ecmwf', 'access', 'ukmo') or MM_ON: v |= {'temperature_2m'}
+    if mkey in ('ecmwf', 'ukmo') or MM_ON: v |= {'temperature_2m'}
     if MM_ON: v |= {'wind_direction_10m', 'wind_speed_10m', 'pressure_msl', 'relative_humidity_2m', 'wind_gusts_10m'}
     if mkey == 'ecmwf': v |= {'temperature_2m_max', 'temperature_2m_min'}
     if kind == 'all':
@@ -727,7 +730,6 @@ def needed_vars(mkey, pids, kind):
                   'soil_temperature_0_to_7cm', 'precipitation_type'}
             for p in (925, 850, 700, 500, 300, 250, 200):
                 v |= {f'temperature_{p}hPa', f'relative_humidity_{p}hPa', f'geopotential_height_{p}hPa', f'wind_u_component_{p}hPa', f'wind_v_component_{p}hPa'}
-        if mkey == 'access': v |= {'soil_temperature_0_to_10cm'}
         if mkey in ('gfs', 'gfs25'): v |= {'cape', 'lifted_index', 'convective_inhibition', 'relative_humidity_2m', 'pressure_msl', 'wind_u_component_10m', 'wind_v_component_10m'}
         if mkey in ('icon', 'ukmo', 'arpege', 'gfs25'): v |= SEC_UPPER                  # ترازهای فشاری همان مدل (برای شاخص‌های همرفت)
         v |= SEC_SFC                                           # ورودی هشدارها (اگر مدل نداشته باشد خوانده نمی‌شود)
@@ -886,7 +888,7 @@ class Engine:
             if i == 0 or c['precip'] is None: c['precip'] = np.zeros_like(p); c['snow'] = np.zeros_like(p)
             if i > 0: c['precip'] = c['precip'] + np.nan_to_num(np.maximum(p, 0)); c['snow'] = c['snow'] + np.nan_to_num(np.maximum(sn, 0))
             st.hist[name][vt] = (c['precip'].copy(), c['snow'].copy())
-            if 'temperature_2m' in d and (mkey in ('ecmwf', 'access') or MM_ON):
+            if 'temperature_2m' in d and (mkey == 'ecmwf' or MM_ON):
                 st.tser[name][vt] = (d['temperature_2m'], d.get('temperature_2m_max', d['temperature_2m']), d.get('temperature_2m_min', d['temperature_2m']), dt_h)
         made = 0
         for rk, R in s.regions.items():
@@ -913,8 +915,14 @@ class Engine:
                     rid_ = f'{run:%Y%m%d%H}'; s.up.put(mkey, rid_, fname, png, dict(r=rk, m=mkey, p=pid, s=lead, v=f'{vt:%Y%m%d%H}'))
                     if lines: s.up.put(mkey, rid_, f'me/{pid}L_{vt:%Y%m%d%H}.webp', lines, dict(r=rk, m=mkey, p=pid + 'L', s=lead, v=f'{vt:%Y%m%d%H}'))
                     if wants_value(pid, P):
-                        try: s.up.put(mkey, rid_, f'me/{pid}V_{vt:%Y%m%d%H}.webp', value_tile(field), dict(r=rk, m=mkey, p=pid + 'V', s=lead, v=f'{vt:%Y%m%d%H}'))
+                        try:
+                            if ID_PTS: s.up.put(mkey, rid_, f'me/{pid}V_{vt:%Y%m%d%H}.webp', id_points.encode(field, ID_PTS, ID_CRC), dict(r=rk, m=mkey, p=pid + 'V', s=lead, v=f'{vt:%Y%m%d%H}'))
                         except Exception as e_: log(f'  ! کاشی مقدار {pid}: {type(e_).__name__}: {e_}')
+                    if pid in WIND_SCALE and (extra.get('barbs') is not None or extra.get('stream') is not None):      # کاشی باد برای ذرات باد (گره)
+                        try:
+                            uu, vv = extra.get('barbs') if extra.get('barbs') is not None else extra.get('stream')
+                            s.up.put(mkey, rid_, f'me/{pid}W_{vt:%Y%m%d%H}.webp', wind_tile.encode(uu, vv, WIND_SCALE[pid]), dict(r=rk, m=mkey, p=pid + 'W', s=lead, v=f'{vt:%Y%m%d%H}'))
+                        except Exception as e_: log(f'  ! کاشی باد {pid}: {type(e_).__name__}: {e_}')
                     st.have.add(fname); made += 1
                     continue
                 sc = styles.SC[P['sc']]
@@ -1234,6 +1242,7 @@ def main():
         for k in list(PARAMS):
             if k not in keep: PARAMS.pop(k)
     eng = Engine(a)
+    if 'me' in a.regions: id_init(a.host)
     if a.mm:                                      # مالتی‌مدل MetStat: میدان هر مدل در a.mm ذخیره و ترکیب می‌شود
         import mm_maps; MM_ON = True; mm_maps.mm_extend_params(PARAMS)
         eng.mm = mm_maps.MMCombiner(sys.modules[__name__], eng, a.mm)
