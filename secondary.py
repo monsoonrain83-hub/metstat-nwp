@@ -360,6 +360,12 @@ def hazards(F):
     if p3 is not None:
         lv = cls(np.maximum(p3, 0), [20, 35, 55]); flat = (np.nan_to_num(g('slope'), nan=0.0) < 1.5) if g('slope') is not None else True
         W['wlog'] = np.where(flat, lv, np.maximum(lv - 1, 0)).astype(np.float32)
+    # دریا: خطرهای «مخصوص خشکی/انسان» (گرمای محسوس، شرجی، یخبندان، سوزباد، گردوغبار از خاک، سیل و آبگرفتگی) روی یاخته‌های دریا صفر می‌شوند؛
+    # باد، بارش، توفان تندری، تگرگ، آذرخش و مه روی دریا می‌مانند. مثلاً نقطهٔ شبنم ≥۲۴ در خلیج فارس/دریای عمان در پاییز عادی است و هشدار شرجی نیست.
+    _S = g('sea') if hasattr(g('sea'), 'shape') else None
+    if _S is not None:
+        for k in ('wheat', 'whum', 'wfrost', 'wgfrost', 'wcold', 'wdust', 'wflood', 'wlog'):
+            if W.get(k) is not None: W[k] = np.where(_S, 0, W[k]).astype(np.float32)
     for k, v in W.items():
         if v is not None: out[k] = v.astype(np.float32)
     allw = [W[k] for k in W if W[k] is not None]

@@ -419,7 +419,7 @@ class MockSource(S3Source):
         LON, LAT = np.meshgrid(lon, lat); return (1200 * np.exp(-((LON - 52) ** 2 + (LAT - 32) ** 2) / 20)).astype(np.float32)
 
 # ---------------------------------------------------------------- کادرهای خروجی (هم‌هندسه با weather.us)
-_SEA_LOGGED = set()
+_SEA_LOGGED = set(); _ICON_LOGS = [0]
 class Region:
     def __init__(s, key):
         s.key = key; R = REGIONS[key]; ax, bx, ay, by = R['geo']; s.geo = R['geo']; s.en = R['en']
@@ -1007,8 +1007,12 @@ class Engine:
             mk = dict(v=1, p=pid, m=M['name'], r=rid, t=f'{vt:%Y%m%d%H}', g=rk, h=int(P['win']) if P['win'] != 'acc' else 0, s=P['sc'], u='', n=P['fa'], e=edges_txt(sc['edges']))
             icons = None
             if Hd is not None:
-                try: icons = warn_icons.pick(Hd, np.array(R.overlay), FX0, FY0)
-                except Exception as e_: log(f'  ! آیکن هشدار ساخته نشد: {e_}')
+                try:
+                    icons = warn_icons.pick(Hd, np.array(R.overlay), FX0, FY0)
+                    if _ICON_LOGS[0] < 6:                                  # تشخیص: چند خط اول هر اجرا
+                        _ICON_LOGS[0] += 1; wl_ = Hd.get('warn'); lv_ = 0 if wl_ is None else int((np.nan_to_num(wl_) >= 1).sum())
+                        log(f'  آیکن هشدار {mkey}/{rk} {vt:%Y%m%d%H}: {len(icons)} آیکن · یاخته‌های هشدار={lv_} · کلیدها={len(Hd)}')
+                except Exception as e_: log(f'  ! آیکن هشدار ساخته نشد: {type(e_).__name__}: {e_}')
             png = render(R, field, P['sc'], P['en'], vt, run, M, '', mk, note='Derived index from model fields (see MetStat docs)', icons=icons)
             s.up.put(mkey, rid, fname, png, meta)
         st.have.add(fname)
