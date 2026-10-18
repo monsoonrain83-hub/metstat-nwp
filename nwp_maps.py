@@ -481,6 +481,17 @@ class MERegion(Region):
         out = map_coordinates(np.asarray(arr, np.float32), np.array([yi, xi]), order=1, mode='constant', cval=np.nan, prefilter=False)
         return out.astype(np.float32)
 
+VAL_STRIDE = 4                          # شبکهٔ مقدار: هر ۴ پیکسل کاشی = ۰٫۱۲۵° (۳۶۰×۲۴۰)
+VAL_CATS = ('pr', 'sn', 'tp')           # بارش، برف، دما: مقدار دقیق با یک رقم اعشار
+VAL_IDS = ('gust', 'w10', 'w200', 'w250', 'w300', 'w500')   # باد: مقدار دقیق بدون اعشار
+def wants_value(pid, P): return P.get('cat') in VAL_CATS or pid in VAL_IDS
+def value_tile(field):
+    """کاشی مقدار (برای ابزار شناسایی): WebP بدون‌اتلاف، شبکهٔ کم‌رزولوشن؛ مقدار = (R*256+G)/10 − ۱۰۰ ؛ ۰ = بدون داده."""
+    f = np.asarray(field, dtype=np.float64)[VAL_STRIDE // 2::VAL_STRIDE, VAL_STRIDE // 2::VAL_STRIDE]
+    q = np.where(np.isfinite(f), np.clip(np.round((f + 100.0) * 10.0), 1, 65535), 0).astype(np.uint16)
+    a = np.zeros(q.shape + (3,), np.uint8); a[..., 0] = q >> 8; a[..., 1] = q & 255
+    b = io.BytesIO(); Image.fromarray(a, 'RGB').save(b, 'WEBP', lossless=True, quality=100, method=4); return b.getvalue()
+
 def render_me(R, field, sc_key, cont=None, cont_lvls=None, cont_fmt='%d', barbs=None, stream=None, lows=None, bold=None):
     """کاشی نمایشگر: فقط لایهٔ رنگیِ گسسته + خطوط (هم‌مقدار، بردار باد، خط جریان)؛ بدون قاب/عنوان/نوار رنگ (سایت می‌کشد). خروجی WebP بدون اتلاف."""
     sc = styles.SC[sc_key]; cols = [styles.hex2rgb(c) for c in sc['colors']]; n = len(cols)
@@ -901,6 +912,9 @@ class Engine:
                     png, lines = render_me(R, field, sck, **{k: v for k, v in extra.items() if k in ('cont', 'cont_lvls', 'cont_fmt', 'barbs', 'stream', 'lows', 'bold')})
                     rid_ = f'{run:%Y%m%d%H}'; s.up.put(mkey, rid_, fname, png, dict(r=rk, m=mkey, p=pid, s=lead, v=f'{vt:%Y%m%d%H}'))
                     if lines: s.up.put(mkey, rid_, f'me/{pid}L_{vt:%Y%m%d%H}.webp', lines, dict(r=rk, m=mkey, p=pid + 'L', s=lead, v=f'{vt:%Y%m%d%H}'))
+                    if wants_value(pid, P):
+                        try: s.up.put(mkey, rid_, f'me/{pid}V_{vt:%Y%m%d%H}.webp', value_tile(field), dict(r=rk, m=mkey, p=pid + 'V', s=lead, v=f'{vt:%Y%m%d%H}'))
+                        except Exception as e_: log(f'  ! کاشی مقدار {pid}: {type(e_).__name__}: {e_}')
                     st.have.add(fname); made += 1
                     continue
                 sc = styles.SC[P['sc']]
