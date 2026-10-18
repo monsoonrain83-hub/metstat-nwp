@@ -90,19 +90,20 @@ def pick(Hd, ov_alpha, fx0, fy0, step=40, half=14):
         okfrac = uniform_filter((lv >= 1).astype(np.float32), size=2 * half + 1, mode='constant')
     except Exception: okfrac = (lv >= 1).astype(np.float32)
     keys = [k for k in PRI if k in Hd and Hd[k] is not None]
-    def free(x, y):
+    MAXB = 0.30                                          # بیشینهٔ سهم پیکسل‌های نام/مرز زیر آیکن (آیکن زیر لایهٔ نام‌هاست؛ در ایران نام شهرستان‌ها پرتراکم است و آستانهٔ ~۱٪ هرگز برقرار نمی‌شد)
+    def bfrac(x, y):
         X, Y = x - fx0, y - fy0
-        if X < half or Y < half or X >= w - half or Y >= h - half: return False
-        if okfrac[Y, X] < 0.9: return False
-        return blocked[y - half:y + half + 1, x - half:x + half + 1].mean() < 0.012
+        if X < half or Y < half or X >= w - half or Y >= h - half: return 9.0
+        if okfrac[Y, X] < 0.9: return 9.0
+        return float(blocked[y - half:y + half + 1, x - half:x + half + 1].mean())
     out = []; used = []
     for gy in range(fy0 + half, fy0 + h - half, step):
         for gx in range(fx0 + half, fx0 + w - half, step):
             if lv[gy - fy0, gx - fx0] < 1: continue
-            spot = None
-            for dx, dy in OFFS:
-                x, y = gx + dx, gy + dy
-                if free(x, y) and not any(abs(x - ux) < S * 0.9 and abs(y - uy) < S * 0.9 for ux, uy in used): spot = (x, y); break
+            spot = None; sb = MAXB
+            for dx, dy in OFFS:                              # کم‌شلوغ‌ترین جا در همسایگی (نه اولین جای مجاز)
+                x, y = gx + dx, gy + dy; b = bfrac(x, y)
+                if b < sb and not any(abs(x - ux) < S * 0.9 and abs(y - uy) < S * 0.9 for ux, uy in used): spot = (x, y); sb = b
             if spot is None: continue
             x, y = spot; Y0, X0 = y - fy0, x - fx0; best = None; bl = 0
             for k in keys:                                    # بالاترین سطح در جعبه؛ در تساوی اولویت PRI
