@@ -163,9 +163,12 @@ def indices(F):
 # CAPE (SB/ML) و CIN مدل‌ها از ۱ اردیبهشت تا ۵ آبان (۲۱ آوریل تا ۲۷ اکتبر) روی خلیج فارس/دریای عمان، دریای سرخ و مدیترانه
 # برای پتانسیل همرفت خشکی قابل‌اعتماد نیست؛ وزن این دو شاخص آنجا ≈۵٪ می‌شود. خشکی و بقیهٔ شاخص‌ها بدون تغییر.
 SEA_BOXES = [(47.5, 63.0, 22.0, 30.6), (32.2, 43.8, 12.5, 29.5), (-6.0, 36.2, 30.0, 41.0), (-6.0, 19.0, 41.0, 46.0)]   # lon0, lon1, lat0, lat1
+import os
+CV_MODE = os.environ.get('CV_MODE', 'old').strip().lower()      # old = فرمول وزنی قبلی (راستی‌آزمایی‌شده)؛ new = روش گروهی-ضربی صفحهٔ تحلیل + قید دریا
 SEA_F = 0.0                                      # وزن CAPE/CIN (و محصولات وابسته) روی دریا = صفر؛ خشکی دست‌نخورده
 W_CAPE_LAND = 0.20; W_CAPE_SEA = W_CAPE_LAND * SEA_F          # سهم نهایی CAPE در ترکیب ≈ ۵٪ (چون مجموع وزن بقیه ≈ ۰٫۸)
 CIN_PEN_LAND = 0.5; CIN_PEN_SEA = CIN_PEN_LAND * SEA_F
+if CV_MODE != 'new': SEA_F = 1.0; W_CAPE_SEA = 0.04; CIN_PEN_SEA = 0.05        # حالت قدیم: وزن‌های دریا مثل نسخهٔ پیش از §78
 def in_cape_window(vt):
     md = (vt.month, vt.day); return (4, 21) <= md <= (10, 27)
 def sea_mask(lon, lat, hsurf, dem=None):
@@ -220,6 +223,62 @@ def cv_potential(V, warm, SW=None):
     p = np.where(np.isnan(Fi), M, Fi * M)
     return np.where((GW['inst'] + wt) > 0, p, np.nan).astype(np.float32)
 
+# ---------------------------------------------------------------- واداشت دینامیکی (ترازهای فوقانی × فشار سطحی)
+# مبانی: Sutcliffe (۱۹۴۷): واگرایی بالای تراز ۵۰۰ hPa (زیر ترپوپوز) ↔ همگرایی سطحی/صعود؛ همگرایی بالا ↔ فرونشینی و واگرایی سطحی.
+# Doswell (۱۹۸۷) و Johns & Doswell (۱۹۹۲): همرفت عمیق = ناپایداری + رطوبت + بالابری؛ بالابری ترازهای بالا (واگرایی ۳۰۰، رودبار، PVA ۵۰۰) ماشه و CIN را تنظیم می‌کند.
+# چهار حالت: کم‌فشار سطحی + واگرایی بالا = تشدید؛ کم‌فشار + همگرایی بالا = سرکوب جریان صعودی؛
+# پرفشار + واگرایی بالا = تضعیف سرکوب و افزایش اندکِ احتمال؛ پرفشار + همگرایی بالا = سرکوب شدید و پایداری. مقادیر رأس‌ها قراردادی و قابل تنظیم‌اند و بین آن‌ها درون‌یابی دوخطی می‌شود.
+DYN_ON = os.environ.get('CV_DYN', '1').strip() != '0'
+DYN_CORNER = dict(low_div=1.0, low_conv=-0.6, high_div=0.3, high_conv=-1.0)
+DYN_UP, DYN_SP, DYN_PVA, DYN_SC, DYN_JET = 1.5e-5, 4.0, 1.0e-8, 2.0e-5, 30.0        # مقیاس‌ها: واگرایی ۳۰۰ (1/s)، ناهنجاری فشار (hPa)، PVA ۵۰۰ (1/s²)، همگرایی ۱۰ متر (1/s)، آستانهٔ رودبار (m/s)
+DYN_PVA_W, DYN_JET_W, DYN_POS_K, DYN_NEG_K = 0.25, 0.15, 0.30, 0.45                  # وزن PVA و رودبار؛ دامنهٔ اثر (افزایش تا ×۱٫۳۰، کاهش تا ×۰٫۵۵)
+def _smooth(a, sig):
+    if a is None: return None
+    try:
+        from scipy.ndimage import gaussian_filter
+        return gaussian_filter(np.nan_to_num(a), sig, mode='nearest').astype(np.float32)
+    except Exception: return np.nan_to_num(a).astype(np.float32)
+def dyn_forcing(F):
+    """خروجی: آرایهٔ −۱..+۱ (مثبت = تقویت همرفت، منفی = تضعیف) یا None اگر داده کافی نیست."""
+    g = F.get
+    if not DYN_ON or g('dxm') is None or g('dym') is None: return None
+    dxm, dym = g('dxm'), g('dym'); dxkm = float(g('dxkm') or 25.0)
+    sg = max(0.7, 120.0 / max(dxkm, 1.0))                         # هموارسازی ≈ ۱۲۰ km فقط روی ورودیِ دینامیکی (مقیاس همدیدی)
+    def ddx(a): return np.gradient(a, axis=1) / dxm
+    def ddy(a): return np.gradient(a, axis=0) / (-dym)             # ردیف‌ها از شمال به جنوب
+    parts = {}
+    if g('u300') is not None and g('v300') is not None:
+        u3, v3 = _smooth(g('u300'), sg), _smooth(g('v300'), sg)
+        parts['up'] = np.clip((ddx(u3) + ddy(v3)) / DYN_UP, -1, 1)
+        parts['jet'] = np.clip((np.hypot(u3, v3) - DYN_JET) / 30.0, 0, 1)
+    elif g('u500') is not None and g('v500') is not None:
+        u5, v5 = _smooth(g('u500'), sg), _smooth(g('v500'), sg); parts['up'] = np.clip(0.7 * (ddx(u5) + ddy(v5)) / DYN_UP, -1, 1)
+    if g('u500') is not None and g('v500') is not None and g('lat') is not None:
+        u5, v5 = _smooth(g('u500'), sg), _smooth(g('v500'), sg); zeta = ddx(v5) - ddy(u5)
+        beta = 2 * 7.292e-5 * np.cos(np.radians(g('lat'))) / 6.371e6
+        adv = -(u5 * ddx(zeta) + v5 * ddy(zeta)) - v5 * beta         # فرارفت گردش مطلق: PVA > 0 ⇒ صعود
+        parts['pva'] = np.clip(_smooth(adv, 1.0) / DYN_PVA, -1, 1)
+    sfc = None
+    if g('msl') is not None:
+        m = _smooth(g('msl'), sg); big = _smooth(g('msl'), max(3.0, 600.0 / max(dxkm, 1.0)))
+        sfc = np.clip(-(m - big) / DYN_SP, -1, 1)                    # +۱ = کم‌فشار نسبت به محیط بزرگ‌مقیاس، −۱ = پرفشار
+    if g('u10') is not None and g('v10') is not None:
+        u1, v1 = _smooth(g('u10'), sg), _smooth(g('v10'), sg); cv = np.clip(-(ddx(u1) + ddy(v1)) / DYN_SC, -1, 1)
+        sfc = cv if sfc is None else np.clip(0.75 * sfc + 0.25 * cv, -1, 1)
+    up = parts.get('up'); C = DYN_CORNER
+    if up is None and sfc is None and 'pva' not in parts: return None
+    if up is not None and sfc is not None:
+        wu, wd, wl, wh = (1 + up) / 2, (1 - up) / 2, (1 + sfc) / 2, (1 - sfc) / 2
+        dyn = wu * wl * C['low_div'] + wd * wl * C['low_conv'] + wu * wh * C['high_div'] + wd * wh * C['high_conv']
+    elif up is not None: dyn = up * 0.8
+    elif sfc is not None: dyn = sfc * 0.4
+    else: dyn = np.zeros_like(parts['pva'])
+    if 'pva' in parts: dyn = dyn + DYN_PVA_W * parts['pva']
+    if 'jet' in parts and up is not None: dyn = dyn + DYN_JET_W * parts['jet'] * np.maximum(up, 0)      # رودبار قوی در ناحیهٔ واگرا بالابری را بیشتر می‌کند
+    return np.clip(dyn, -1, 1).astype(np.float32)
+def dyn_factor(d):
+    return None if d is None else np.where(d >= 0, 1 + DYN_POS_K * d, 1 + DYN_NEG_K * d).astype(np.float32)
+
 def sea_evidence(F, pr):
     """شاهد واقعی بودن همرفت روی دریا (True = مجاز به رده بالاتر از ۲): (۱) بارش مدل ≥ ۰٫۲ mm/h در همسایگی ≈۵۰ km و در ۳ ساعت گذشته؛
     یا (۲) واداشت دینامیکی قوی: هستهٔ سرد ۵۰۰ ≤ −۱۵°C، یا رودباد ≥ ۳۵ m/s (۳۰۰ یا ۵۰۰) همراه با ۵۰۰ ≤ −۱۲°C. بدون هیچ‌کدام از میدان‌ها → None (سقف اعمال نمی‌شود)."""
@@ -253,25 +312,48 @@ def hazards(F):
     _sw = lambda land: land if SW is None else np.where(SW, land * SEA_F, land).astype(np.float32)   # وزن روی دریا = SEA_F × خشکی
     wC = W_CAPE_LAND if SW is None else np.where(SW, W_CAPE_SEA, W_CAPE_LAND).astype(np.float32)
     cinP = CIN_PEN_LAND if SW is None else np.where(SW, CIN_PEN_SEA, CIN_PEN_LAND).astype(np.float32)
-    # ---- پتانسیل همرفت: روش گروهی-ضربی سایت (cv_potential) + شواهد ماشه‌کشی
-    td2 = td_from_rh(g('t2'), g('rh2')) if (g('t2') is not None and g('rh2') is not None) else None
-    V = dict(cape=None if I['cape'] is None else np.maximum(I['cape'], 0), cin=None if I['cin'] is None else np.abs(I['cin']), li=I.get('li'), si=I.get('show'), ki=I.get('k'), tt=I.get('tt'),
-             gdi=I.get('gdi'), lapse=I.get('lr75'), sweat=I.get('sweat'), t500=g('t500'), pwat=I.get('pw'), rh=g('rh700'), td2m=td2, cprec=pr)
-    sc = cv_potential(V, warm_season(g('vt')), SW) if any(V[k] is not None for k in CV_GRP if CV_GRP[k] == 'inst') else None      # بدون هیچ شاخص ناپایداری، پتانسیل ساخته نمی‌شود
-    cvp = None
-    if sc is not None:
-        if I.get('rhmid') is not None: sc = np.where(I['rhmid'] < 20, sc * 0.6, sc)            # ستون خشک
-        cvp = cls(np.clip(sc, 0, 1), [0.10, 0.20, 0.32, 0.45, 0.60])
-        SEA = g('sea') if hasattr(g('sea'), 'shape') else None                                  # دریا در همهٔ فصل‌ها (نه فقط بازهٔ CAPE)
-        if SEA is not None:
-            ev = sea_evidence(F, pr)
-            if ev is not None: cvp = np.where(SEA & ~ev, np.minimum(cvp, 2), cvp).astype(np.float32)   # دریا: بدون شاهد (بارش همرفتی همسایگی یا واداشت دینامیکی) سقف رده ۲
-        out['cvp'] = cvp
+    if CV_MODE != 'new':
+        comp = [(0.22, None if I.get('li') is None else nz(I['li'], 3.0, -6.0)),           # LI: بهترین در راستی‌آزمایی
+                (wC, None if I['cape'] is None else nz(np.maximum(I['cape'], 0), 170, 3000)),
+                (0.10, None if I.get('ko') is None else nz(I['ko'], 2.0, -4.0)),
+                (0.10, None if I.get('tt') is None else nz(I['tt'], 46.7, 56.0)),
+                (0.08, None if I.get('show') is None else nz(I['show'], 4.2, -6.0)),
+                (0.06, None if I.get('k') is None else nz(I['k'], 21.0, 40.0)),
+                (0.04, None if I.get('sweat') is None else nz(I['sweat'], 134, 400)),
+                (0.05, None if I.get('gdi') is None else nz(I['gdi'], 25, 45)),
+                (0.08, None if I.get('lr75') is None else nz(I['lr75'], 6.0, 8.5)),
+                (0.06, None if (g('t2') is None or g('rh2') is None) else nz(td_from_rh(g('t2'), g('rh2')), 0.0, 16.0)),      # رطوبت سطحی (نقطهٔ شبنم ۲ متر)
+                (0.07, None if I.get('rhmid') is None and I.get('pw') is None else wavg([(0.5, None if I.get('rhmid') is None else nz(I['rhmid'], 30, 75)), (0.5, None if I.get('pw') is None else nz(I['pw'], 8, 30))]))]
+        sc = wavg(comp); cvp = None
+        if sc is not None:
+            if I['cin'] is not None: sc = sc * (1 - cinP * nz(-I['cin'], 50, 300))                # بازدارندگی همرفت
+            if pr is not None: sc = sc + 0.10 * nz(pr, 0, 2)                                       # شاهد ماشه‌کشی: بارش همرفتی مدل
+            if I.get('rhmid') is not None: sc = np.where(I['rhmid'] < 20, sc * 0.6, sc)
+            dm = dyn_factor(dyn_forcing(F))
+            if dm is not None: sc = sc * dm
+            cvp = cls(np.clip(sc, 0, 1), [0.15, 0.30, 0.45, 0.60, 0.75]); out['cvp'] = cvp
+    else:
+        # ---- پتانسیل همرفت: روش گروهی-ضربی سایت (cv_potential) + شواهد ماشه‌کشی
+        td2 = td_from_rh(g('t2'), g('rh2')) if (g('t2') is not None and g('rh2') is not None) else None
+        V = dict(cape=None if I['cape'] is None else np.maximum(I['cape'], 0), cin=None if I['cin'] is None else np.abs(I['cin']), li=I.get('li'), si=I.get('show'), ki=I.get('k'), tt=I.get('tt'),
+                 gdi=I.get('gdi'), lapse=I.get('lr75'), sweat=I.get('sweat'), t500=g('t500'), pwat=I.get('pw'), rh=g('rh700'), td2m=td2, cprec=pr)
+        sc = cv_potential(V, warm_season(g('vt')), SW) if any(V[k] is not None for k in CV_GRP if CV_GRP[k] == 'inst') else None      # بدون هیچ شاخص ناپایداری، پتانسیل ساخته نمی‌شود
+        cvp = None
+        if sc is not None:
+            if I.get('rhmid') is not None: sc = np.where(I['rhmid'] < 20, sc * 0.6, sc)            # ستون خشک
+            dm = dyn_factor(dyn_forcing(F))
+            if dm is not None: sc = sc * dm
+            cvp = cls(np.clip(sc, 0, 1), [0.10, 0.20, 0.32, 0.45, 0.60])
+            SEA = g('sea') if hasattr(g('sea'), 'shape') else None                                  # دریا در همهٔ فصل‌ها (نه فقط بازهٔ CAPE)
+            if SEA is not None:
+                ev = sea_evidence(F, pr)
+                if ev is not None: cvp = np.where(SEA & ~ev, np.minimum(cvp, 2), cvp).astype(np.float32)   # دریا: بدون شاهد (بارش همرفتی همسایگی یا واداشت دینامیکی) سقف رده ۲
+            out['cvp'] = cvp
     _SEA = g('sea') if hasattr(g('sea'), 'shape') else None
-    capsea = (lambda a, lim: a) if (_SEA is None or cvp is None) else (lambda a, lim: np.where(_SEA, np.minimum(a, lim), a).astype(np.float32))
+    capsea = (lambda a, lim: a) if (_SEA is None or cvp is None or CV_MODE != 'new') else (lambda a, lim: np.where(_SEA, np.minimum(a, lim), a).astype(np.float32))
     # ---- شدت همرفت: انرژی × برش + پتانسیل رگبار/تندباد پایین‌رو
     cb = None if (I['cape'] is None or I.get('s06') is None) else np.maximum(I['cape'], 0) * I['s06']
-    wC15 = 0.15 if SW is None else np.where(SW, 0.15 * SEA_F, 0.15).astype(np.float32)
+    wC15 = 0.15 if SW is None else np.where(SW, 0.15 * SEA_F if CV_MODE == 'new' else 0.03, 0.15).astype(np.float32)
     gust = g('gust')
     wCB, wSH, wPE = _sw(0.35), _sw(0.35), _sw(0.30)
     dbi = None if I.get('lr85') is None or I.get('spr700') is None else wavg([(0.5, nz(I['lr85'], 7.0, 9.0)), (0.5, nz(I['spr700'], 10, 25))])
@@ -288,6 +370,7 @@ def hazards(F):
         ship = np.maximum(I['cape'], 0) * r * I['lr75'] * t5 * sh / 42e6
         ship = np.where(I['cape'] < 1300, ship * np.maximum(I['cape'], 0) / 1300.0, ship); ship = np.where(I['lr75'] < 5.8, ship * np.maximum(I['lr75'], 0) / 5.8, ship)
         if I.get('fzl') is not None: ship = np.where(I['fzl'] < 2400, ship * np.maximum(I['fzl'], 0) / 2400.0, ship)
+        if CV_MODE != 'new' and SW is not None: ship = np.where(SW, np.nan, ship).astype(np.float32)
         hs = wavg([(wSH, nz(ship, 0.0, 2.0)),
                    (0.15, None if I.get('hgz') is None else nz(I['hgz'], 1200, 3200)),
                    (0.10, None if I.get('fzl') is None else nz(I['fzl'], 4800, 2800)),
@@ -301,10 +384,11 @@ def hazards(F):
     ltg = None
     if I['cape'] is not None:
         pe = None if pr is None else np.maximum(I['cape'], 0) * np.maximum(pr, 0)
+        if CV_MODE != 'new' and pe is not None and SW is not None: pe = np.where(SW, np.nan, pe).astype(np.float32)
         ls = wavg([(wPE, None if pe is None else nz(np.log10(1 + pe), np.log10(21), np.log10(2001))), (wC, nz(np.maximum(I['cape'], 0), 100, 2500)),
                    (_sw(0.15), None if I.get('li') is None else nz(I['li'], 2.0, -6.0)), (0.15, None if I.get('hgz') is None else nz(I['hgz'], 1000, 3500)),
                    (0.10, None if I.get('pw') is None else nz(I['pw'], 10, 35)), (0.10, None if I.get('tt') is None else nz(I['tt'], 46, 56))])
-        ltg = np.where(I['cape'] >= 100, cls(np.clip(ls, 0, 1), [0.15, 0.30, 0.45, 0.60, 0.75]), 0); ltg = np.where(np.isnan(ls) | np.isnan(I['cape']), np.nan, ltg).astype(np.float32)
+        ltg = np.where((I['cape'] >= 100) | ((CV_MODE != 'new') & (False if SW is None else SW)), cls(np.clip(ls, 0, 1), [0.15, 0.30, 0.45, 0.60, 0.75]), 0); ltg = np.where(np.isnan(ls) | np.isnan(I['cape']), np.nan, ltg).astype(np.float32)
         if cvp is not None: ltg = capsea(ltg, np.minimum(cvp + 1, 5))                          # دریا: آذرخش حداکثر یک رده بالاتر از پتانسیل همرفت
         out['ltg'] = ltg
     # ---- سیل‌خیزی

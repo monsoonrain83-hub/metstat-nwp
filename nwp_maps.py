@@ -963,7 +963,7 @@ class Engine:
         hs = src.hsurf(); hm = R.interp(src, hs) if hs is not None else None
         dem = R.dem if R.key != 'me' else R.dem
         zs = np.where(np.isnan(dem), hm if hm is not None else 0.0, dem).astype(np.float32); F['zs'] = zs
-        msl = G('pressure_msl'); F['ps'] = ((msl if msl is not None else 1013.25) * np.exp(-zs / 8434.0)).astype(np.float32)
+        msl = G('pressure_msl'); F['msl'] = msl; F['ps'] = ((msl if msl is not None else 1013.25) * np.exp(-zs / 8434.0)).astype(np.float32)
         if F['t2'] is not None and 'temperature_2m' in d:                  # دمای ۲ متری با اصلاح ارتفاعی DEM (برای یخبندان/گرما)
             try: F['t2c'] = s.lapse(st, R, lambda: d['temperature_2m'])
             except Exception: pass
@@ -980,6 +980,10 @@ class Engine:
         for h in (1, 3, 6, 12, 24): F[f'p{h}'] = s.accfield(st, R, vt, h)
         for h in (6, 24): F[f'sn{h}'] = s.accfield(st, R, vt, h, 'snow')
         F['slope'] = R.slope(); F['vt'] = vt
+        try:                                                                 # شبکه برای واداشت دینامیکی (واگرایی/PVA): گام‌ها به متر
+            F['lat'] = np.asarray(R.lat, np.float32); F['dym'] = abs(float(R.lat[1, 0] - R.lat[0, 0])) * 111000.0
+            F['dxm'] = (abs(float(R.lon[0, 1] - R.lon[0, 0])) * 111000.0 * np.cos(np.radians(R.lat))).astype(np.float32)
+        except Exception: pass
         try: F['dxkm'] = float(abs(R.lon[0, 1] - R.lon[0, 0])) * 111.0 * float(np.cos(np.radians(np.nanmean(R.lat))))   # اندازهٔ پیکسل (km) برای همسایگی بارش
         except Exception: pass
         try: F['sea'] = secondary.sea_mask(R.lon, R.lat, hm, R.dem)   # CAPE/CIN دریا در ۱ اردیبهشت تا ۵ آبان (secondary.in_cape_window)
@@ -1029,6 +1033,9 @@ class Engine:
                 except Exception as e_: log(f'  ! آیکن هشدار ساخته نشد: {type(e_).__name__}: {e_}')
             png = render(R, field, P['sc'], P['en'], vt, run, M, '', mk, note='Derived index from model fields (see MetStat docs)', icons=icons)
             s.up.put(mkey, rid, fname, png, meta)
+        if s.mm and rk in ('iran', 'fars', 'me'):
+            try: s.mm.sink(mkey, rk, pid, run, vt, field, {})                         # مالتی‌مدل: میدان رده‌ای خطر/هشدار
+            except Exception as e_: log(f'  ! مالتی‌مدل sink {pid}: {e_}')
         st.have.add(fname)
 
     def plan(s, P, st, vt, lead, dt_h, want_all):

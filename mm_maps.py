@@ -36,7 +36,7 @@ def mm_extend_params(PARAMS):
 class MMCombiner:
     def __init__(s, nm, eng, d):
         s.nm, s.eng, s.dir = nm, eng, d; os.makedirs(d, exist_ok=True)
-        s.lock = threading.Lock(); s.idx = {}; s.prog = {}; s.first = {}; s.done = set(); s.have = {}; s.begun = set(); s.n = 0
+        s.lock = threading.Lock(); s.sec_hd = {}; s.idx = {}; s.prog = {}; s.first = {}; s.done = set(); s.have = {}; s.begun = set(); s.n = 0
         s.model = dict(name=MM_NAME, label=MM_LABEL, prov='NWP centres')
         s.pmm = s.build_params(); s.t_log = time.time(); s.cnt = {}
         nm_ = nm; nm_.log(f'مالتی‌مدل MetStat فعال است: {len(s.pmm)} پارامتر؛ میدان‌ها در {d}')
@@ -45,8 +45,8 @@ class MMCombiner:
     def build_params(s):
         nm = s.nm; out = {}
         for pid, P in nm.PARAMS.items():
-            if P.get('me_only') or P.get('raw') or P['kind'] == 'sec': continue
-            if W.group_of(pid) is None: continue
+            if P.get('me_only') or P.get('raw'): continue
+            if s.grp(pid) is None: continue
             if len([m for m in P['models'] if m in W.MM_MODELS or m in ('ecmwf9', 'gfs25')]) < 2: continue
             out[pid] = P
         k0 = max(P['ord'] for P in nm.PARAMS.values()) + 1
@@ -57,6 +57,10 @@ class MMCombiner:
                 out[f'{pid}m{"x" if kd == "max" else "n"}'] = P
         for pid, P in out.items(): P.setdefault('mmk', 'w'); P.setdefault('base', pid)
         return out
+
+    def grp(s, pid):
+        P = s.nm.PARAMS.get(pid) or {}
+        return W.HAZ_GROUP.get(P.get('haz')) if P.get('kind') == 'sec' else W.group_of(pid)
 
     # ---- ورودی از Engine
     def hz(s, src, run):
@@ -129,7 +133,7 @@ class MMCombiner:
 
     def tick(s, final=False):
         nm = s.nm; made = {}; ks = []
-        with s.lock: ks = sorted(s.idx, key=lambda k: (k[2], k[3], k[0], k[1]))
+        with s.lock: ks = sorted(s.idx, key=lambda k: (k[2], k[3], k[0], str(k[1]).startswith('warn'), k[1]))      # «هشدار ترکیبی» آخر تا همهٔ خطرهای همان ساعت آماده باشند
         for k in ks:
             if k in s.done: continue
             rk, pid, run, vt = k; pick = s.decide(k, final)
@@ -153,7 +157,7 @@ class MMCombiner:
         nm = s.nm; rk, pid, run, vt = k; P0 = nm.PARAMS[pid]; lead = int(round((vt - run).total_seconds() / 3600))
         if len(pick) < 2: return 0
         s.begin(run); rid = f'{run:%Y%m%d%H}'; R = s.eng.regions[rk]; D = {m: s.load(s.idx[k][src]) for m, src in pick.items()}
-        wts, season, _ = W.weights(W.group_of(pid), vt, list(pick.values()))
+        wts, season, _ = W.weights(s.grp(pid), vt, list(pick.values()))
         if not wts: return 0
         made = 0
         for mpid, P in s.pmm.items():
@@ -162,6 +166,12 @@ class MMCombiner:
             if fname in s.have.get(rid, set()): continue
             kind = P['mmk']; DD = {m: d for m, d in D.items() if kind != 'w' or m in wts}; arrs = {m: d['f'] for m, d in DD.items()}
             field = s.combine(kind, wts, arrs, pid)
+            sec = P0['kind'] == 'sec'
+            if sec: field = np.where(np.isnan(field), np.nan, np.floor(field + 0.5)).astype(np.float32)          # رده‌ای: گرد به نزدیک‌ترین رده
+            if sec:
+                hk = (rk, run, vt, P0['win']); hd = s.sec_hd.setdefault(hk, {}); hd[P0['haz']] = field
+                if len(s.sec_hd) > 400:
+                    for _k in sorted(s.sec_hd, key=lambda t: t[2])[:100]: s.sec_hd.pop(_k, None)
             if P0.get('skip_empty') and not (np.nanmax(field) >= 0.1): continue
             extra = {}
             if kind == 'w':
@@ -186,7 +196,14 @@ class MMCombiner:
                 title = P['en']
                 if P0['kind'] == 'win' and P0['h'] == 0: title += f', {lead}h'
                 note = 'Elevation-adjusted per model before blending'
-                png = nm.render(R, field, P['sc'], title, vt, run, s.model, P['unit'], mk, caption=cap_en, note=note, **extra)
+                if sec:
+                    icons = None
+                    if P0['haz'] == 'warn':
+                        try: icons = nm.warn_icons.pick(s.sec_hd.get((rk, run, vt, P0['win']), {}), np.array(R.overlay), nm.FX0, nm.FY0)
+                        except Exception as e_: nm.log(f'  ! آیکن هشدار مالتی‌مدل: {type(e_).__name__}: {e_}')
+                    png = nm.render(R, field, P['sc'], title, vt, run, s.model, '', mk, caption=cap_en, note='Derived index from model fields, blended across models', icons=icons)
+                else:
+                    png = nm.render(R, field, P['sc'], title, vt, run, s.model, P['unit'], mk, caption=cap_en, note=note, **extra)
                 s.eng.up.put(MM_ID, rid, fname, png, dict(r=rk, m=MM_ID, p=mpid, s=lead, v=f'{vt:%Y%m%d%H}', w=wstr))
             s.have.setdefault(rid, set()).add(fname); made += 1; s.cnt[mpid] = s.cnt.get(mpid, 0) + 1
         return made

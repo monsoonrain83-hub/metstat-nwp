@@ -101,6 +101,12 @@ def group_of(pid):
     return None            # بقیه (مثلاً نقشه‌های ثانویهٔ همرفت/آذرخش) در گام بعد بر اساس haz تعیین می‌شوند
 
 
+# ---- نقشه‌های ثانویه (خطرها/هشدارها): گروه وزن بر اساس نوع خطر (haz)؛ میدان‌ها رده‌ای (۰..۵) هستند و پس از میانگین وزنی به نزدیک‌ترین رده گرد می‌شوند
+HAZ_GROUP = {'cvp': 'convection', 'cvi': 'convection', 'hail': 'convection', 'ltg': 'convection', 'wtstm': 'convection', 'whail': 'convection', 'wltg': 'convection',
+             'flood': 'precip', 'wflood': 'precip', 'wlog': 'precip', 'wrain': 'precip', 'wrainl': 'precip', 'wsnow': 'precip', 'wice': 'precip',
+             'wwind': 'wind', 'wdust': 'wind', 'wfrost': 'temp', 'wgfrost': 'temp', 'wcold': 'temp', 'wheat': 'temp', 'whum': 'temp', 'wfog': 'humidity', 'warn': 'precip'}
+
+
 # ---- نقشه‌های بیشینه/کمینهٔ مدل‌ها (بدون وزن؛ همه مدل‌های موجود)
 MINMAX = {
     'p24': ('max', 'min'), 'pacc': ('max', 'min'), 'snow24': ('max', 'min'), 'snowacc': ('max', 'min'),
