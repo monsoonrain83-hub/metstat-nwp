@@ -496,7 +496,7 @@ def id_init(host):
     ID_PTS = id_points.build(id_points.load_seats(), places); ID_CRC = id_points.crc16(ID_PTS)
     log(f'نقاط شناسایی: {len(ID_PTS)} (crc {ID_CRC:04x})')
 
-def render_me(R, field, sc_key, cont=None, cont_lvls=None, cont_fmt='%d', barbs=None, stream=None, lows=None, bold=None):
+def render_me(R, field, sc_key, cont=None, cont_lvls=None, cont_fmt='%d', barbs=None, stream=None, lows=None, bold=None, cont_fine=False):
     """کاشی نمایشگر: فقط لایهٔ رنگیِ گسسته + خطوط (هم‌مقدار، بردار باد، خط جریان)؛ بدون قاب/عنوان/نوار رنگ (سایت می‌کشد). خروجی WebP بدون اتلاف."""
     sc = styles.SC[sc_key]; cols = [styles.hex2rgb(c) for c in sc['colors']]; n = len(cols)
     k = classify(field, sc['edges'])
@@ -514,8 +514,14 @@ def render_me(R, field, sc_key, cont=None, cont_lvls=None, cont_fmt='%d', barbs=
             ax.streamplot(X1[::sub], Y1[::sub], np.nan_to_num(U[::sub, ::sub]), -np.nan_to_num(V[::sub, ::sub]), density=2.6, color=(0.1, 0.1, 0.1, 0.55), linewidth=0.55, arrowsize=0.7, arrowstyle='->')
         if cont is not None:
             cf = gaussian_filter(np.nan_to_num(cont, nan=np.nanmean(cont)), PXD * 0.30)
-            cs = ax.contour(X1, Y1, cf, levels=cont_lvls, colors='k', linewidths=0.8)
-            ax.clabel(cs, fmt=cont_fmt, fontsize=8, inline=True)
+            if cont_fine or (cont_lvls is not None and len(cont_lvls) > 1 and abs(float(cont_lvls[1]) - float(cont_lvls[0])) <= 1.0):                                   # گام ۱ دکامتر (تراز ۵۰۰): خط نازک؛ مضرب‌های ۵ ضخیم‌تر؛ برچسب همهٔ خطوط
+                cs = ax.contour(X1, Y1, cf, levels=cont_lvls, colors='k', linewidths=0.45)
+                ax.clabel(cs, fmt=cont_fmt, fontsize=6.5, inline=True, inline_spacing=2)
+                mj = [l for l in cont_lvls if int(round(l)) % 5 == 0]
+                if mj: ax.contour(X1, Y1, cf, levels=mj, colors='k', linewidths=1.0)
+            else:
+                cs = ax.contour(X1, Y1, cf, levels=cont_lvls, colors='k', linewidths=0.8)
+                ax.clabel(cs, fmt=cont_fmt, fontsize=8, inline=True)
             if bold is not None:
                 ax.contour(X1, Y1, cf, levels=[bold], colors='k', linewidths=1.8)
         if barbs is not None:
@@ -561,7 +567,7 @@ def classify(field, edges):
 MPL_LOCK = threading.Lock()
 MARK = [(16 * k + 8, 0x3C, (16 * k + 8) ^ 0xA5) for k in range(16)]
 
-def render(region, field, sc_key, title, valid, run, model, unit, marker, cont=None, cont_lvls=None, cont_fmt='%d', barbs=None, note=None, caption=None, icons=None):
+def render(region, field, sc_key, title, valid, run, model, unit, marker, cont=None, cont_lvls=None, cont_fmt='%d', barbs=None, note=None, caption=None, icons=None, cont_fine=False):
     sc = styles.SC[sc_key]; cols = [styles.hex2rgb(c) for c in sc['colors']]; n = len(cols)
     k = classify(field, sc['edges'])
     pal = np.array(cols + [(255, 255, 255)], dtype=np.uint8)          # -1 → سفید (بدون داده / بدون پدیده)
@@ -578,8 +584,15 @@ def render(region, field, sc_key, title, valid, run, model, unit, marker, cont=N
         fig.patch.set_alpha(0); ax.patch.set_alpha(0)
         X, Y = np.meshgrid(np.arange(FX0, FX1 + 1), np.arange(FY0, FY1 + 1))
         if cont is not None:
-            cs = ax.contour(X, Y, gaussian_filter(np.nan_to_num(cont, nan=np.nanmean(cont)), 2), levels=cont_lvls, colors='k', linewidths=0.9)
-            ax.clabel(cs, fmt=cont_fmt, fontsize=7, inline=True)
+            cg = gaussian_filter(np.nan_to_num(cont, nan=np.nanmean(cont)), 2)
+            if cont_fine or (cont_lvls is not None and len(cont_lvls) > 1 and abs(float(cont_lvls[1]) - float(cont_lvls[0])) <= 1.0):
+                cs = ax.contour(X, Y, cg, levels=cont_lvls, colors='k', linewidths=0.45)
+                ax.clabel(cs, fmt=cont_fmt, fontsize=6, inline=True, inline_spacing=2)
+                mj = [l for l in cont_lvls if int(round(l)) % 5 == 0]
+                if mj: ax.contour(X, Y, cg, levels=mj, colors='k', linewidths=1.0)
+            else:
+                cs = ax.contour(X, Y, cg, levels=cont_lvls, colors='k', linewidths=0.9)
+                ax.clabel(cs, fmt=cont_fmt, fontsize=7, inline=True)
         if barbs is not None:
             bu, bv = barbs; st = 34
             ax.barbs(X[st // 2::st, st // 2::st], Y[st // 2::st, st // 2::st], bu[st // 2::st, st // 2::st], -bv[st // 2::st, st // 2::st],
@@ -913,7 +926,7 @@ class Engine:
                 if rk == 'me':
                     mo = P.get('me') or {}; sck = mo.get('sc', P['sc'])
                     if mo.get('k', 1.0) != 1.0: field = field * mo['k']
-                    png, lines = render_me(R, field, sck, **{k: v for k, v in extra.items() if k in ('cont', 'cont_lvls', 'cont_fmt', 'barbs', 'stream', 'lows', 'bold')})
+                    png, lines = render_me(R, field, sck, **{k: v for k, v in extra.items() if k in ('cont', 'cont_lvls', 'cont_fmt', 'barbs', 'stream', 'lows', 'bold', 'cont_fine')})
                     rid_ = f'{run:%Y%m%d%H}'; s.up.put(mkey, rid_, fname, png, dict(r=rk, m=mkey, p=pid, s=lead, v=f'{vt:%Y%m%d%H}'))
                     if lines: s.up.put(mkey, rid_, f'me/{pid}L_{vt:%Y%m%d%H}.webp', lines, dict(r=rk, m=mkey, p=pid + 'L', s=lead, v=f'{vt:%Y%m%d%H}'))
                     if wants_value(pid, P):
@@ -1177,7 +1190,7 @@ class Engine:
         if pid == 'z500a':
             g = d.get('geopotential_height_500hPa'); C = z500_clim_at(R, vt)
             if g is None or C is None: return None
-            Z = I(g); return ((Z - C) / 10, dict(cont=Z / 10, cont_lvls=np.arange(480, 620, 4), bold=580))
+            Z = I(g); return ((Z - C) / 10, dict(cont=Z / 10, cont_lvls=np.arange(480, 620, 1), bold=580, cont_fine=True))
         if pid == 'tsoil':
             v = d.get('soil_temperature_0_to_7cm', d.get('soil_temperature_0_to_10cm'))
             return (I(v), {}) if v is not None else None
@@ -1238,8 +1251,8 @@ class Engine:
         if pid in ('z850', 'z700', 'z500'):
             p = int(pid[1:]); g = d.get(f'geopotential_height_{p}hPa'); rh = d.get(f'relative_humidity_{p}hPa')
             if g is None or rh is None: return None
-            step = 6 if p == 500 else 3
-            return (I(rh), dict(cont=I(g) / 10, cont_lvls=np.arange(0, 1200, step)))
+            if p == 500: return (I(rh), dict(cont=I(g) / 10, cont_lvls=np.arange(440, 620, 1), cont_fine=True))      # r58: گام ۱ دکامتر
+            return (I(rh), dict(cont=I(g) / 10, cont_lvls=np.arange(0, 1200, 3)))
         if pid in ('w500', 'w300'):
             p = int(pid[1:]); u = d.get(f'wind_u_component_{p}hPa'); v = d.get(f'wind_v_component_{p}hPa')
             if u is None: return None

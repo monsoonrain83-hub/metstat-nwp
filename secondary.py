@@ -123,12 +123,21 @@ def indices(F):
     g = F.get; I = {}
     T = {p: g(f't{p}') for p in (925, 850, 700, 500, 300)}; RH = {p: g(f'rh{p}') for p in (925, 850, 700, 500, 300)}
     Td = {p: (td_from_rh(T[p], RH[p]) if T[p] is not None and RH[p] is not None else None) for p in T}
+    # r58 اصلاح ارتفاعی: اگر تراز ۸۵۰ هکتوپاسکال زیر سطح زمین باشد (فلات ایران: فشار سطح < ۸۵۰)، مقدار مدل آنجا برون‌یابی است؛
+    # در آن یاخته‌ها «سطح زمین» (t2، td2، فشار سطح) جای ۸۵۰ می‌نشیند تا TT، K، Showalter، SWEAT، DCI و Soaring از هوای زیرزمینی ساخته نشوند.
+    ps_, t2_, rh2_ = g('ps'), g('t2'), g('rh2'); p850 = 850.0; below = None
+    if ps_ is not None and t2_ is not None and rh2_ is not None and T[850] is not None and RH[850] is not None and ELEV_FIX:
+        below = np.asarray(ps_) < 850.0
+        if bool(np.any(below)):
+            T[850] = np.where(below, t2_, T[850]).astype(np.float32); RH[850] = np.where(below, rh2_, RH[850]).astype(np.float32)
+            Td[850] = td_from_rh(T[850], RH[850]); p850 = np.where(below, ps_, 850.0).astype(np.float32)
+    I['below850'] = below
     have = lambda *ps: all(T[p] is not None and RH[p] is not None for p in ps)
     I['cape'], I['cin'] = g('cape'), g('cin')
     if have(850, 700, 500):
         I['tt'] = T[850] + Td[850] - 2 * T[500]
         I['k'] = (T[850] - T[500]) + Td[850] - (T[700] - Td[700])
-        I['show'] = parcel_to_500(T[850], Td[850], 850.0, T[500])
+        I['show'] = parcel_to_500(T[850], Td[850], p850, T[500])
         I['spr700'] = T[700] - Td[700]
         dz = 29.27 * (0.5 * (T[700] + T[500]) + 273.15) * np.log(700.0 / 500.0) / 1000.0
         I['lr75'] = (T[700] - T[500]) / np.maximum(dz, 1.0)
@@ -139,8 +148,16 @@ def indices(F):
             td2 = td_from_rh(g('t2'), g('rh2'))
             I['ko'] = 0.5 * (theta_e(T[500], Td[500], 500.0) + theta_e(T[700], Td[700], 700.0)) - 0.5 * (theta_e(g('t2'), td2, g('ps')) + theta_e(T[850], Td[850], 850.0))   # KO با تراز سطحی به‌جای ۱۰۰۰ هکتوپاسکال (فلات ایران)
             I['li'] = g('li') if g('li') is not None else parcel_to_500(g('t2'), td2, g('ps'), T[500])
-            I['mr'] = mixr_gkg(T[850], RH[850], 850.0)
+            I['mr'] = mixr_gkg(T[850], RH[850], p850)
     if I.get('li') is None and g('li') is not None: I['li'] = g('li')
+    if have(850, 700, 500):
+        I['soar'] = (T[850] - T[500]) - (T[700] - Td[700])                                       # Soaring Index (جدول استاندارد: ۰ ← ۵ ← ۱۰)
+        if I.get('li') is not None: I['dci'] = T[850] + Td[850] - I['li']                        # DCI بارلو (۱۹۹۳) = T850 + Td850 − LI
+    if g('z700') is not None and g('msl') is not None and T[700] is not None:
+        z1000 = 29.27 * 288.15 * np.log(np.maximum(g('msl'), 600.0) / 1000.0)                    # ارتفاع تقریبی تراز ۱۰۰۰ hPa از فشار سطح دریا (مستقل از ارتفاع زمین)
+        I['boy'] = (g('z700') - z1000) / 10.0 - T[700] - 200.0                                   # Boyden (۱۹۶۳)
+    if g('u300') is not None and g('v300') is not None: I['jet'] = np.hypot(g('u300'), g('v300'))
+    I['rh700'] = RH[700]
     if g('u850') is not None and g('u500') is not None and g('v850') is not None and g('v500') is not None and 'tt' in I:
         f850 = np.hypot(g('u850'), g('v850')) * 1.94384; f500 = np.hypot(g('u500'), g('v500')) * 1.94384
         d = lambda u, v: (np.degrees(np.arctan2(-u, -v)) + 360) % 360
@@ -165,7 +182,9 @@ def indices(F):
 # برای پتانسیل همرفت خشکی قابل‌اعتماد نیست؛ وزن این دو شاخص آنجا ≈۵٪ می‌شود. خشکی و بقیهٔ شاخص‌ها بدون تغییر.
 SEA_BOXES = [(47.5, 63.0, 22.0, 30.6), (32.2, 43.8, 12.5, 29.5), (-6.0, 36.2, 30.0, 41.0), (-6.0, 19.0, 41.0, 46.0)]   # lon0, lon1, lat0, lat1
 import os
-CV_MODE = os.environ.get('CV_MODE', 'old').strip().lower()      # old = فرمول وزنی قبلی (راستی‌آزمایی‌شده)؛ new = روش گروهی-ضربی صفحهٔ تحلیل + قید دریا
+ELEV_FIX = os.environ.get('CV_ELEV', '1').strip() != '0'      # r58: اصلاح ارتفاعی تراز ۸۵۰ زیر زمین (۰ = خاموش)
+SKEWT_ON = os.environ.get('CV_SKEWT', '1').strip() != '0'      # r58: صافی نهایی پروفایل قائم
+CV_MODE = os.environ.get('CV_MODE', 'new').strip().lower()      # old = فرمول وزنی قبلی (راستی‌آزمایی‌شده)؛ new = روش گروهی-ضربی صفحهٔ تحلیل + قید دریا
 SEA_F = 0.0                                      # وزن CAPE/CIN (و محصولات وابسته) روی دریا = صفر؛ خشکی دست‌نخورده
 W_CAPE_LAND = 0.20; W_CAPE_SEA = W_CAPE_LAND * SEA_F          # سهم نهایی CAPE در ترکیب ≈ ۵٪ (چون مجموع وزن بقیه ≈ ۰٫۸)
 CIN_PEN_LAND = 0.5; CIN_PEN_SEA = CIN_PEN_LAND * SEA_F
@@ -188,10 +207,11 @@ def sea_mask(lon, lat, hsurf, dem=None):
 # یعنی «همهٔ جوانب لازم‌اند»: ناپایداری بالا بدون رطوبت/ماشه/بارش مدل، پتانسیل بالا نمی‌دهد (برخلاف جمع وزنی که یک عامل قوی کل را بالا می‌برد).
 # رمپ سه‌نقطه‌ای (۰ → ۰٫۵ → ۱) و وزن علمی فصلی (فصل گرم ۲۰ فروردین تا ۱۵ آبان) عیناً از سایت.
 CV_RAMP = dict(cape=(100, 800, 1500), cin=(200, 75, 25), li=(2, -1, -4), si=(3, 0, -3), ki=(20, 28, 35), tt=(44, 48, 52), gdi=(5, 25, 45), lapse=(5.5, 6.5, 7.5),
-               sweat=(150, 250, 300), t500=(-8, -14, -20), pwat=(10, 18, 30), rh=(40, 60, 80), td2m=(0, 8, 16), cprec=(0.1, 1, 5))
-CV_GRP = dict(cape='inst', li='inst', si='inst', ki='inst', tt='inst', gdi='inst', lapse='inst', sweat='inst', t500='inst', cin='trig', pwat='moist', rh='moist', td2m='moist', cprec='sig')
-CV_W = {True: dict(li=1.5, si=1.5, ki=1.3, cape=1.3, gdi=1.2, tt=1.0, lapse=1.0, sweat=0.8, t500=0.8, cin=1.0, pwat=1.0, td2m=1.0, rh=0.8, cprec=1.2),
-        False: dict(li=1.2, si=1.3, ki=1.2, cape=0.6, gdi=0.8, tt=1.3, lapse=1.2, sweat=0.8, t500=1.4, cin=0.8, pwat=1.0, td2m=0.9, rh=1.1, cprec=1.2)}
+               sweat=(150, 250, 300), t500=(-8, -14, -20), pwat=(10, 18, 30), rh=(40, 60, 80), td2m=(0, 8, 16), cprec=(0.1, 1, 5),
+               soar=(0, 5, 10), boyd=(92, 94, 97), dci=(15, 25, 32))
+CV_GRP = dict(cape='inst', li='inst', si='inst', ki='inst', tt='inst', gdi='inst', lapse='inst', sweat='inst', t500='inst', cin='trig', pwat='moist', rh='moist', td2m='moist', cprec='sig', soar='inst', boyd='inst', dci='inst')
+CV_W = {True: dict(li=1.5, si=1.5, ki=1.3, cape=1.3, gdi=1.2, tt=1.0, lapse=1.0, sweat=0.8, t500=0.8, cin=1.0, pwat=1.0, td2m=1.0, rh=0.8, cprec=1.2, soar=0.7, boyd=0.6, dci=1.0),
+        False: dict(li=1.2, si=1.3, ki=1.2, cape=0.6, gdi=0.8, tt=1.3, lapse=1.2, sweat=0.8, t500=1.4, cin=0.8, pwat=1.0, td2m=0.9, rh=1.1, cprec=1.2, soar=0.8, boyd=0.5, dci=0.9)}
 def warm_season(vt):
     """فصل گرم سایت: ۲۰ فروردین (≈۹ آوریل) تا ۱۵ آبان (≈۶ نوامبر)."""
     return vt is None or (4, 9) <= (vt.month, vt.day) <= (11, 6)
@@ -306,9 +326,27 @@ def sea_evidence(F, pr):
     return ev
 
 # ---------------------------------------------------------------- طبقه‌بندی خطرها
+CUTS_OLD = [0.15, 0.30, 0.45, 0.60, 0.75]; CUTS_NEW = [0.10, 0.20, 0.32, 0.45, 0.60]
+def skewt_filter(sc, I, F, cuts):
+    """r58: صافی نهایی با شاخص‌های پروفایل قائم (Skew-T) همان مدل، روی همهٔ یاخته‌ها (با اصلاح ارتفاعی ۸۵۰ در indices).
+    مبنا: جدول استاندارد «بی‌اثر ← مساعد ← ایده‌آل» (SPC/NWS، Gálvez & Davison، George ۱۹۶۰، Miller ۱۹۷۲) و SPC (ستون خشک/وارونگی).
+    ۱) پایداری کامل (LI ≥ ۲، K < ۲۰، TT < ۴۴ و CAPE < ۱۰۰) ⇒ بدون پتانسیل؛ ۲) CIN > ۲۰۰ (وارونگی قوی) ⇒ سقف رده ۲؛ ۳) ستون خشک (PW < ۱۰ mm و RH700 < ۴۰٪) ⇒ سقف رده ۱.
+    رده‌های ۳ به بالا فقط وقتی می‌مانند که پروفایل مانع نباشد. NaN دست‌نخورده می‌ماند."""
+    if not SKEWT_ON or sc is None: return sc
+    s = np.asarray(sc, np.float32).copy(); g = F.get
+    cap2 = 0.5 * (cuts[1] + cuts[2]); cap1 = 0.5 * (cuts[0] + cuts[1])
+    li, k, tt, cape, cin = I.get('li'), I.get('k'), I.get('tt'), I.get('cape'), I.get('cin')
+    if li is not None and k is not None and tt is not None:
+        st = (li >= 2) & (k < 20) & (tt < 44)
+        if cape is not None: st = st & (np.nan_to_num(cape) < 100)
+        s = np.where(st, np.minimum(s, 0.0), s)
+    if cin is not None: s = np.where(np.abs(np.nan_to_num(cin)) > 200, np.minimum(s, cap2), s)
+    if I.get('pw') is not None and I.get('rh700') is not None: s = np.where((I['pw'] < 10) & (I['rh700'] < 40), np.minimum(s, cap1), s)
+    return s.astype(np.float32)
+
 def hazards(F):
     I = indices(F); g = F.get; out = {}
-    pr = g('pr')
+    pr = g('pr'); Pcv = None
     SW = F.get('sea') if (F.get('sea') is not None and F.get('vt') is not None and in_cape_window(F['vt'])) else None      # دریا × بازهٔ زمانی
     _sw = lambda land: land if SW is None else np.where(SW, land * SEA_F, land).astype(np.float32)   # وزن روی دریا = SEA_F × خشکی
     wC = W_CAPE_LAND if SW is None else np.where(SW, W_CAPE_SEA, W_CAPE_LAND).astype(np.float32)
@@ -332,23 +370,27 @@ def hazards(F):
             if I.get('rhmid') is not None: sc = np.where(I['rhmid'] < 20, sc * 0.6, sc)
             dm = dyn_factor(dyn_forcing(F))
             if dm is not None: sc = sc * dm
-            cvp = cls(np.clip(sc, 0, 1), [0.15, 0.30, 0.45, 0.60, 0.75]); out['cvp'] = cvp
+            sc = skewt_filter(sc, I, F, CUTS_OLD); Pcv = np.clip(sc, 0, 1)
+            cvp = cls(np.clip(sc, 0, 1), CUTS_OLD); out['cvp'] = cvp
     else:
         # ---- پتانسیل همرفت: روش گروهی-ضربی سایت (cv_potential) + شواهد ماشه‌کشی
         td2 = td_from_rh(g('t2'), g('rh2')) if (g('t2') is not None and g('rh2') is not None) else None
         V = dict(cape=None if I['cape'] is None else np.maximum(I['cape'], 0), cin=None if I['cin'] is None else np.abs(I['cin']), li=I.get('li'), si=I.get('show'), ki=I.get('k'), tt=I.get('tt'),
-                 gdi=I.get('gdi'), lapse=I.get('lr75'), sweat=I.get('sweat'), t500=g('t500'), pwat=I.get('pw'), rh=g('rh700'), td2m=td2, cprec=pr)
+                 gdi=I.get('gdi'), lapse=I.get('lr75'), sweat=I.get('sweat'), t500=g('t500'), pwat=I.get('pw'), rh=g('rh700'), td2m=td2, cprec=pr, soar=I.get('soar'), boyd=I.get('boy'), dci=I.get('dci'))
         sc = cv_potential(V, warm_season(g('vt')), SW) if any(V[k] is not None for k in CV_GRP if CV_GRP[k] == 'inst') else None      # بدون هیچ شاخص ناپایداری، پتانسیل ساخته نمی‌شود
         cvp = None
         if sc is not None:
             if I.get('rhmid') is not None: sc = np.where(I['rhmid'] < 20, sc * 0.6, sc)            # ستون خشک
             dm = dyn_factor(dyn_forcing(F))
             if dm is not None: sc = sc * dm
-            cvp = cls(np.clip(sc, 0, 1), [0.10, 0.20, 0.32, 0.45, 0.60])
+            sc = skewt_filter(sc, I, F, CUTS_NEW); Pcv = np.clip(sc, 0, 1)
+            cvp = cls(np.clip(sc, 0, 1), CUTS_NEW)
             SEA = g('sea') if hasattr(g('sea'), 'shape') else None                                  # دریا در همهٔ فصل‌ها (نه فقط بازهٔ CAPE)
             if SEA is not None:
                 ev = sea_evidence(F, pr)
-                if ev is not None: cvp = np.where(SEA & ~ev, np.minimum(cvp, 2), cvp).astype(np.float32)   # دریا: بدون شاهد (بارش همرفتی همسایگی یا واداشت دینامیکی) سقف رده ۲
+                if ev is not None:
+                    cvp = np.where(SEA & ~ev, np.minimum(cvp, 2), cvp).astype(np.float32)   # دریا: بدون شاهد (بارش همرفتی همسایگی یا واداشت دینامیکی) سقف رده ۲
+                    Pcv = np.where(SEA & ~ev, np.minimum(Pcv, CUTS_NEW[2] - 1e-3), Pcv).astype(np.float32)
             out['cvp'] = cvp
     _SEA = g('sea') if hasattr(g('sea'), 'shape') else None
     capsea = (lambda a, lim: a) if (_SEA is None or cvp is None or CV_MODE != 'new') else (lambda a, lim: np.where(_SEA, np.minimum(a, lim), a).astype(np.float32))
@@ -359,7 +401,7 @@ def hazards(F):
     wCB, wSH, wPE = _sw(0.35), _sw(0.35), _sw(0.30)
     dbi = None if I.get('lr85') is None or I.get('spr700') is None else wavg([(0.5, nz(I['lr85'], 7.0, 9.0)), (0.5, nz(I['spr700'], 10, 25))])
     isc = wavg([(wCB, None if cb is None else nz(cb, 2500, 40000)), (wC15, None if I['cape'] is None else nz(np.maximum(I['cape'], 0), 500, 3000)),
-                (0.15, None if I.get('s06') is None else nz(I['s06'], 10, 25)), (0.10, None if I.get('s85') is None else nz(I['s85'], 5, 18)),
+                (0.15, None if I.get('s06') is None else nz(I['s06'], 10, 20)), (0.10, None if I.get('s85') is None else nz(I['s85'], 5, 18)), (0.10, None if I.get('jet') is None else nz(I['jet'], 25, 50)),
                 (0.15, None if gust is None else nz(gust, 40, 100)), (0.10, dbi)])
     cvi = None
     if isc is not None and cvp is not None:
@@ -375,7 +417,7 @@ def hazards(F):
         hs = wavg([(wSH, nz(ship, 0.0, 2.0)),
                    (0.15, None if I.get('hgz') is None else nz(I['hgz'], 1200, 3200)),
                    (0.10, None if I.get('fzl') is None else nz(I['fzl'], 4800, 2800)),
-                   (wC15, nz(np.maximum(I['cape'], 0), 400, 2200)), (0.10, nz(I['lr75'], 6.0, 8.0)), (0.15, nz(I['s06'], 8, 22))])
+                   (wC15, nz(np.maximum(I['cape'], 0), 400, 2200)), (0.10, nz(I['lr75'], 6.0, 8.0)), (0.15, nz(I['s06'], 8, 22)), (0.08, nz(g('t500'), -12, -22))])
         hs = np.where(I['s06'] < 8, hs * 0.6, hs)                                              # برش کم → رگبار تک‌سلولی، تگرگ درشت کم‌احتمال
         hail = np.where(cvp >= 1, cls(np.clip(hs, 0, 1), [0.12, 0.25, 0.40, 0.55, 0.70]), 0) if cvp is not None else cls(np.clip(hs, 0, 1), [0.12, 0.25, 0.40, 0.55, 0.70])
         hail = np.where(np.isnan(hs), np.nan, hail).astype(np.float32)
@@ -398,6 +440,7 @@ def hazards(F):
     fl = None
     def _ramp(k, lo, hi):
         return None if g(k) is None else nz(np.maximum(g(k), 0), lo, hi)
+    sc_ref = next((np.asarray(g(k)) for k in ('p6', 'p24', 'p3', 'p1', 'p12') if g(k) is not None), None); sc_ = None
     short = None
     for k, lo, hi in (('p1', 10, 50), ('p3', 20, 80), ('p6', 30, 110)):
         a = _ramp(k, lo, hi)
@@ -414,7 +457,13 @@ def hazards(F):
         if g('u850') is not None and g('v850') is not None and g('u500') is not None and g('v500') is not None:
             steer = 0.5 * (np.hypot(g('u850'), g('v850')) + np.hypot(g('u500'), g('v500')))
             eff = eff + 0.15 * (1 - nz(steer, 5, 20))                                                                      # جریان هدایت ضعیف → سامانه کند حرکت می‌کند → مدت بیشتر
-        wet = (1.0 + 0.25 * np.nan_to_num(nz(g('soil'), 0.10, 0.35), nan=0.4)) if g('soil') is not None else 1.0
+        # r58: بارش «همرفتی/رگباری» از «یکنواخت و طولانی» با استاندارد جدا می‌شود (نه با رطوبت خاک): CAPE (۱۰۰←۸۰۰←۱۵۰۰ جدول) یا شدت لحظه‌ای ≥ ۴ mm/h (آستانهٔ رگبار شدید)
+        # ⇒ سهم همرفتی fconv؛ رطوبت خاک فقط به نسبت (۱−fconv) بر شاخهٔ بارش طولانی اثر می‌گذارد.
+        fconv = np.zeros(np.shape(sc_ref), np.float32)
+        if I.get('cape') is not None: fconv = np.fmax(fconv, np.nan_to_num(cv_ramp(np.maximum(I['cape'], 0), (100, 800, 1500))))
+        if pr is not None: fconv = np.fmax(fconv, np.where(np.nan_to_num(pr) >= 4.0, 0.7, 0.0).astype(np.float32))
+        if I.get('rh700') is not None: fconv = np.where(I['rh700'] > 85, fconv * 0.7, fconv)        # لایهٔ میانی کاملاً اشباع و بدون ناپایداری = بارش لایه‌ای
+        wet = (1.0 + 0.25 * (1 - fconv) * np.nan_to_num(nz(g('soil'), 0.10, 0.35), nan=0.4)) if g('soil') is not None else 1.0
         a1 = None if short is None else short * slope_f * eff
         a2 = None if longd is None else longd * slope_f * wet
         sc_ = a1 if a2 is None else (a2 if a1 is None else np.fmax(a1, a2))
@@ -422,25 +471,28 @@ def hazards(F):
     # ---- هشدارها (سطح ۰..۳)
     def L(x, th): return None if x is None else cls(x, th)
     W = {}
-    r6 = L(g('p6'), [20, 40, 70]); r24 = L(g('p24'), [40, 80, 140]); W['wrain'] = mx(r6, r24)
-    rl = mx(L(g('p6'), [5, 12, 25]), L(g('p24'), [10, 25, 50]))                               # بارش با شدت: زرد ≥۵ mm/۶ساعت یا ≥۱۰ mm/۲۴ساعت، نارنجی ≥۱۲ یا ≥۲۵، قرمز ≥۲۵ یا ≥۵۰ (سنگین‌تر از این در «بارش سنگین»)
+    # r58: آستانه‌های جدول کاربر (زرد/نارنجی/قرمز): بارش تجمعی ۲/۲۰/۴۰ mm (۲۴ ساعته؛ برای پنجرهٔ ۶ ساعته ×۰٫۷۵ ⇒ ۲/۱۵/۳۰)؛ رگبار شدید (شدت) ۴/۱۰/۲۰ mm/h
+    ra6 = L(g('p6'), [2, 15, 30]); ra24 = L(g('p24'), [2, 20, 40]); acc = mx(ra6, ra24)
+    rate = mx(mx(L(g('p1'), [4, 10, 20]), None if g('p3') is None else L(g('p3') / 3.0, [4, 10, 20])), None if g('p6') is None else L(g('p6') / 6.0, [4, 10, 20]))
+    W['wrain'] = mx(rate, None if acc is None else np.where(acc >= 2, acc, 0).astype(np.float32) * np.where(np.isnan(acc), np.nan, 1))       # «سنگین» = رگبار شدید، یا تجمع در سطح نارنجی/قرمز
+    rl = acc
     if rl is not None:
         liquid = (g('t2') > 1.0) if g('t2') is not None else True                              # برف در هشدار برف می‌آید
         W['wrainl'] = np.where(liquid, rl, 0).astype(np.float32) * np.where(np.isnan(rl), np.nan, 1)
-    W['wsnow'] = mx(L(g('sn6'), [3, 8, 15]), L(g('sn24'), [5, 15, 30]))
+    W['wsnow'] = mx(L(g('sn6'), [2, 8, 18]), L(g('sn24'), [2, 10, 25]))               # r58 جدول: برف ۲/۱۰/۲۵ cm
     if g('iceprec') is not None and pr is not None: W['wice'] = np.where(g('iceprec') > 0.5, cls(pr, [0.1, 0.5, 2.0]), 0).astype(np.float32)
     elif g('t2') is not None and pr is not None and g('t850') is not None:
         W['wice'] = np.where((g('t2') > -4) & (g('t2') < 0.5) & (g('t850') > 0.5) & (pr >= 0.2), 1, 0).astype(np.float32)
-    W['wwind'] = L(gust, [50, 75, 100])
+    W['wwind'] = mx(L(gust, [50, 70, 90]), None if g('ws10') is None else L(g('ws10') * 3.6, [40, 55, 70]))      # r58 جدول: تندباد ۵۰/۷۰/۹۰ و باد پایدار ۴۰/۵۵/۷۰ km/h
     if gust is not None and g('rh2') is not None:
         dry = (g('rh2') < 45) & ((g('soil') < 0.15) if g('soil') is not None else True) & ((pr < 0.1) if pr is not None else True)
         W['wdust'] = np.where(dry, cls(gust, [45, 60, 80]), 0).astype(np.float32)
-    if g('vis') is not None: W['wfog'] = cls(-g('vis'), [-1000, -500, -200])
+    if g('vis') is not None: W['wfog'] = cls(-g('vis'), [-1000, -400, -100])      # r58 جدول: دید ۱/۰٫۴/۰٫۱ km
     elif g('rh2') is not None and g('ws10') is not None:
         W['wfog'] = np.where((g('rh2') >= 99) & (g('ws10') < 2), 2, np.where((g('rh2') >= 97) & (g('ws10') < 3) & ((pr < 0.1) if pr is not None else True), 1, 0)).astype(np.float32)
     t2 = g('t2c') if g('t2c') is not None else g('t2')
     if t2 is not None:
-        W['wfrost'] = cls(-t2, [0, 5, 10])
+        W['wfrost'] = cls(-t2, [0, 4, 8])                                                   # r58 جدول: یخبندان از دمای ۲ متری ۰/−۴/−۸
         cloud = g('cloud') if g('cloud') is not None else (np.clip((g('rh2') - 50) / 40, 0, 1) * 100 if g('rh2') is not None else np.full(np.shape(t2), 30.0, np.float32))
         wsv = g('ws10') if g('ws10') is not None else np.full(np.shape(t2), 2.0, np.float32)
         dT = (1.5 + 3.0 * (1 - np.clip(cloud, 0, 100) / 100)) * (1 - 0.6 * np.clip((wsv - 1) / 5, 0, 1))             # کاهش دمای تابشی چمن نسبت به ۲ متر
@@ -449,17 +501,22 @@ def hazards(F):
         if g('ws10') is not None:
             v = np.maximum(g('ws10') * 3.6, 4.8); wct = 13.12 + 0.6215 * t2 - 11.37 * v ** 0.16 + 0.3965 * t2 * v ** 0.16
             W['wcold'] = np.where((t2 <= 10) & (g('ws10') * 3.6 >= 4.8), cls(-wct, [10, 28, 40]), 0).astype(np.float32)
-        if g('rh2') is not None:
-            td = td_from_rh(t2, g('rh2')); e = g('rh2') / 100.0 * es(t2); ws0 = g('ws10') if g('ws10') is not None else 1.0
-            at = t2 + 0.33 * e - 0.70 * ws0 - 4.0
-            W['wheat'] = cls(np.fmax(t2, at), [40, 45, 50]); W['whum'] = np.where(t2 >= 28, cls(td, [22, 24, 26]), 0).astype(np.float32)
-        else: W['wheat'] = cls(t2, [40, 45, 50])
+        W['wheat'] = cls(t2, [40, 44, 48])                                                  # r58 جدول: گرمای شدید از دمای ۲ متری ۴۰/۴۴/۴۸
+        if g('rh2') is not None:                                                            # r58 جدول: شرجی = شاخص گرما (Rothfusz/NWS، °C) ۳۲/۳۹/۵۲؛ فقط T ≥ ۲۷°C و RH ≥ ۴۰٪
+            T_, R_ = t2, np.clip(g('rh2'), 0, 100)
+            hi = (-8.78469475556 + 1.61139411 * T_ + 2.33854883889 * R_ - 0.14611605 * T_ * R_ - 0.012308094 * T_ ** 2 - 0.0164248277778 * R_ ** 2
+                  + 0.002211732 * T_ ** 2 * R_ + 0.00072546 * T_ * R_ ** 2 - 0.000003582 * T_ ** 2 * R_ ** 2)
+            W['whum'] = np.where((T_ >= 27) & (R_ >= 40), cls(hi, [32, 39, 52]), 0).astype(np.float32) * np.where(np.isnan(T_), np.nan, 1)
     if cvp is not None:
-        W['wtstm'] = mx(np.where(cvp >= 5, 3, np.where(cvp >= 4, 2, np.where(cvp >= 3, 1, 0))).astype(np.float32) * np.where(np.isnan(cvp), np.nan, 1),
-                        None if cvi is None else np.where(cvi >= 5, 3, np.where(cvi >= 4, 2, np.where(cvi >= 3, 1, 0))).astype(np.float32) * np.where(np.isnan(cvi), np.nan, 1))
+        # r58 جدول: احتمال توفان تندری ۳۰/۵۰/۷۰٪ (از امتیاز پتانسیل پس از صافی Skew-T) و CAPE ۱۰۰۰/۲۰۰۰/۳۰۰۰ J/kg (فقط وقتی پتانسیل ≥ رده ۲ است، یعنی رطوبت/ماشه هم هست)
+        lp = None if Pcv is None else cls(Pcv, [0.30, 0.50, 0.70])
+        lc = None if I['cape'] is None else np.where(cvp >= 2, cls(np.maximum(I['cape'], 0), [1000, 2000, 3000]), 0).astype(np.float32) * np.where(np.isnan(I['cape']), np.nan, 1)
+        li_ = None if cvi is None else np.where(cvi >= 5, 3, np.where(cvi >= 4, 2, np.where(cvi >= 3, 1, 0))).astype(np.float32) * np.where(np.isnan(cvi), np.nan, 1)
+        W['wtstm'] = mx(mx(lp, lc), li_)
+        if lp is None: W['wtstm'] = mx(np.where(cvp >= 5, 3, np.where(cvp >= 4, 2, np.where(cvp >= 3, 1, 0))).astype(np.float32) * np.where(np.isnan(cvp), np.nan, 1), W['wtstm'])
     if hail is not None: W['whail'] = np.where(hail >= 4, 3, np.where(hail >= 3, 2, np.where(hail >= 2, 1, 0))).astype(np.float32) * np.where(np.isnan(hail), np.nan, 1)
     if ltg is not None: W['wltg'] = np.where(ltg >= 5, 3, np.where(ltg >= 4, 2, np.where(ltg >= 3, 1, 0))).astype(np.float32) * np.where(np.isnan(ltg), np.nan, 1)
-    if fl is not None: W['wflood'] = np.where(fl >= 4, 3, np.where(fl >= 3, 2, np.where(fl >= 2, 1, 0))).astype(np.float32) * np.where(np.isnan(fl), np.nan, 1)
+    if fl is not None: W['wflood'] = (cls(np.clip(sc_, 0, 1.2) * 100.0, [25, 50, 75]) if sc_ is not None else np.where(fl >= 4, 3, np.where(fl >= 3, 2, np.where(fl >= 2, 1, 0))).astype(np.float32) * np.where(np.isnan(fl), np.nan, 1))      # r58 جدول: ریسک سیلاب ۲۵/۵۰/۷۵٪
     p3 = g('p3') if g('p3') is not None else g('p1')
     if p3 is not None:
         lv = cls(np.maximum(p3, 0), [20, 35, 55]); flat = (np.nan_to_num(g('slope'), nan=0.0) < 1.5) if g('slope') is not None else True
@@ -549,6 +606,24 @@ def selftest():
     assert float(np.nanmax(hazards(Fl)['wrainl'])) == 1.0 and float(np.nanmin(hazards(Fl)['wrainl'])) == 1.0
     Fl['p6'][:] = 7.0; assert float(np.nanmin(hazards(Fl)['wrainl'])) == 2.0
     Fl['p6'][:] = 0.0; Fl['p24'][:] = 0.0; assert float(np.nanmax(hazards(Fl)['wrainl'])) == 0.0
+    # r58: آستانه‌های جدول کاربر
+    z = lambda v: np.full(n, v, np.float32)
+    def lv(key, **kw):
+        base = dict(p1=z(0), p3=z(0), p6=z(0), p12=z(0), p24=z(0), t2=z(15), rh2=z(50), gust=z(10), ws10=z(2), sn6=z(0), sn24=z(0)); base.update({k: z(v) for k, v in kw.items()})
+        return float(np.nanmax(hazards(base)[key]))
+    assert lv('wwind', gust=55) == 2 and lv('wwind', gust=72) == 3 and lv('wwind', gust=95) == 4          # تندباد ۵۰/۷۰/۹۰
+    assert lv('wwind', ws10=12) == 2 and lv('wwind', ws10=20) == 4                                          # باد ۴۰/۵۵/۷۰ km/h (۱۲ m/s = ۴۳٫۲)
+    assert lv('wrainl', p24=25) == 3 and lv('wrainl', p24=45) == 4 and lv('wrainl', p24=3) == 2             # تجمعی ۲/۲۰/۴۰
+    assert lv('wrain', p1=5) == 2 and lv('wrain', p1=12) == 3 and lv('wrain', p1=25) == 4                   # رگبار شدید ۴/۱۰/۲۰ mm/h
+    assert lv('wsnow', sn24=3, t2=-3) == 2 and lv('wsnow', sn24=12, t2=-3) == 3 and lv('wsnow', sn24=26, t2=-3) == 4
+    assert lv('wheat', t2=41) == 2 and lv('wheat', t2=45) == 3 and lv('wheat', t2=49) == 4
+    assert lv('wfrost', t2=-1) == 2 and lv('wfrost', t2=-5) == 3 and lv('wfrost', t2=-9) == 4
+    # صافی Skew-T و اصلاح ارتفاعی
+    Fs = dict(cape=z(20), cin=-z(10), rh850=z(40), rh700=z(35), rh500=z(35), rh925=z(40), rh300=z(30), t925=z(18), t850=z(14), t700=z(2), t500=z(-8), t300=z(-40), t2=z(20), rh2=z(30), ps=z(1000), zs=z(0), pr=z(0), li=z(4), pw=z(14))
+    assert float(np.nanmax(hazards(Fs)['cvp'])) == 0.0                                                        # پایداری کامل ⇒ بی‌پتانسیل
+    Fe = dict(Fs); Fe.update(ps=z(790), t850=z(45), rh850=z(95)); Ie = indices(Fe); Ib = indices(dict(Fe, ps=z(1000)))
+    assert float(np.nanmax(Ie['tt'])) < float(np.nanmin(Ib['tt'])) - 5 and bool(np.all(Ie['below850']))          # ۸۵۰ زیر زمین ⇒ از سطح ساخته می‌شود
+    assert 'dci' in Ie and 'soar' in Ie
     # با میدان‌های ناقص هم نباید خطا بدهد
     F2 = {k: v for k, v in F.items() if k in ('p6', 'p24', 'gust', 't2', 'rh2', 'ws10')}
     H2 = hazards(F2); assert 'wrain' in H2 and 'wwind' in H2 and 'wheat' in H2
