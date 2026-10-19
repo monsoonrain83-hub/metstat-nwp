@@ -750,6 +750,8 @@ def needed_vars(mkey, pids, kind):
         v |= SEC_SFC                                           # ورودی هشدارها (اگر مدل نداشته باشد خوانده نمی‌شود)
     return v
 
+FORCE = bool(os.environ.get('NWP_FORCE', '').strip() not in ('', '0')) or os.path.exists('FORCE_REGEN') or '--force' in sys.argv     # r58
+FORCED = set()
 class Uploader:
     def __init__(s, host, key, outdir):
         s.host, s.key, s.out = (host.rstrip('/') if host else None), key, outdir
@@ -835,7 +837,10 @@ class Engine:
                                        'params': {k: dict(fa=v['fa'], unit=v['unit'], cat=v['cat'], o=v['ord'], sc=(v.get('me') or {}).get('sc', v['sc']),
                                                           mu=(v.get('me') or {}).get('unit', v['unit']), alt=v.get('alt', ''), me=int(bool(v.get('me_only'))), ln=int(bool(v.get('cont') or v.get('barbs') or v.get('ln'))))
                                                   for k, v in PARAMS.items() if mkey in v['models']}})
-            st.have = set(r.get('have', [])); log(f'▶ {M["name"]} اجرای {rid}: {len(vts)} گام زمانی، {len(st.have)} نقشه از قبل روی هاست')
+            st.have = set(r.get('have', []))
+            if FORCE and (mkey, rid) not in FORCED:                    # r58: بازسازی اجباری فقط یک‌بار برای هر (مدل، ران)؛ بدون آن نقشه‌های موجود روی هاست دوباره ساخته نمی‌شوند
+                FORCED.add((mkey, rid)); log(f'  ⟳ بازسازی اجباری: {len(st.have)} نقشهٔ موجود دوباره ساخته و جایگزین می‌شود'); st.have = set()
+            log(f'▶ {M["name"]} اجرای {rid}: {len(vts)} گام زمانی، {len(st.have)} نقشه از قبل روی هاست')
         made = 0; t0 = time.time()
         for i, vt in enumerate(vts):
             if i <= st.done_i: continue
@@ -1266,6 +1271,7 @@ def main():
     ap.add_argument('--host'); ap.add_argument('--key', default=''); ap.add_argument('--out')
     ap.add_argument('--loop', action='store_true'); ap.add_argument('--max-minutes', type=int, default=0)
     ap.add_argument('--models', default=','.join(MODELS)); ap.add_argument('--regions', default='iran,fars,me')
+    ap.add_argument('--force', action='store_true', help='r58: نقشه‌های موجود روی هاست را هم دوباره بساز (یک‌بار برای هر ران). معادل: فایل FORCE_REGEN در ریشهٔ مخزن یا NWP_FORCE=1')
     ap.add_argument('--params', default='', help='فقط این پارامترها (با کاما)'); ap.add_argument('--mm', default='', help='پوشهٔ میدان‌های مدل‌ها؛ مالتی‌مدل MetStat را روشن می‌کند'); ap.add_argument('--mock', action='store_true'); ap.add_argument('--probe', action='store_true'); ap.add_argument('--max-steps', type=int, default=0); ap.add_argument('--horizon', type=int, default=0); ap.add_argument('--hourly-upto', type=int, default=0, help='سازگاری با workflow قدیمی (بدون اثر)')
     a = ap.parse_args(); a.regions = a.regions.split(','); t_end = time.time() + a.max_minutes * 60 if a.max_minutes else None
     if not a.host and not a.out: sys.exit('--host یا --out لازم است')
