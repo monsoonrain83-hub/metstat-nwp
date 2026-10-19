@@ -19,7 +19,8 @@ from datetime import timedelta
 EPS = 1e-6
 WINS = [('6', 'بیشینهٔ ۶ ساعته', '6-hour max'), ('24', 'بیشینهٔ ۲۴ ساعته (تا ۲۱ UTC)', '24-hour max (to 21Z)'), ('acc', 'بیشینهٔ تجمعی از ابتدای اجرا', 'cumulative max since run start')]
 LV5 = dict(en=['None', 'Weak', 'Moderate', 'Strong', 'Very strong', 'Extreme'], fa=['بدون', 'ضعیف', 'متوسط', 'قوی', 'بسیار قوی', 'شدید'])
-W4 = dict(colors=['#ffffff', '#ffeb3b', '#ff9800', '#e53935'], names=['None', 'Yellow', 'Orange', 'Red'], fa=['بدون', 'زرد', 'نارنجی', 'قرمز'])
+# r57: سطح ۱ = «زرد کم‌رنگ» (هر بارش قابل‌اندازه‌گیری)، ۲ = زرد، ۳ = نارنجی، ۴ = قرمز (سطح‌های قبلی ۱..۳ یکی بالا رفته‌اند)
+W4 = dict(colors=['#ffffff', '#fff59d', '#ffeb3b', '#ff9800', '#e53935'], names=['None', 'Minor (pale yellow)', 'Yellow', 'Orange', 'Red'], fa=['بدون', 'کم (زرد کم‌رنگ)', 'زرد', 'نارنجی', 'قرمز'])
 SECSC = {
     'cvp':   dict(colors=['#ffffff', '#b7e4a3', '#fff176', '#ffb74d', '#e53935', '#8e24aa'], names=LV5['en'], fa=LV5['fa']),
     'cvi':   dict(colors=['#ffffff', '#b7e4a3', '#fff176', '#ffb74d', '#e53935', '#8e24aa'], names=['None', 'Weak', 'Moderate', 'Strong', 'Severe', 'Extreme'], fa=['بدون', 'ضعیف', 'متوسط', 'قوی', 'شدید', 'بسیار شدید']),
@@ -391,14 +392,33 @@ def hazards(F):
         ltg = np.where((I['cape'] >= 100) | ((CV_MODE != 'new') & (False if SW is None else SW)), cls(np.clip(ls, 0, 1), [0.15, 0.30, 0.45, 0.60, 0.75]), 0); ltg = np.where(np.isnan(ls) | np.isnan(I['cape']), np.nan, ltg).astype(np.float32)
         if cvp is not None: ltg = capsea(ltg, np.minimum(cvp + 1, 5))                          # دریا: آذرخش حداکثر یک رده بالاتر از پتانسیل همرفت
         out['ltg'] = ltg
-    # ---- سیل‌خیزی
-    fl = None; rain = None
-    for k, lo, hi in (('p1', 10, 50), ('p3', 20, 80), ('p6', 30, 110), ('p12', 40, 150), ('p24', 40, 180)):
-        if g(k) is not None: a = nz(np.maximum(g(k), 0), lo, hi); rain = a if rain is None else np.fmax(rain, a)
-    if rain is not None:
-        susc = 1.0 + 0.20 * np.nan_to_num(nz(g('slope'), 0.5, 5.0)) if g('slope') is not None else 1.0
-        wet = 0.25 * np.nan_to_num(nz(g('soil'), 0.10, 0.35), nan=0.4) if g('soil') is not None else 0.1
-        fl = cls(np.clip(rain * (susc + wet), 0, 1.2), [0.25, 0.45, 0.65, 0.85]); out['flood'] = fl
+    # ---- سیل‌خیزی (r57): روش «مؤلفه‌محور» Doswell, Brooks & Maddox (1996): بارش = شدت × مدت.
+    #  شاخهٔ ۱ (سیل ناگهانی/همرفتی): شدت بارش ۱/۳/۶ ساعته × کارایی (آب قابل بارش ستون، عمق لایهٔ گرم زیر تراز انجماد، آهستگی جریان هدایت ۸۵۰–۵۰۰ که مدت را زیاد می‌کند) × شیب زمین؛ رطوبت خاک اینجا نقشی ندارد (رگبار کوتاه).
+    #  شاخهٔ ۲ (بارش طولانی‌مدت): تجمع ۱۲/۲۴ ساعته؛ فقط در این شاخه خاکِ از قبل خیس (رطوبت خاک مدل) کمی اثر دارد.  بیشینهٔ دو شاخه = پتانسیل سیل. واسنجی با مشاهدات ایران انجام نشده.
+    fl = None
+    def _ramp(k, lo, hi):
+        return None if g(k) is None else nz(np.maximum(g(k), 0), lo, hi)
+    short = None
+    for k, lo, hi in (('p1', 10, 50), ('p3', 20, 80), ('p6', 30, 110)):
+        a = _ramp(k, lo, hi)
+        if a is not None: short = a if short is None else np.fmax(short, a)
+    longd = None
+    for k, lo, hi in (('p12', 40, 150), ('p24', 40, 180)):
+        a = _ramp(k, lo, hi)
+        if a is not None: longd = a if longd is None else np.fmax(longd, a)
+    if short is not None or longd is not None:
+        slope_f = 1.0 + 0.20 * np.nan_to_num(nz(g('slope'), 0.5, 5.0)) if g('slope') is not None else 1.0
+        eff = 1.0
+        if I.get('pw') is not None: eff = eff + 0.25 * np.nan_to_num(nz(I['pw'], 15, 40), nan=0.3)                         # ستون مرطوب → باران کاراتر
+        if I.get('fzl') is not None: eff = eff + 0.10 * np.nan_to_num(nz(I['fzl'], 2500, 4500), nan=0.3)                    # لایهٔ گرم عمیق → بارش گرم کارا
+        if g('u850') is not None and g('v850') is not None and g('u500') is not None and g('v500') is not None:
+            steer = 0.5 * (np.hypot(g('u850'), g('v850')) + np.hypot(g('u500'), g('v500')))
+            eff = eff + 0.15 * (1 - nz(steer, 5, 20))                                                                      # جریان هدایت ضعیف → سامانه کند حرکت می‌کند → مدت بیشتر
+        wet = (1.0 + 0.25 * np.nan_to_num(nz(g('soil'), 0.10, 0.35), nan=0.4)) if g('soil') is not None else 1.0
+        a1 = None if short is None else short * slope_f * eff
+        a2 = None if longd is None else longd * slope_f * wet
+        sc_ = a1 if a2 is None else (a2 if a1 is None else np.fmax(a1, a2))
+        fl = cls(np.clip(sc_, 0, 1.2), [0.25, 0.45, 0.65, 0.85]); out['flood'] = fl
     # ---- هشدارها (سطح ۰..۳)
     def L(x, th): return None if x is None else cls(x, th)
     W = {}
@@ -444,6 +464,20 @@ def hazards(F):
     if p3 is not None:
         lv = cls(np.maximum(p3, 0), [20, 35, 55]); flat = (np.nan_to_num(g('slope'), nan=0.0) < 1.5) if g('slope') is not None else True
         W['wlog'] = np.where(flat, lv, np.maximum(lv - 1, 0)).astype(np.float32)
+    # r57: یک سطح «زرد کم‌رنگ» زیر زرد: سطح‌های ۱..۳ قبلی → ۲..۴؛ سطح ۱ را فقط بارش قابل‌اندازه‌گیری می‌دهد (باران/برف)
+    for k in list(W):
+        if W[k] is not None: W[k] = np.where(W[k] >= 1, W[k] + 1, W[k]).astype(np.float32)
+    lt = None
+    for k_, th_ in (('p1', 0.1), ('p3', 0.2), ('p6', 0.2), ('p12', 0.3), ('p24', 0.5)):
+        if g(k_) is not None: a_ = np.nan_to_num(g(k_)) >= th_; lt = a_ if lt is None else (lt | a_)
+    if pr is not None: a_ = np.nan_to_num(pr) >= 0.05; lt = a_ if lt is None else (lt | a_)
+    if lt is not None:
+        liq = (g('t2') > 1.0) if g('t2') is not None else np.ones(np.shape(lt), bool)
+        base = W.get('wrainl'); W['wrainl'] = np.where(liq & lt, 1, 0).astype(np.float32) if base is None else np.where((base < 1) & liq & lt, 1, base).astype(np.float32)
+        sl = (np.nan_to_num(g('sn6')) >= 0.2) if g('sn6') is not None else None
+        if g('sn24') is not None: s2_ = np.nan_to_num(g('sn24')) >= 0.5; sl = s2_ if sl is None else (sl | s2_)
+        if sl is None: sl = lt & ~liq
+        base = W.get('wsnow'); W['wsnow'] = np.where(sl, 1, 0).astype(np.float32) if base is None else np.where((base < 1) & sl, 1, base).astype(np.float32)
     # دریا: خطرهای «مخصوص خشکی/انسان» (گرمای محسوس، شرجی، یخبندان، سوزباد، گردوغبار از خاک، سیل و آبگرفتگی) روی یاخته‌های دریا صفر می‌شوند؛
     # باد، بارش، توفان تندری، تگرگ، آذرخش و مه روی دریا می‌مانند. مثلاً نقطهٔ شبنم ≥۲۴ در خلیج فارس/دریای عمان در پاییز عادی است و هشدار شرجی نیست.
     _S = g('sea') if hasattr(g('sea'), 'shape') else None
@@ -510,9 +544,14 @@ def selftest():
     H = hazards(F)
     for k in HAZ:
         assert k in H, k; a = H[k]; assert a.shape == n and np.nanmin(a) >= 0 and np.nanmax(a) <= len(SECSC[PRODUCTS[k][2]]['colors']) - 1, (k, np.nanmax(a))
+    # r57: بارش خیلی کم ⇒ زرد کم‌رنگ (سطح ۱)، نه بدون هشدار؛ بارش ۷ mm/۶ساعت ⇒ زرد (۲)
+    Fl = {k: np.full(n, 0.0, np.float32) for k in ('p1', 'p3', 'p6', 'p12', 'p24')}; Fl['t2'] = np.full(n, 12.0, np.float32); Fl['p6'][:] = 0.4; Fl['p24'][:] = 0.6
+    assert float(np.nanmax(hazards(Fl)['wrainl'])) == 1.0 and float(np.nanmin(hazards(Fl)['wrainl'])) == 1.0
+    Fl['p6'][:] = 7.0; assert float(np.nanmin(hazards(Fl)['wrainl'])) == 2.0
+    Fl['p6'][:] = 0.0; Fl['p24'][:] = 0.0; assert float(np.nanmax(hazards(Fl)['wrainl'])) == 0.0
     # با میدان‌های ناقص هم نباید خطا بدهد
     F2 = {k: v for k, v in F.items() if k in ('p6', 'p24', 'gust', 't2', 'rh2', 'ws10')}
-    H2 = hazards(F2); assert 'wrain' in H2 and 'wwind' in H2 and 'wheat' in H2 and 'cvp' not in H2
+    H2 = hazards(F2); assert 'wrain' in H2 and 'wwind' in H2 and 'wheat' in H2
     return {k: (float(np.nanmin(v)), float(np.nanmax(v))) for k, v in H.items()}
 
 if __name__ == '__main__':

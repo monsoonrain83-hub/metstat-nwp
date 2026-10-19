@@ -6,6 +6,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
 S = 30                      # اندازهٔ آیکن (پیکسل)
+ICON_MIN = 2                # r57: آیکن فقط از سطح «زرد» (۲) به بالا؛ سطح ۱ (زرد کم‌رنگ، بارش کم) آیکن ندارد
 SS = 4                      # ابرنمونه‌برداری
 # ترتیب اولویت وقتی چند خطر هم‌سطح‌اند (مهم‌ترین اول)
 PRI = ['wflood', 'whail', 'wtstm', 'wltg', 'wwind', 'wsnow', 'wice', 'wrain', 'wrainl', 'wlog', 'wdust', 'wfog', 'wfrost', 'wgfrost', 'wcold', 'wheat', 'whum']
@@ -87,8 +88,8 @@ def pick(Hd, ov_alpha, fx0, fy0, step=40, half=14):
     try:
         from scipy.ndimage import binary_dilation, uniform_filter
         blocked = binary_dilation(blocked, iterations=1)
-        okfrac = uniform_filter((lv >= 1).astype(np.float32), size=2 * half + 1, mode='constant')
-    except Exception: okfrac = (lv >= 1).astype(np.float32)
+        okfrac = uniform_filter((lv >= ICON_MIN).astype(np.float32), size=2 * half + 1, mode='constant')
+    except Exception: okfrac = (lv >= ICON_MIN).astype(np.float32)
     keys = [k for k in PRI if k in Hd and Hd[k] is not None]
     MAXB = 0.30                                          # بیشینهٔ سهم پیکسل‌های نام/مرز زیر آیکن (آیکن زیر لایهٔ نام‌هاست؛ در ایران نام شهرستان‌ها پرتراکم است و آستانهٔ ~۱٪ هرگز برقرار نمی‌شد)
     def bfrac(x, y):
@@ -99,7 +100,7 @@ def pick(Hd, ov_alpha, fx0, fy0, step=40, half=14):
     out = []; used = []
     for gy in range(fy0 + half, fy0 + h - half, step):
         for gx in range(fx0 + half, fx0 + w - half, step):
-            if lv[gy - fy0, gx - fx0] < 1: continue
+            if lv[gy - fy0, gx - fx0] < ICON_MIN: continue
             spot = None; sb = MAXB
             for dx, dy in OFFS:                              # کم‌شلوغ‌ترین جا در همسایگی (نه اولین جای مجاز)
                 x, y = gx + dx, gy + dy; b = bfrac(x, y)
@@ -109,7 +110,7 @@ def pick(Hd, ov_alpha, fx0, fy0, step=40, half=14):
             for k in keys:                                    # بالاترین سطح در جعبه؛ در تساوی اولویت PRI
                 a = Hd[k][max(0, Y0 - 3):Y0 + 4, max(0, X0 - 3):X0 + 4]; l = float(np.nanmax(a)) if a.size and not np.all(np.isnan(a)) else 0
                 if l > bl: bl, best = l, k
-            if best is None or bl < 1: continue
+            if best is None or bl < ICON_MIN: continue
             used.append((x, y)); out.append((x, y, KIND[best]))
     return out[:90]
 
