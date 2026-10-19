@@ -1257,7 +1257,7 @@ class Engine:
             p = int(pid[1:]); g = d.get(f'geopotential_height_{p}hPa'); rh = d.get(f'relative_humidity_{p}hPa')
             if g is None or rh is None: return None
             if p == 500: return (I(rh), dict(cont=I(g) / 10, cont_lvls=np.arange(440, 620, 1), cont_fine=True))      # r58: گام ۱ دکامتر
-            return (I(rh), dict(cont=I(g) / 10, cont_lvls=np.arange(0, 1200, 3)))
+            return (I(rh), dict(cont=I(g) / 10, cont_lvls=np.arange(0, 1200, 2 if p == 700 else 4)))       # r58: ۷۰۰ گام ۲ دکامتر، ۸۵۰ گام ۴ دکامتر
         if pid in ('w500', 'w300'):
             p = int(pid[1:]); u = d.get(f'wind_u_component_{p}hPa'); v = d.get(f'wind_v_component_{p}hPa')
             if u is None: return None
