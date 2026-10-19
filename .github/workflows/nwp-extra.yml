@@ -1,23 +1,72 @@
 {
   "name": "metstat-extra",
   "on": {
-    "schedule": [{"cron": "40 6 * * *"}],
+    "schedule": [
+      {
+        "cron": "40 6 * * *"
+      }
+    ],
     "workflow_dispatch": {}
   },
-  "concurrency": {"group": "extra", "cancel-in-progress": false},
+  "concurrency": {
+    "group": "extra",
+    "cancel-in-progress": false
+  },
   "jobs": {
     "extra": {
       "runs-on": "ubuntu-latest",
       "timeout-minutes": 60,
       "steps": [
-        {"uses": "actions/checkout@v4"},
-        {"uses": "actions/setup-python@v5", "with": {"python-version": "3.12"}},
-        {"name": "install", "run": "pip install -r requirements.txt"},
-        {"name": "indices", "continue-on-error": true, "run": "python indices.py --host \"${{ secrets.MX_HOST }}\" --key \"${{ secrets.MX_KEY }}\""},
-        {"name": "ecmwf-clim-cache", "uses": "actions/cache@v4", "with": {"path": "ecmwf_idx_clim.npz", "key": "ecmwf-idx-clim-v1"}},
-        {"name": "ecmwf-clim", "continue-on-error": true, "env": {"CDSAPI_URL": "https://cds.climate.copernicus.eu/api", "CDSAPI_KEY": "${{ secrets.CDSAPI_KEY }}"}, "run": "[ -f ecmwf_idx_clim.npz ] || python ecmwf_indices.py --build-clim"},
-        {"name": "ecmwf-indices", "continue-on-error": true, "run": "python ecmwf_indices.py --host \"${{ secrets.MX_HOST }}\" --key \"${{ secrets.MX_KEY }}\""},
-        {"name": "longrange", "continue-on-error": true, "run": "python lr_maps.py --host \"${{ secrets.MX_HOST }}\" --key \"${{ secrets.MX_KEY }}\""}
+        {
+          "uses": "actions/checkout@v4"
+        },
+        {
+          "uses": "actions/setup-python@v5",
+          "with": {
+            "python-version": "3.12"
+          }
+        },
+        {
+          "name": "install",
+          "run": "pip install -r requirements.txt"
+        },
+        {
+          "name": "indices",
+          "continue-on-error": true,
+          "run": "python indices.py --host \"${{ secrets.MX_HOST }}\" --key \"${{ secrets.MX_KEY }}\""
+        },
+        {
+          "name": "mjo",
+          "continue-on-error": true,
+          "run": "python mjo_idx.py --host \"${{ secrets.MX_HOST }}\" --key \"${{ secrets.MX_KEY }}\""
+        },
+        {
+          "name": "ecmwf-clim-cache",
+          "uses": "actions/cache@v4",
+          "with": {
+            "path": "ecmwf_idx_clim.npz",
+            "key": "ecmwf-idx-clim-v1"
+          }
+        },
+        {
+          "name": "ecmwf-clim",
+          "continue-on-error": true,
+          "env": {
+            "CDSAPI_URL": "https://cds.climate.copernicus.eu/api",
+            "CDSAPI_KEY": "${{ secrets.CDSAPI_KEY }}"
+          },
+          "run": "[ -f ecmwf_idx_clim.npz ] || python ecmwf_indices.py --build-clim"
+        },
+        {
+          "name": "ecmwf-indices",
+          "continue-on-error": true,
+          "run": "python ecmwf_indices.py --host \"${{ secrets.MX_HOST }}\" --key \"${{ secrets.MX_KEY }}\""
+        },
+        {
+          "name": "longrange",
+          "continue-on-error": true,
+          "run": "python lr_maps.py --host \"${{ secrets.MX_HOST }}\" --key \"${{ secrets.MX_KEY }}\""
+        }
       ]
     }
   }
