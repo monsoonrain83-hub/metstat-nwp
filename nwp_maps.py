@@ -19,7 +19,7 @@ from datetime import datetime, timedelta, timezone
 import numpy as np
 from scipy.ndimage import map_coordinates, gaussian_filter
 from PIL import Image, ImageDraw, ImageFont
-import styles, secondary, warn_icons, id_points, wind_tile
+import styles, secondary, warn_icons, id_points, wind_tile, hl_centers
 styles.SC.update(secondary.SECSC)
 
 UTC = timezone.utc
@@ -934,6 +934,12 @@ class Engine:
                     png, lines = render_me(R, field, sck, **{k: v for k, v in extra.items() if k in ('cont', 'cont_lvls', 'cont_fmt', 'barbs', 'stream', 'lows', 'bold', 'cont_fine')})
                     rid_ = f'{run:%Y%m%d%H}'; s.up.put(mkey, rid_, fname, png, dict(r=rk, m=mkey, p=pid, s=lead, v=f'{vt:%Y%m%d%H}'))
                     if lines: s.up.put(mkey, rid_, f'me/{pid}L_{vt:%Y%m%d%H}.webp', lines, dict(r=rk, m=mkey, p=pid + 'L', s=lead, v=f'{vt:%Y%m%d%H}'))
+                    if extra.get('hl') is not None:                       # r63: لایهٔ مراکز L/H (شفاف، قابل روشن/خاموش در سایت)
+                        try:
+                            hk, hf, hps = extra['hl']; cs_ = hl_centers.find_centers(hf, hk, hps, PXD)
+                            hb = hl_centers.encode_layer(cs_, MEW, MEH)
+                            if hb: s.up.put(mkey, rid_, f'me/{pid}H_{vt:%Y%m%d%H}.webp', hb, dict(r=rk, m=mkey, p=pid + 'H', s=lead, v=f'{vt:%Y%m%d%H}'))
+                        except Exception as e_: log(f'  ! L/H {pid}: {type(e_).__name__}: {e_}')
                     if wants_value(pid, P):
                         try:
                             if ID_PTS: s.up.put(mkey, rid_, f'me/{pid}V_{vt:%Y%m%d%H}.webp', id_points.encode(field, ID_PTS, ID_CRC), dict(r=rk, m=mkey, p=pid + 'V', s=lead, v=f'{vt:%Y%m%d%H}'))
@@ -951,7 +957,7 @@ class Engine:
                 if P.get('wv'): mk['wv'] = P['wv']
                 title = P['en']
                 if P['kind'] == 'win' and P['h'] == 0: title += f', {lead}h'
-                png = render(R, field, P['sc'], title, vt, run, M, P['unit'], mk, **extra)
+                png = render(R, field, P['sc'], title, vt, run, M, P['unit'], mk, **{k_: v_ for k_, v_ in extra.items() if k_ != 'hl'})
                 meta = dict(r=rk, m=mkey, p=pid, s=lead, v=f'{vt:%Y%m%d%H}')
                 s.up.put(mkey, f'{run:%Y%m%d%H}', fname, png, meta); st.have.add(fname); made += 1
         if want_all and s.regions.get('me') is not None:                     # r57: کاشی باد ترازهای ۱۰۰۰/۹۲۵/۸۵۰/۷۰۰ هکتوپاسکال برای ذرات باد (بدون نقشهٔ رنگی)
@@ -1186,7 +1192,7 @@ class Engine:
         if pid == 'w10':
             if 'pressure_msl' not in d or 'wind_u_component_10m' not in d: return None
             u, v = I(d['wind_u_component_10m']) * 1.94384, I(d['wind_v_component_10m']) * 1.94384; msl = I(d['pressure_msl'])
-            return (np.hypot(u, v), dict(cont=msl, cont_lvls=np.arange(900, 1100, 4), barbs=(u, v), lows=msl))
+            return (np.hypot(u, v), dict(cont=msl, cont_lvls=np.arange(900, 1100, 4), barbs=(u, v), hl=('msl', msl, None)))      # r63: L/H از لایهٔ جدای {pid}H (قابل خاموش‌کردن)؛ دیگر در لایهٔ خطی نمی‌پزد
         if pid in ('w250', 'w200'):
             p = int(pid[1:]); u = d.get(f'wind_u_component_{p}hPa'); v = d.get(f'wind_v_component_{p}hPa')
             if u is None or v is None: return None
@@ -1252,12 +1258,13 @@ class Engine:
             else: return None
             u, v = I(uu) * 1.94384, I(vv) * 1.94384
             msl = I(d['pressure_msl']); lv = np.arange(940, 1060, 2)
-            return (I(d['relative_humidity_2m']), dict(cont=msl, cont_lvls=lv, barbs=(u, v)))
+            return (I(d['relative_humidity_2m']), dict(cont=msl, cont_lvls=lv, barbs=(u, v), hl=('msl', msl, None)))
         if pid in ('z850', 'z700', 'z500'):
             p = int(pid[1:]); g = d.get(f'geopotential_height_{p}hPa'); rh = d.get(f'relative_humidity_{p}hPa')
             if g is None or rh is None: return None
-            if p == 500: return (I(rh), dict(cont=I(g) / 10, cont_lvls=np.arange(440, 620, 1), cont_fine=True))      # r58: گام ۱ دکامتر
-            return (I(rh), dict(cont=I(g) / 10, cont_lvls=np.arange(0, 1200, 2 if p == 700 else 4)))       # r58: ۷۰۰ گام ۲ دکامتر، ۸۵۰ گام ۴ دکامتر
+            hsf = src.hsurf(); psl = I(d['pressure_msl'] * np.exp(-(hsf if hsf is not None else 0) / 8434.0)) if 'pressure_msl' in d else None      # r63: فشار سطح برای ماسکِ «تراز زیر زمین»
+            if p == 500: return (I(rh), dict(cont=I(g) / 10, cont_lvls=np.arange(440, 620, 1), cont_fine=True, hl=(500, I(g) / 10, psl)))      # r58: گام ۱ دکامتر
+            return (I(rh), dict(cont=I(g) / 10, cont_lvls=np.arange(0, 1200, 2 if p == 700 else 4), hl=(p, I(g) / 10, psl)))       # r58: ۷۰۰ گام ۲ دکامتر، ۸۵۰ گام ۴ دکامتر
         if pid in ('w500', 'w300'):
             p = int(pid[1:]); u = d.get(f'wind_u_component_{p}hPa'); v = d.get(f'wind_v_component_{p}hPa')
             if u is None: return None
