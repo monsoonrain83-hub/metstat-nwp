@@ -59,6 +59,7 @@ def fetch_run(steps, workdir, run=None):
     if run is None:
         run = cl.latest(dict(base, step=max(steps)))
         log('آخرین اجرای دارای گام', max(steps), ':', run)
+        if run.hour not in (0, 12): run = run.replace(hour=0 if run.hour < 12 else 12); log('  ← فقط ران ۰۰/۱۲ نگه داشته می‌شود؛ ران مؤثر:', run)
     tgt = os.path.join(workdir, f'ec_{run:%Y%m%d%H}.grib2'); os.makedirs(workdir, exist_ok=True)
     try: cl.retrieve(dict(base, date=run.strftime('%Y%m%d'), time=run.hour, step=steps), tgt)
     except Exception as e:                       # اگر پارامتری (مثلاً w) در این جریان نبود، بدون پارامترهای اختیاری تلاش دوباره
