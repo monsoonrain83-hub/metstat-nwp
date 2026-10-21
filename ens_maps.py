@@ -170,10 +170,32 @@ def cfs_inv(fs, path):
     return [dict(var=x[3], lev=x[4], ft=x[5] if len(x) > 5 else '', off=offs[i], end=(offs[i + 1] if i + 1 < len(L_) else None)) for i, x in enumerate(L_)]
 
 def cfs_window(ft, B):
+    """بازهٔ میانگین‌گیری PRATE؛ None = مقدار لحظه‌ای ('N hour fcst')."""
     m = re.search(r'(\d+)-(\d+)\s*hour', ft)
-    if m: return int(m.group(1)), int(m.group(2))
+    if m and re.search(r'ave|acc', ft): return int(m.group(1)), int(m.group(2))
     m = re.search(r'(\d+)\s*hour\s*(ave|acc)', ft)
-    return (B - int(m.group(1)), B) if m else (0, B)
+    return (B - int(m.group(1)), B) if m else None
+
+def cfs_accum(got, dt=6):
+    """r66: بارش تجمعی (mm) از PRATE (kg/m²/s). اگر میانگین‌گیری باشد (A,B) مثل قبل؛ اگر لحظه‌ای ('fcst') باشد با قاعدهٔ ذوزنقه‌ای روی گام‌های ۶ ساعته.
+    (باگ قبلی: مقدار لحظه‌ای در کل زمان گذشته ضرب می‌شد ← هستهٔ چند برابر اغراق‌آمیز.) خروجی: {ساعت: (آرایه mm, lo, la)} فقط مضرب ۲۴."""
+    tp = {}; cum = {0: 0.0}; prev = None
+    for st in sorted(got):
+        o = got[st]
+        if 'prate' not in o: prev = None; continue
+        a, lo, la, win = o['prate']; a = np.nan_to_num(a, nan=0.0)
+        if win is not None:
+            A, B = win; c0 = cum.get(A)
+            if c0 is None: prev = None; continue
+            cum[B] = c0 + a * (B - A) * 3600.0
+        else:
+            if prev is not None and 0 < st - prev[0] <= 2 * dt and prev[0] in cum: cum[st] = cum[prev[0]] + 0.5 * (prev[1] + a) * (st - prev[0]) * 3600.0   # گام گمشده (تا ۱۲ ساعت) با ذوزنقهٔ پهن‌تر پر می‌شود
+            elif st == dt: cum[st] = a * dt * 3600.0          # نخستین گام: نرخ لحظهٔ صفر ناشناخته، همان نرخ گام ۶ فرض می‌شود
+            else: prev = (st, a); continue
+            B = st
+        prev = (st, a)
+        if B % 24 == 0: tp[B] = (cum[B], lo, la)
+    return tp
 
 def cfs_member(fs, run, mem, days):
     """یک عضو CFS: dict var→{step: (arr, lo, la)}؛ بارش به‌صورت تجمعی (mm) و دما (K) هر ۶ ساعت، HGT500 فقط ۰۰Z."""
@@ -183,12 +205,12 @@ def cfs_member(fs, run, mem, days):
         v = run + timedelta(hours=step); out = {}
         p = f'{base}/flxf{v:%Y%m%d%H}.{mem}.{day}{hh}.grb2'; inv = cfs_inv(fs, p); r = {}
         for e in inv:
-            if e['var'] == 'PRATE' and e['lev'] == 'surface' and 'prate' not in r: r['prate'] = e
+            if e['var'] == 'PRATE' and e['lev'] == 'surface' and (('prate' not in r) or (re.search(r'ave|acc', e['ft']) and not re.search(r'ave|acc', r['prate']['ft']))): r['prate'] = e
             elif e['var'] == 'TMP' and e['lev'].startswith('2 m') and 't2' not in r: r['t2'] = e
         for key, e in r.items():
             a, lo, la = decode(getb(fs, p, e['off'], e['end']))
             out[key] = (a, lo, la, cfs_window(e['ft'], step) if key == 'prate' else None)
-            if key == 'prate' and step in (6, 12, 18, 24, 30, 48): log(f"  [تشخیص] عضو {mem} گام {step}: ft='{e['ft']}' → پنجره {cfs_window(e['ft'], step)}")
+            if key == 'prate' and step in (6, 24) and mem == '01': log(f"  [تشخیص] گام {step}: ft انتخابی='{e['ft']}' (همهٔ PRATE سطح: {[x['ft'] for x in inv if x['var'] == 'PRATE']}) → {'میانگین' if cfs_window(e['ft'], step) else 'لحظه‌ای'}")
         if step % 24 == 0:
             p2 = f'{base}/pgbf{v:%Y%m%d%H}.{mem}.{day}{hh}.grb2'
             try:
@@ -203,14 +225,9 @@ def cfs_member(fs, run, mem, days):
             try: s, o = f.result(); got[s] = o
             except Exception as e:
                 if len(got) < 3: log(f'  ✗ CFS عضو {mem}: {type(e).__name__}: {e}')
-    res = {'tp': {}, 't2': {}, 'z5': {}}; cum = {0: 0.0}
+    res = {'tp': cfs_accum(got), 't2': {}, 'z5': {}}
     for s in sorted(got):
         o = got[s]
-        if 'prate' in o:
-            a, lo, la, (A, B) = o['prate']; c0 = cum.get(A)
-            if c0 is not None:
-                cum[B] = c0 + np.nan_to_num(a, nan=0.0) * (B - A) * 3600.0
-                if B % 24 == 0: res['tp'][B] = (cum[B], lo, la)
         if 't2' in o: res['t2'][s] = o['t2'][:3]
         if 'z5' in o: res['z5'][s] = o['z5'][:3]
     log(f'  CFS عضو {mem}: {len(got)}/{len(steps)} گام، {len(res["tp"])} روز بارش، {len(res["t2"])} دما، {len(res["z5"])} z500')
