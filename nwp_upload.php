@@ -42,6 +42,13 @@ if ($a === 'cmipput') {                    // r55: دادهٔ پیش‌نگری 
     if (!is_array($j) || ($j['v'] ?? 0) !== 1 || !isset($j['models'], $j['tas'], $j['pr'])) jout(['error' => 'not cmip6 json'], 400);
     file_put_contents("$CD/$nm.tmp", $b); rename("$CD/$nm.tmp", "$CD/$nm"); jout(['ok' => true, 'bytes' => strlen($b)]);
 }
+if ($a === 'geoput') {                     // r65: لایهٔ جغرافیایی (geo.json از geo_layers.py) ← data/geo.json
+    if (empty($_FILES['f']['tmp_name']) || !is_uploaded_file($_FILES['f']['tmp_name'])) jout(['error' => 'no file'], 400);
+    if (filesize($_FILES['f']['tmp_name']) > 40 * 1024 * 1024) jout(['error' => 'too big'], 400);
+    $b = (string)file_get_contents($_FILES['f']['tmp_name']); $j = json_decode($b, true);
+    if (!is_array($j) || ($j['v'] ?? 0) !== 1 || !isset($j['places'])) jout(['error' => 'not geo json'], 400);
+    @mkdir($DATA, 0755, true); file_put_contents("$DATA/geo.json.tmp", $b); rename("$DATA/geo.json.tmp", "$DATA/geo.json"); jout(['ok' => true, 'bytes' => strlen($b)]);
+}
 if ($a === 'idxput' || $a === 'idxend') {      // نمودار شاخص‌های اقلیمی (تصویر)؛ بدون وابستگی به مدل/اجرا
     $ID = "$DATA/idx"; @mkdir($ID, 0755, true); $F = "$ID/index.json"; $X = jload($F, ['items' => [], 'updated' => null]);
     if ($a === 'idxend') { $X['updated'] = gmdate('c'); jsave($F, $X); jout(['ok' => true]); }
