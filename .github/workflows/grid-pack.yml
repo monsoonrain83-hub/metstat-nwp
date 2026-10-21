@@ -1,5 +1,5 @@
 name: metstat-grid-pack
-# بستهٔ شبکهٔ ECMWF (Open Data) برای سینرژی/جبهه. تأخیر انتشار ECMWF حدود ۷ تا ۹ ساعت است؛ اجرا هر ۶ ساعت.
+# بستهٔ شبکه‌ای ECMWF (Open Data) و GFS برای سینرژی/جبهه (r66: + متغیرهای سطحی و GFS). اجرا هر ۶ ساعت.
 on:
   workflow_dispatch:
     inputs:
@@ -11,7 +11,7 @@ on:
 jobs:
   grid:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -21,3 +21,7 @@ jobs:
       - run: pip install ecmwf-opendata eccodes numpy requests
       - run: python test_grid_derive.py && python test_grid_pack.py
       - run: python grid_pack.py --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}" --steps "${{ github.event.inputs.steps || '0-72/6' }}"
+
+      - name: GFS
+        continue-on-error: true
+        run: python grid_pack.py --model gfs --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}" --steps "${{ github.event.inputs.steps || '0-72/6' }}"
