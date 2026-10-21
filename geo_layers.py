@@ -270,7 +270,14 @@ def mock():
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument('--out', default='geo_out'); ap.add_argument('--only', default='places,lakes,rivers,roads,borders,coast')
     ap.add_argument('--mock', action='store_true'); ap.add_argument('--max-villages', type=int, default=9000)
+    ap.add_argument('--base', default='', help='r65: geo.json قبلی (فایل یا آدرس)؛ بخش‌هایی که در --only نیستند از آن حفظ می‌شوند')
     a = ap.parse_args(); os.makedirs(a.out, exist_ok=True); G = {}
+    if a.base:
+        try:
+            raw = open(a.base, 'rb').read() if os.path.exists(a.base) else get(a.base)
+            B = json.loads(raw); G = {k: v for k, v in B.items() if isinstance(v, list) and k not in a.only.split(',')}
+            log(f'  پایه: بخش‌های حفظ‌شده {sorted(G)}')
+        except Exception as e: log(f'✗ خواندن --base ناموفق: {type(e).__name__}: {e}'); sys.exit(2)
     if a.mock: G = mock()
     else:
         for k, f in (('places', lambda: places(a.max_villages)), ('lakes', lakes), ('rivers', rivers), ('roads', roads), ('borders', borders), ('coast', coast)):

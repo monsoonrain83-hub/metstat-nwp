@@ -19,8 +19,8 @@ EC_BUCKET = 'ecmwf-forecasts'; CFS_BUCKET = 'noaa-cfs-pds'
 MODELS = {
     'ecenc': dict(label='ECMWF ENS — کنترل', name='ECMWF-ENS-CTRL', res='0.25°', cyc='00/12', prov='ECMWF Open Data (CC-BY-4.0)', src='ec', mean=False, days=15),
     'ecenm': dict(label='ECMWF ENS — میانگین اعضا', name='ECMWF-ENS-MEAN', res='0.25°', cyc='00/12', prov='ECMWF Open Data (CC-BY-4.0)', src='ec', mean=True, days=15),
-    'cfsc':  dict(label='CFS — عضو ۱ (کنترل)', name='CFS-M1', res='~0.5°', cyc='00/06/12/18', prov='NOAA CFSv2', src='cfs', mean=False, days=45),
-    'cfsm':  dict(label='CFS — میانگین ۴ عضو', name='CFS-MEAN', res='~0.5°', cyc='00/06/12/18', prov='NOAA CFSv2', src='cfs', mean=True, days=45),
+    'cfsc':  dict(label='CFS — کنترل (عضو ۱ از ۴ عضو هر اجرا)', name='CFS-CTRL', res='~0.5°', cyc='00/06/12/18', prov='NOAA CFSv2', src='cfs', mean=False, days=45),
+    'cfsm':  dict(label='CFS — میانگین ۴ عضو (هموارتر؛ برای بازهٔ بلند مطمئن‌تر)', name='CFS-MEAN', res='~0.5°', cyc='00/06/12/18', prov='NOAA CFSv2', src='cfs', mean=True, days=45),
 }
 PARAMS = {  # id: (فارسی, واحد, دسته, ترتیب, مقیاس رنگ, خط‌های روی نقشه)
     'p24':   ('بارش ۲۴ ساعته', 'mm', 'pr', 10, 'pr_h24', 0),
@@ -188,6 +188,7 @@ def cfs_member(fs, run, mem, days):
         for key, e in r.items():
             a, lo, la = decode(getb(fs, p, e['off'], e['end']))
             out[key] = (a, lo, la, cfs_window(e['ft'], step) if key == 'prate' else None)
+            if key == 'prate' and step in (6, 12, 18, 24, 30, 48): log(f"  [تشخیص] عضو {mem} گام {step}: ft='{e['ft']}' → پنجره {cfs_window(e['ft'], step)}")
         if step % 24 == 0:
             p2 = f'{base}/pgbf{v:%Y%m%d%H}.{mem}.{day}{hh}.grb2'
             try:
@@ -237,6 +238,20 @@ def cfs_products(raw, days):
         if 24 * k in z5: o['z5'] = z5[24 * k]
         if o: P[k] = o
     return P
+
+
+def diag_box(prods, tag):
+    """r66 تشخیص: میانگین/بیشینهٔ بارش روی ایران (۴۴–۶۳°E، ۲۵–۴۰°N) برای چند روز؛ مقادیر نامعقول (مثلاً بیش از ~۳۰۰ میلی‌متر میانگین در ۴۵ روز) یعنی اشکال در انباشت/پنجرهٔ زمانی."""
+    try:
+        for k in (1, 5, 15, 30, 45):
+            o = prods.get(k, {})
+            for key in ('p24', 'ptot'):
+                if key not in o: continue
+                a, lo, la = o[key]; lo = np.asarray(lo); la = np.asarray(la)
+                m = ((la >= 25) & (la <= 40))[:, None] & ((lo >= 44) & (lo <= 63))[None, :]
+                v = np.asarray(a)[m]; v = v[np.isfinite(v)]
+                if v.size: log(f"  [تشخیص] {tag} روز {k} {key}: میانگین ایران {v.mean():.1f} mm، بیشینه {v.max():.0f} mm")
+    except Exception as e: log(f'  [تشخیص] خطا: {e}')
 
 # ------------------------------------------------------------------ ساخت نقشه
 class G:  # شبکهٔ کاشی برای اقلیم Z500
@@ -303,7 +318,7 @@ def main():
                 if 'cfs' not in srcs: srcs['cfs'] = cfs_pick_run(fs)
                 run = srcs['cfs']
                 if not run: log(f'✗ {mk}: اجرای کامل ۴۵ روزهٔ CFS پیدا نشد'); continue
-                log(f'▶ {mk}: اجرای {run:%Y-%m-%d %H}Z'); prods = cfs_products(cfs_collect(fs, run, M['days'], M['mean']), M['days'])
+                log(f'▶ {mk}: اجرای {run:%Y-%m-%d %H}Z'); prods = cfs_products(cfs_collect(fs, run, M['days'], M['mean']), M['days']); diag_box(prods, mk)
             if not prods: log(f'✗ {mk}: هیچ روزی ساخته نشد'); continue
             tot += make_model(up, mk, run, prods, a)
         except SystemExit: raise
