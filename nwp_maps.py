@@ -45,6 +45,10 @@ BBOX = (17.0, 68.0, 9.0, 45.0)         # lon0, lon1, lat0, lat1 — پوشش ک�
 ME_EXT = (20.0, 65.0, 12.0, 42.0)      # کادر «خاورمیانه» نمایشگر (همان کادر Tropical Tidbits)
 PXD = 32                                # پیکسل در هر درجه برای کاشی‌های خاورمیانه (≈ ۰٫۰۳ درجه)
 MEW, MEH = int((ME_EXT[1] - ME_EXT[0]) * PXD), int((ME_EXT[3] - ME_EXT[2]) * PXD)
+# r65: کادر «اروپا» (فقط ترازهای بالا و فشار سطح دریا): اروپا، غرب روسیه، شمال کاسپین، مصر/لیبی و بخشی از دریای عرب
+EU_EXT = (-12.0, 68.0, 12.0, 62.0); EU_PXD = 16
+EUW, EUH = int((EU_EXT[1] - EU_EXT[0]) * EU_PXD), int((EU_EXT[3] - EU_EXT[2]) * EU_PXD)
+EU_PIDS = ('z850', 'z700', 'z500', 'z500a', 'w500', 'w300', 'w250', 'w200', 'sfc', 'w10')
 MODELS = {
     'ecmwf':  dict(name='ECMWF 28km', label='ECMWF IFS 28km (0.25°)', dom=['ecmwf_ifs025'], prov='ECMWF', hz={'00': 360, '12': 360, '06': 144, '18': 144}, res='0.25°', cyc='00/06/12/18'),
     'ecmwf9': dict(name='ECMWF 9km', label='ECMWF IFS 9km (HRES)', dom=['ecmwf_ifs'], prov='ECMWF', hz={'00': 240, '12': 240, '06': 144, '18': 144}, res='0.1° (9 km)', cyc='00/06/12/18'),   # فقط پارامترهای سطحی؛ ترازهای فشاری در HRES نیست
@@ -463,15 +467,19 @@ class Region:
 
 class MERegion(Region):
     """کادر «خاورمیانه» برای نمایشگر: شبکهٔ هم‌فاصلهٔ جغرافیایی (۳۲ پیکسل در درجه)؛ DEM ایران روی آن نمونه‌برداری می‌شود."""
-    def __init__(s, iran):
-        s.key = 'me'; s.en = 'Middle East'; s.iran = iran; s._idx = {}
-        s.geo = (-ME_EXT[0] * PXD, float(PXD), ME_EXT[3] * PXD, -float(PXD))
-        xs = np.arange(MEW) + 0.5; ys = np.arange(MEH) + 0.5
-        s.lon, s.lat = np.meshgrid(ME_EXT[0] + xs / PXD, ME_EXT[3] - ys / PXD)
+    def __init__(s, iran, key='me'):
+        eu = key == 'eu'; ext = EU_EXT if eu else ME_EXT; px = EU_PXD if eu else PXD; W_, H_ = (EUW, EUH) if eu else (MEW, MEH)
+        s.key = key; s.en = 'Europe' if eu else 'Middle East'; s.iran = iran; s._idx = {}; s.px, s.W, s.H, s.ext = px, W_, H_, ext
+        s.geo = (-ext[0] * px, float(px), ext[3] * px, -float(px))
+        xs = np.arange(W_) + 0.5; ys = np.arange(H_) + 0.5
+        s.lon, s.lat = np.meshgrid(ext[0] + xs / px, ext[3] - ys / px)
         s.lon = s.lon.astype(np.float32); s.lat = s.lat.astype(np.float32)
-        s.dem = s.from_iran(iran.dem)
-        from scipy.ndimage import distance_transform_edt
-        s.taper = np.clip(distance_transform_edt(~np.isnan(s.dem)) / (25.0 * PXD / 35.0), 0, 1).astype(np.float32)
+        if eu:                                                  # اروپا: بدون DEM/اصلاح ارتفاعی (فقط ترازهای بالا)
+            s.dem = np.full(s.lon.shape, np.nan, np.float32); s.taper = np.zeros(s.lon.shape, np.float32)
+        else:
+            s.dem = s.from_iran(iran.dem)
+            from scipy.ndimage import distance_transform_edt
+            s.taper = np.clip(distance_transform_edt(~np.isnan(s.dem)) / (25.0 * PXD / 35.0), 0, 1).astype(np.float32)
     def from_iran(s, arr):
         """میدان روی کادر ایران (هندسهٔ weather.us) → شبکهٔ خاورمیانه؛ بیرون از کادر ایران NaN."""
         ax, bx, ay, by = REGIONS['iran']['geo']
@@ -498,6 +506,7 @@ def id_init(host):
 
 def render_me(R, field, sc_key, cont=None, cont_lvls=None, cont_fmt='%d', barbs=None, stream=None, lows=None, bold=None, cont_fine=False):
     """کاشی نمایشگر: فقط لایهٔ رنگیِ گسسته + خطوط (هم‌مقدار، بردار باد، خط جریان)؛ بدون قاب/عنوان/نوار رنگ (سایت می‌کشد). خروجی WebP بدون اتلاف."""
+    _PX, _MW, _MH = getattr(R, 'px', PXD), getattr(R, 'W', MEW), getattr(R, 'H', MEH)      # r65: هندسهٔ کاشی از منطقه (me/eu)
     sc = styles.SC[sc_key]; cols = [styles.hex2rgb(c) for c in sc['colors']]; n = len(cols)
     k = classify(field, sc['edges'])
     pal = np.array(cols + [(255, 255, 255)], dtype=np.uint8)
@@ -506,14 +515,14 @@ def render_me(R, field, sc_key, cont=None, cont_lvls=None, cont_fmt='%d', barbs=
       with MPL_LOCK:
         import matplotlib; matplotlib.use('Agg')
         import matplotlib.pyplot as plt
-        fig = plt.figure(figsize=(MEW / 100, MEH / 100), dpi=100); ax = fig.add_axes([0, 0, 1, 1]); ax.set_xlim(0, MEW); ax.set_ylim(MEH, 0); ax.axis('off')
+        fig = plt.figure(figsize=(_MW / 100, _MH / 100), dpi=100); ax = fig.add_axes([0, 0, 1, 1]); ax.set_xlim(0, _MW); ax.set_ylim(_MH, 0); ax.axis('off')
         fig.patch.set_alpha(0); ax.patch.set_alpha(0)
-        X1, Y1 = np.arange(MEW) + 0.5, np.arange(MEH) + 0.5
+        X1, Y1 = np.arange(_MW) + 0.5, np.arange(_MH) + 0.5
         if stream is not None:
             U, V = stream; sub = 4
             ax.streamplot(X1[::sub], Y1[::sub], np.nan_to_num(U[::sub, ::sub]), -np.nan_to_num(V[::sub, ::sub]), density=2.6, color=(0.1, 0.1, 0.1, 0.55), linewidth=0.55, arrowsize=0.7, arrowstyle='->')
         if cont is not None:
-            cf = gaussian_filter(np.nan_to_num(cont, nan=np.nanmean(cont)), PXD * 0.30)
+            cf = gaussian_filter(np.nan_to_num(cont, nan=np.nanmean(cont)), _PX * 0.30)
             if cont_fine or (cont_lvls is not None and len(cont_lvls) > 1 and abs(float(cont_lvls[1]) - float(cont_lvls[0])) <= 1.0):                                   # گام ۱ دکامتر (تراز ۵۰۰): خط نازک؛ مضرب‌های ۵ ضخیم‌تر؛ برچسب همهٔ خطوط
                 cs = ax.contour(X1, Y1, cf, levels=cont_lvls, colors='k', linewidths=0.45)
                 ax.clabel(cs, fmt=cont_fmt, fontsize=6.5, inline=True, inline_spacing=2)
@@ -525,19 +534,19 @@ def render_me(R, field, sc_key, cont=None, cont_lvls=None, cont_fmt='%d', barbs=
             if bold is not None:
                 ax.contour(X1, Y1, cf, levels=[bold], colors='k', linewidths=1.8)
         if barbs is not None:
-            bu, bv = barbs; st = int(PXD * 1.6)
+            bu, bv = barbs; st = int(_PX * 1.6)
             ax.barbs(X1[st // 2::st], Y1[st // 2::st], bu[st // 2::st, st // 2::st], -bv[st // 2::st, st // 2::st],
                      length=5.0, linewidth=0.6, color='#202020', barb_increments=dict(half=5, full=10, flag=50))
         if lows is not None:                                   # کمینه‌های فشار (L قرمز + مقدار)
             from scipy.ndimage import minimum_filter
-            m = gaussian_filter(np.nan_to_num(lows, nan=np.nanmean(lows)), PXD * 0.6); mn = minimum_filter(m, size=int(PXD * 8)) == m
+            m = gaussian_filter(np.nan_to_num(lows, nan=np.nanmean(lows)), _PX * 0.6); mn = minimum_filter(m, size=int(_PX * 8)) == m
             ys, xs = np.nonzero(mn); marg = 20
             for y, x in zip(ys, xs):
-                if marg < x < MEW - marg and marg < y < MEH - marg and m[y, x] < 1012:
+                if marg < x < _MW - marg and marg < y < _MH - marg and m[y, x] < 1012:
                     ax.text(x, y - 5, 'L', color='#e0201c', fontsize=15, fontweight='bold', ha='center', va='center')
                     ax.text(x, y + 10, '%d' % round(m[y, x]), color='#e0201c', fontsize=8, fontweight='bold', ha='center', va='center')
         buf = io.BytesIO(); fig.savefig(buf, format='png', dpi=100, transparent=True); plt.close(fig); buf.seek(0)
-        lay = Image.open(buf).convert('RGBA').resize((MEW, MEH))
+        lay = Image.open(buf).convert('RGBA').resize((_MW, _MH))
     b = io.BytesIO(); im.save(b, 'WEBP', lossless=True, quality=100, method=4)
     lb = None
     if lay is not None: bb = io.BytesIO(); lay.save(bb, 'WEBP', lossless=True, quality=100, method=4); lb = bb.getvalue()
@@ -800,9 +809,11 @@ def leads(vts, run): return [int(round((v - run).total_seconds() / 3600)) for v 
 class Engine:
     def __init__(s, a):
         s.a = a; s.state = {}; s.fs = None; s.mm = None
-        s.regions = {k: Region(k) for k in a.regions if k != 'me'}
+        s.regions = {k: Region(k) for k in a.regions if k not in ('me', 'eu')}
         if 'me' in a.regions:
             base = s.regions.get('iran') or Region('iran'); s.regions['me'] = MERegion(base)
+        if 'eu' in a.regions:
+            base = s.regions.get('iran') or Region('iran'); s.regions['eu'] = MERegion(base, 'eu')
         s.up = Uploader(a.host, a.key, a.out)
         if not a.mock:
             import s3fs
@@ -915,10 +926,11 @@ class Engine:
             for pid in mine:
                 P = PARAMS[pid]
                 if P['kind'] == 'sec': continue                     # نقشه‌های ثانویه پایین‌تر (sec_step) ساخته می‌شوند
-                if P.get('me_only') and rk != 'me': continue
+                if P.get('me_only') and rk not in ('me', 'eu'): continue
+                if rk == 'eu' and pid not in EU_PIDS: continue
                 job = s.plan(P, st, vt, lead, dt_h, want_all)
                 if not job: continue
-                fname = f'{rk}/{pid}_{vt:%Y%m%d%H}.' + ('webp' if rk == 'me' else 'png')
+                fname = f'{rk}/{pid}_{vt:%Y%m%d%H}.' + ('webp' if rk in ('me', 'eu') else 'png')
                 if fname in st.have: continue
                 try:
                     out = s.make(P, pid, st, D, R, vt, lead, dt_h)
@@ -928,23 +940,23 @@ class Engine:
                 field, extra = out
                 if s.mm and rk in ('iran', 'fars', 'me'): s.mm.sink(mkey, rk, pid, run, vt, field, extra)
                 if P.get('skip_empty') and not (np.nanmax(field) >= 0.1): continue
-                if rk == 'me':
+                if rk in ('me', 'eu'):
                     mo = P.get('me') or {}; sck = mo.get('sc', P['sc'])
                     if mo.get('k', 1.0) != 1.0: field = field * mo['k']
                     png, lines = render_me(R, field, sck, **{k: v for k, v in extra.items() if k in ('cont', 'cont_lvls', 'cont_fmt', 'barbs', 'stream', 'lows', 'bold', 'cont_fine')})
                     rid_ = f'{run:%Y%m%d%H}'; s.up.put(mkey, rid_, fname, png, dict(r=rk, m=mkey, p=pid, s=lead, v=f'{vt:%Y%m%d%H}'))
-                    if lines: s.up.put(mkey, rid_, f'me/{pid}L_{vt:%Y%m%d%H}.webp', lines, dict(r=rk, m=mkey, p=pid + 'L', s=lead, v=f'{vt:%Y%m%d%H}'))
+                    if lines: s.up.put(mkey, rid_, f'{rk}/{pid}L_{vt:%Y%m%d%H}.webp', lines, dict(r=rk, m=mkey, p=pid + 'L', s=lead, v=f'{vt:%Y%m%d%H}'))
                     if extra.get('hl') is not None:                       # r63: لایهٔ مراکز L/H (شفاف، قابل روشن/خاموش در سایت)
                         try:
-                            hk, hf, hps = extra['hl']; cs_ = hl_centers.find_centers(hf, hk, hps, PXD)
-                            hb = hl_centers.encode_layer(cs_, MEW, MEH)
-                            if hb: s.up.put(mkey, rid_, f'me/{pid}H_{vt:%Y%m%d%H}.webp', hb, dict(r=rk, m=mkey, p=pid + 'H', s=lead, v=f'{vt:%Y%m%d%H}'))
+                            hk, hf, hps = extra['hl']; cs_ = hl_centers.find_centers(hf, hk, hps, R.px if rk == 'eu' else PXD)
+                            hb = hl_centers.encode_layer(cs_, R.W if rk == 'eu' else MEW, R.H if rk == 'eu' else MEH)
+                            if hb: s.up.put(mkey, rid_, f'{rk}/{pid}H_{vt:%Y%m%d%H}.webp', hb, dict(r=rk, m=mkey, p=pid + 'H', s=lead, v=f'{vt:%Y%m%d%H}'))
                         except Exception as e_: log(f'  ! L/H {pid}: {type(e_).__name__}: {e_}')
-                    if wants_value(pid, P):
+                    if wants_value(pid, P) and rk == 'me':
                         try:
                             if ID_PTS: s.up.put(mkey, rid_, f'me/{pid}V_{vt:%Y%m%d%H}.webp', id_points.encode(field, ID_PTS, ID_CRC), dict(r=rk, m=mkey, p=pid + 'V', s=lead, v=f'{vt:%Y%m%d%H}'))
                         except Exception as e_: log(f'  ! کاشی مقدار {pid}: {type(e_).__name__}: {e_}')
-                    if pid in WIND_SCALE and (extra.get('barbs') is not None or extra.get('stream') is not None):      # کاشی باد برای ذرات باد (گره)
+                    if rk == 'me' and pid in WIND_SCALE and (extra.get('barbs') is not None or extra.get('stream') is not None):      # کاشی باد برای ذرات باد (گره)
                         try:
                             uu, vv = extra.get('barbs') if extra.get('barbs') is not None else extra.get('stream')
                             s.up.put(mkey, rid_, f'me/{pid}W_{vt:%Y%m%d%H}.webp', wind_tile.encode(uu, vv, WIND_SCALE[pid]), dict(r=rk, m=mkey, p=pid + 'W', s=lead, v=f'{vt:%Y%m%d%H}'))
@@ -1050,6 +1062,7 @@ class Engine:
         made = 0
         if not hasattr(st, 'sec'): st.sec = {}
         for rk, R in s.regions.items():
+            if rk == 'eu': continue                              # r65: کادر اروپا فقط ترازهای بالا
             acc = st.sec.setdefault(rk, secondary.SecAcc(st.run))
             events = acc.pre(vt)
             H = secondary.hazards(s.sec_fields(st, D, R, vt, dt_h))
@@ -1277,7 +1290,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--host'); ap.add_argument('--key', default=''); ap.add_argument('--out')
     ap.add_argument('--loop', action='store_true'); ap.add_argument('--max-minutes', type=int, default=0)
-    ap.add_argument('--models', default=','.join(MODELS)); ap.add_argument('--regions', default='iran,fars,me')
+    ap.add_argument('--models', default=','.join(MODELS)); ap.add_argument('--regions', default='iran,fars,me,eu')
     ap.add_argument('--force', action='store_true', help='r58: نقشه‌های موجود روی هاست را هم دوباره بساز (یک‌بار برای هر ران). معادل: فایل FORCE_REGEN در ریشهٔ مخزن یا NWP_FORCE=1')
     ap.add_argument('--params', default='', help='فقط این پارامترها (با کاما)'); ap.add_argument('--mm', default='', help='پوشهٔ میدان‌های مدل‌ها؛ مالتی‌مدل MetStat را روشن می‌کند'); ap.add_argument('--mock', action='store_true'); ap.add_argument('--probe', action='store_true'); ap.add_argument('--max-steps', type=int, default=0); ap.add_argument('--horizon', type=int, default=0); ap.add_argument('--hourly-upto', type=int, default=0, help='سازگاری با workflow قدیمی (بدون اثر)')
     a = ap.parse_args(); a.regions = a.regions.split(','); t_end = time.time() + a.max_minutes * 60 if a.max_minutes else None
