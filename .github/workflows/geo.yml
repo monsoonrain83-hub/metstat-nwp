@@ -3,22 +3,26 @@ on:
   workflow_dispatch:
     inputs:
       only:
-        description: "بخش‌ها"
-        default: "places,lakes,rivers,roads,borders,coast"
+        description: "بخش‌هایی که باید دوباره ساخته شوند (بقیه از geo.json فعلی روی هاست حفظ می‌شوند)"
+        default: "borders,coast"
 concurrency:
   group: geo
 jobs:
   geo:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 300
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - run: pip install requests
+      - name: download current geo.json (base)
+        run: curl -sS --fail -L -o base_geo.json "${{ secrets.MX_HOST }}/data/geo.json" || echo "no base"
       - name: build geo.json
-        run: python geo_layers.py --out geo_out --only "${{ github.event.inputs.only || 'places,lakes,rivers,roads,borders,coast' }}"
+        run: |
+          if [ -s base_geo.json ]; then B="--base base_geo.json"; else B=""; fi
+          python geo_layers.py --out geo_out --only "${{ github.event.inputs.only || 'borders,coast' }}" $B
       - uses: actions/upload-artifact@v4
         with:
           name: geo-json
