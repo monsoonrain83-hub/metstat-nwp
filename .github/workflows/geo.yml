@@ -1,0 +1,28 @@
+name: metstat-geo
+on:
+  workflow_dispatch:
+    inputs:
+      only:
+        description: "بخش‌ها"
+        default: "places,lakes,rivers,roads,borders,coast"
+concurrency:
+  group: geo
+jobs:
+  geo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests
+      - name: build geo.json
+        run: python geo_layers.py --out geo_out --only "${{ github.event.inputs.only || 'places,lakes,rivers,roads,borders,coast' }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: geo-json
+          path: geo_out/geo.json
+      - name: upload to host
+        run: |
+          curl -sS --fail-with-body -X POST -F "f=@geo_out/geo.json" "${{ secrets.MX_HOST }}/nwp_upload.php?a=geoput&key=${{ secrets.MX_KEY }}"
