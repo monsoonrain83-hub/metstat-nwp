@@ -175,7 +175,49 @@ def indices(F):
         if z is not None:
             t2 = g('t2'); z0 = iso_height(T, z, zs, 0.0, t2); z10 = iso_height(T, z, zs, -10.0, t2); z30 = iso_height(T, z, zs, -30.0, t2)
             I['fzl'] = z0 - zs; I['hgz'] = np.where(np.isnan(z10) | np.isnan(z30), np.nan, z30 - z10)
+    try: synoptic_indices(F, I, T, Td, RH)
+    except Exception as e: print('  ! شاخص‌های همدیدی r81:', e)
     return I
+
+# ---------------------------------------------------------------- r81: شاخص‌های همدیدی/جبهه‌ای و ابر همرفتی (همان لایه‌های سینرژی روی صفحهٔ اول)
+# θe بولتون (1980)؛ θw از θe با تقریب Davies-Jones (2008) — همان MetPy؛ شاخص ناپایداری پتانسیلی Δθe = θe500 − θe850 (منفی = ناپایدار)؛
+# همگرایی شار رطوبت MFC = −∇·(qV) (Banacos & Schultz 2005)؛ گردش نسبی و واگرایی با تفاضل مرکزی پس از هموارسازی ≈۶۰ km؛
+# فرارفت دما −V·∇T؛ ضخامت ۱۰۰۰–۵۰۰ (z1000 از فشار سطح دریا، ≈۸ m/hPa)؛ ابر همرفتی: Slingo (1987, QJRMS 113): C = −0.006 + 0.125 ln(Pc) با Pc بارش همرفتی (mm/day)، بیشینه ۰٫۸.
+def thw_from_the(te):
+    te = np.asarray(te, np.float32); x = te / 273.15; x2 = x * x; x3 = x2 * x; x4 = x2 * x2
+    a = 7.101574 - 20.68208 * x + 16.11182 * x2 + 2.574631 * x3 - 5.205688 * x4; b = 1 - 3.552497 * x + 3.781782 * x2 - 0.6899655 * x3 - 0.5929340 * x4
+    return np.where(te > 173.15, te - np.exp(a / b), te).astype(np.float32)
+def slingo_ccc(pc_mmday):
+    pc = np.asarray(pc_mmday, np.float32); c = -0.006 + 0.125 * np.log(np.maximum(pc, 1e-6))
+    return np.where(np.isnan(pc), np.nan, np.clip(c, 0, 0.8) * 100).astype(np.float32)
+def synoptic_indices(F, I, T, Td, RH):
+    g = F.get
+    bg = I.get('below850')                                   # تراز ۸۵۰ زیر سطح زمین (فلات ایران): میدان‌های ۸۵۰ آنجا ماسک می‌شوند (استاندارد نقشه‌های همدیدی)
+    m850 = (lambda a: a) if bg is None else (lambda a: None if a is None else np.where(bg, np.nan, a).astype(np.float32))
+    if T.get(850) is not None and Td.get(850) is not None:
+        te850 = theta_e(T[850], Td[850], 850.0); I['te850'] = m850(te850); I['thw850'] = m850(thw_from_the(te850) - 273.15)
+        if T.get(500) is not None and Td.get(500) is not None: I['dte'] = m850(theta_e(T[500], Td[500], 500.0) - te850)
+    if g('z500') is not None and g('msl') is not None: I['thk'] = (g('z500') - (g('msl') - 1000.0) * 8.0) / 10.0
+    if g('w700') is not None: I['w700'] = g('w700')
+    dxm, dym = g('dxm'), g('dym')
+    if dxm is not None and dym is not None:
+        dxkm = float(g('dxkm') or 25.0); sg = max(0.7, 60.0 / max(dxkm, 1.0))
+        ddx = lambda a: np.gradient(a, axis=1) / dxm; ddy = lambda a: np.gradient(a, axis=0) / (-dym)
+        if g('u500') is not None and g('v500') is not None:
+            u, v = _smooth(g('u500'), sg), _smooth(g('v500'), sg); I['vo500'] = ((ddx(v) - ddy(u)) * 1e5).astype(np.float32)
+        if g('u300') is not None and g('v300') is not None:
+            u, v = _smooth(g('u300'), sg), _smooth(g('v300'), sg); I['dv300'] = ((ddx(u) + ddy(v)) * 1e5).astype(np.float32)
+        if g('u850') is not None and g('v850') is not None and T.get(850) is not None:
+            u, v = _smooth(g('u850'), sg), _smooth(g('v850'), sg); t = _smooth(T[850], sg)
+            I['ta850'] = m850((-(u * ddx(t) + v * ddy(t)) * 6 * 3600).astype(np.float32))                     # K در ۶ ساعت
+            if RH.get(850) is not None:
+                q = _smooth(mixr_gkg(T[850], RH[850], 850.0), sg); I['mfc850'] = m850((-(ddx(q * u) + ddy(q * v)) * 86400).astype(np.float32))   # g/kg در روز
+    pc = None; I['ccc_approx'] = False
+    if g('cpr') is not None: pc = np.maximum(np.nan_to_num(g('cpr')), 0) * 24.0
+    elif g('pr') is not None and g('cape') is not None:
+        conv = (np.nan_to_num(g('cape')) > 100) & ((np.nan_to_num(g('li'), nan=0) <= 0) if g('li') is not None else True)
+        pc = np.where(conv, np.maximum(np.nan_to_num(g('pr')), 0), 0) * 24.0; I['ccc_approx'] = True
+    if pc is not None: I['ccc'] = slingo_ccc(pc)
 
 # ---------------------------------------------------------------- CAPE/CIN روی دریا در نیمهٔ گرم سال
 # CAPE (SB/ML) و CIN مدل‌ها از ۱ اردیبهشت تا ۵ آبان (۲۱ آوریل تا ۲۷ اکتبر) روی خلیج فارس/دریای عمان، دریای سرخ و مدیترانه
@@ -208,10 +250,11 @@ def sea_mask(lon, lat, hsurf, dem=None):
 # رمپ سه‌نقطه‌ای (۰ → ۰٫۵ → ۱) و وزن علمی فصلی (فصل گرم ۲۰ فروردین تا ۱۵ آبان) عیناً از سایت.
 CV_RAMP = dict(cape=(100, 800, 1500), cin=(200, 75, 25), li=(2, -1, -4), si=(3, 0, -3), ki=(20, 28, 35), tt=(44, 48, 52), gdi=(5, 25, 45), lapse=(5.5, 6.5, 7.5),
                sweat=(150, 250, 300), t500=(-8, -14, -20), pwat=(10, 18, 30), rh=(40, 60, 80), td2m=(0, 8, 16), cprec=(0.1, 1, 5),
-               soar=(0, 5, 10), boyd=(92, 94, 97), dci=(15, 25, 32))
-CV_GRP = dict(cape='inst', li='inst', si='inst', ki='inst', tt='inst', gdi='inst', lapse='inst', sweat='inst', t500='inst', cin='trig', pwat='moist', rh='moist', td2m='moist', cprec='sig', soar='inst', boyd='inst', dci='inst')
-CV_W = {True: dict(li=1.5, si=1.5, ki=1.3, cape=1.3, gdi=1.2, tt=1.0, lapse=1.0, sweat=0.8, t500=0.8, cin=1.0, pwat=1.0, td2m=1.0, rh=0.8, cprec=1.2, soar=0.7, boyd=0.6, dci=1.0),
-        False: dict(li=1.2, si=1.3, ki=1.2, cape=0.6, gdi=0.8, tt=1.3, lapse=1.2, sweat=0.8, t500=1.4, cin=0.8, pwat=1.0, td2m=0.9, rh=1.1, cprec=1.2, soar=0.8, boyd=0.5, dci=0.9)}
+               soar=(0, 5, 10), boyd=(92, 94, 97), dci=(15, 25, 32),
+               dte=(2, -2, -8), mfc=(0, 4, 12), w700=(0.0, -0.3, -1.0))      # r81: ناپایداری پتانسیلی (K)، همگرایی شار رطوبت ۸۵۰ (g/kg/day)، امگای ۷۰۰ (Pa/s؛ منفی = صعود)
+CV_GRP = dict(cape='inst', li='inst', si='inst', ki='inst', tt='inst', gdi='inst', lapse='inst', sweat='inst', t500='inst', cin='trig', pwat='moist', rh='moist', td2m='moist', cprec='sig', soar='inst', boyd='inst', dci='inst', dte='inst', mfc='trig', w700='trig')
+CV_W = {True: dict(li=1.5, si=1.5, ki=1.3, cape=1.3, gdi=1.2, tt=1.0, lapse=1.0, sweat=0.8, t500=0.8, cin=1.0, pwat=1.0, td2m=1.0, rh=0.8, cprec=1.2, soar=0.7, boyd=0.6, dci=1.0, dte=0.9, mfc=0.8, w700=0.8),
+        False: dict(li=1.2, si=1.3, ki=1.2, cape=0.6, gdi=0.8, tt=1.3, lapse=1.2, sweat=0.8, t500=1.4, cin=0.8, pwat=1.0, td2m=0.9, rh=1.1, cprec=1.2, soar=0.8, boyd=0.5, dci=0.9, dte=0.7, mfc=0.9, w700=1.0)}
 def warm_season(vt):
     """فصل گرم سایت: ۲۰ فروردین (≈۹ آوریل) تا ۱۵ آبان (≈۶ نوامبر)."""
     return vt is None or (4, 9) <= (vt.month, vt.day) <= (11, 6)
@@ -376,7 +419,8 @@ def hazards(F):
         # ---- پتانسیل همرفت: روش گروهی-ضربی سایت (cv_potential) + شواهد ماشه‌کشی
         td2 = td_from_rh(g('t2'), g('rh2')) if (g('t2') is not None and g('rh2') is not None) else None
         V = dict(cape=None if I['cape'] is None else np.maximum(I['cape'], 0), cin=None if I['cin'] is None else np.abs(I['cin']), li=I.get('li'), si=I.get('show'), ki=I.get('k'), tt=I.get('tt'),
-                 gdi=I.get('gdi'), lapse=I.get('lr75'), sweat=I.get('sweat'), t500=g('t500'), pwat=I.get('pw'), rh=g('rh700'), td2m=td2, cprec=pr, soar=I.get('soar'), boyd=I.get('boy'), dci=I.get('dci'))
+                 gdi=I.get('gdi'), lapse=I.get('lr75'), sweat=I.get('sweat'), t500=g('t500'), pwat=I.get('pw'), rh=g('rh700'), td2m=td2, cprec=(g('cpr') if g('cpr') is not None else pr), soar=I.get('soar'), boyd=I.get('boy'), dci=I.get('dci'),
+                 dte=I.get('dte'), mfc=I.get('mfc850'), w700=I.get('w700'))
         sc = cv_potential(V, warm_season(g('vt')), SW) if any(V[k] is not None for k in CV_GRP if CV_GRP[k] == 'inst') else None      # بدون هیچ شاخص ناپایداری، پتانسیل ساخته نمی‌شود
         cvp = None
         if sc is not None:

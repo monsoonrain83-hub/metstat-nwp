@@ -113,8 +113,21 @@ SEC_IDX = {'tt': ('tt', 'tt', '', 'Total Totals Index', 'شاخص Total Totals')
            'lr85': ('lr85', 'lr', 'K/km', 'Lapse rate 850–500 hPa (K/km)', 'لپس‌ریت ۸۵۰–۵۰۰ هکتوپاسکال'), 'sh06': ('s06', 'shr', 'm/s', 'Bulk wind shear ~0–6 km (m/s)', 'برش باد ≈ ۰–۶ کیلومتر (m/s)'),
            'sh85': ('s85', 'shr', 'm/s', 'Bulk wind shear 850–500 hPa (m/s)', 'برش باد ۸۵۰–۵۰۰ هکتوپاسکال (m/s)'), 'swt': ('sweat', 'swt', '', 'SWEAT Index', 'شاخص SWEAT'),
            'fzl': ('fzl', 'fzl', 'm', 'Freezing level height above ground (m)', 'ارتفاع تراز صفر درجه از سطح زمین (m)'), 'hgz': ('hgz', 'hgz', 'm', 'Hail growth zone depth −10…−30°C (m)', 'عمق ناحیهٔ رشد تگرگ (−۱۰ تا −۳۰°C) (m)')}
+# r81: لایه‌های همدیدی/جبهه‌ای سینرژی + ابر همرفتی روی صفحهٔ اول (همان موتور شاخص‌ها؛ با خطوط هم‌ارتفاع/هم‌فشار)
+SEC_IDX.update({'vo500': ('vo500', 'vo', '10⁻⁵ s⁻¹', 'Relative vorticity 500 hPa (1e-5/s) & height', 'تاوایی نسبی ۵۰۰ هکتوپاسکال و ارتفاع ژئوپتانسیل'),
+    'dv300': ('dv300', 'dv', '10⁻⁵ s⁻¹', 'Divergence 300 hPa (1e-5/s)', 'واگرایی ۳۰۰ هکتوپاسکال'),
+    'ta850': ('ta850', 'tadv', 'K/6h', 'Temperature advection 850 hPa (K/6h)', 'فرارفت دمای ۸۵۰ هکتوپاسکال (K در ۶ ساعت)'),
+    'mfc850': ('mfc850', 'mfc', 'g/kg/day', 'Moisture flux convergence 850 hPa (g/kg/day)', 'همگرایی شار رطوبت ۸۵۰ هکتوپاسکال'),
+    'te850': ('te850', 'te', 'K', 'Equivalent potential temperature θe 850 hPa (K)', 'دمای پتانسیل هم‌ارز θe ۸۵۰ هکتوپاسکال'),
+    'thw850': ('thw850', 'thw', '°C', 'Wet-bulb potential temperature θw 850 hPa (°C) — fronts', 'دمای پتانسیل تر θw ۸۵۰ هکتوپاسکال (جبهه‌ها)'),
+    'dte': ('dte', 'dte', 'K', 'Potential instability θe500 − θe850 (K)', 'ناپایداری پتانسیلی θe۵۰۰ − θe۸۵۰'),
+    'thk': ('thk', 'thk', 'dam', '1000–500 hPa thickness (dam) & MSLP', 'ضخامت ۱۰۰۰–۵۰۰ هکتوپاسکال و فشار سطح دریا'),
+    'w700': ('w700', 'omg', 'Pa/s', 'Vertical velocity (omega) 700 hPa (Pa/s)', 'سرعت قائم (امگا) ۷۰۰ هکتوپاسکال'),
+    'ccc': ('ccc', 'ccc', '%', 'Convective cloud cover (Slingo 1987) (%)', 'پوشش ابر همرفتی (روش Slingo)')})
+SEC_CONT = {'vo500': ('z500', 10.0, (480, 600, 6)), 'ta850': ('z850', 10.0, (120, 165, 3)), 'te850': ('z850', 10.0, (120, 165, 3)), 'thw850': ('z850', 10.0, (120, 165, 3)),
+            'mfc850': ('z850', 10.0, (120, 165, 3)), 'thk': ('msl', 1.0, (960, 1052, 4)), 'w700': ('z700', 10.0, (270, 330, 3)), 'dv300': ('z300', 10.0, (840, 980, 12))}
 for _p, (_k, _sck, _u, _en, _fa) in SEC_IDX.items():
-    PARAMS[_p] = dict(kind='inst', sc=_sck, models=I_CV, unit=_u, en=_en, fa=_fa, secidx=_k)
+    PARAMS[_p] = dict(kind='inst', sc=_sck, models=(ALL if _p == 'ccc' else I_CV), unit=_u, en=_en, fa=_fa, secidx=_k)
 # ---- نقشه‌های ثانویه (secondary.py): همرفت، شدت، تگرگ، آذرخش، سیل‌خیزی و هشدارها؛ پنجرهٔ ۶ ساعته / ۲۴ ساعته / تجمعی
 for _h, (_fa, _en, _sck, _mm) in secondary.PRODUCTS.items():
     for _w, _wfa, _wen in secondary.WINS:
@@ -141,11 +154,12 @@ for _a in [x[0] for x in PR_WIN] + [x[0] for x in SN_WIN] + ['rh']:
     PARAMS[_b].pop('alt', None); PARAMS[_a]['alt'] = _b
 # دسته‌بندی استاندارد برای منوهای نمایشگر (شناسه، نام فارسی، ترتیب)
 CATS = [('pr', 'بارش', 1), ('sn', 'برف', 2), ('tp', 'دما', 3), ('hm', 'رطوبت و آب قابل بارش', 4), ('sf', 'فشار و باد سطحی', 5),
-        ('ul', 'ارتفاع ژئوپتانسیل و رطوبت ترازهای بالا', 6), ('uw', 'باد در ترازهای بالا', 7), ('cv', 'همرفت و ناپایداری', 8), ('rd', 'بازتاب و هوای مهم', 9), ('sc', 'نقشه‌های ثانویه (همرفت، تگرگ، آذرخش، سیل، هشدار)', 10)]
+        ('ul', 'ارتفاع ژئوپتانسیل و رطوبت ترازهای بالا', 6), ('uw', 'باد در ترازهای بالا', 7), ('dy', 'دینامیک، جبهه و ابر همرفتی', 7.5), ('cv', 'همرفت و ناپایداری', 8), ('rd', 'بازتاب و هوای مهم', 9), ('sc', 'نقشه‌های ثانویه (همرفت، تگرگ، آذرخش، سیل، هشدار)', 10)]
 _CAT = {'t2m': 'tp', 'tsoil': 'tp', 'tmax': 'tp', 'tmin': 'tp', 'tanom': 'tp', 't2mr': 'tp', 'tmaxr': 'tp', 'tminr': 'tp', 'rh': 'hm', 'rhr': 'hm', 'pw': 'hm', 'gust': 'sf', 'sfc': 'sf', 'w10': 'sf',
         'z850': 'ul', 'z700': 'ul', 'z500': 'ul', 'z500a': 'ul', 'w500': 'uw', 'w300': 'uw', 'w250': 'uw', 'w200': 'uw',
         'tt': 'cv', 'ko': 'cv', 'shw': 'cv', 'lr75': 'cv', 'lr85': 'cv', 'sh06': 'cv', 'sh85': 'cv', 'swt': 'cv', 'fzl': 'cv', 'hgz': 'cv',
-        'ki': 'cv', 'cape': 'cv', 'cin': 'cv', 'si': 'cv', 'gdi': 'cv', 'li': 'cv', 'refl': 'rd', 'sigwx': 'rd'}
+        'ki': 'cv', 'cape': 'cv', 'cin': 'cv', 'si': 'cv', 'gdi': 'cv', 'li': 'cv', 'refl': 'rd', 'sigwx': 'rd',
+        'vo500': 'dy', 'dv300': 'dy', 'ta850': 'dy', 'mfc850': 'dy', 'te850': 'dy', 'thw850': 'dy', 'dte': 'cv', 'thk': 'dy', 'w700': 'dy', 'ccc': 'dy'}
 for _i, (_p, _P) in enumerate(PARAMS.items()):
     _P['cat'] = _CAT.get(_p) or ('sc' if _P.get('kind') == 'sec' else 'sn' if _P.get('var') == 'snow' else 'pr'); _P['ord'] = _i
 
@@ -413,6 +427,9 @@ class MockSource(S3Source):
             elif n.startswith('temperature_') and n.endswith('hPa'):
                 p = int(n.split('_')[-1][:-3]); v = base - (1000 - p) * 0.07 - 3
             elif n == 'precipitation_type': v = np.where(base < 2, 5, 1).astype(float)
+            elif n == 'showers': v = np.maximum(0, 4 * blob - 0.6)
+            elif n.startswith('cloud_cover_'): v = np.clip(10 + 80 * blob, 0, 100)
+            elif n.startswith('vertical_velocity'): v = 0.3 - 1.4 * blob
             else: continue
             out[n] = v.astype(np.float32)
         return out
@@ -735,7 +752,7 @@ class RunState:
         s.tser = {d: {} for d in srcs}          # zamān → (t2, tmax, tmin) برای مدل‌های دمای روزانه
         s.done_i = -1; s.prev_vt = None; s.wait_hi = {}
 
-SEC_SFC = {'wind_speed_10m', 'wind_gusts_10m', 'temperature_2m', 'relative_humidity_2m', 'wind_u_component_10m', 'wind_v_component_10m', 'cloud_cover', 'visibility', 'precipitation_type',
+SEC_SFC = {'showers', 'cloud_cover_low', 'cloud_cover_mid', 'wind_speed_10m', 'wind_gusts_10m', 'temperature_2m', 'relative_humidity_2m', 'wind_u_component_10m', 'wind_v_component_10m', 'cloud_cover', 'visibility', 'precipitation_type',
            'soil_moisture_0_to_7cm', 'soil_moisture_0_to_10cm', 'pressure_msl', 'cape', 'convective_inhibition', 'lifted_index', 'total_column_integrated_water_vapour', 'surface_temperature'}
 SEC_UPPER = {f'{q}_{p}hPa' for q in ('temperature', 'relative_humidity', 'geopotential_height') for p in (925, 850, 700, 500, 300)} | \
             {f'wind_{c}_component_{p}hPa' for c in ('u', 'v') for p in (850, 700, 500, 300)} | {f'wind_{c}_{p}hPa' for c in ('speed', 'direction') for p in (850, 700, 500, 300)} | {'wind_direction_10m'} | (SEC_SFC - {'cloud_cover', 'visibility', 'precipitation_type', 'surface_temperature'})
@@ -752,9 +769,11 @@ def needed_vars(mkey, pids, kind):
             v |= {'relative_humidity_2m', 'total_column_integrated_water_vapour', 'cape', 'pressure_msl', 'wind_gusts_10m', 'wind_u_component_10m', 'wind_v_component_10m',
                   'soil_temperature_0_to_7cm', 'precipitation_type'}
             v |= {'wind_u_component_1000hPa', 'wind_v_component_1000hPa'}
+            v |= {'vertical_velocity_700hPa', 'vertical_velocity_500hPa'}          # r81: امگا (اگر مدل نداشته باشد خوانده نمی‌شود)
             for p in (925, 850, 700, 500, 300, 250, 200):
                 v |= {f'temperature_{p}hPa', f'relative_humidity_{p}hPa', f'geopotential_height_{p}hPa', f'wind_u_component_{p}hPa', f'wind_v_component_{p}hPa'}
         if mkey in ('gfs', 'gfs25'): v |= {'cape', 'lifted_index', 'convective_inhibition', 'relative_humidity_2m', 'pressure_msl', 'wind_u_component_10m', 'wind_v_component_10m'}
+        if mkey in ('gfs', 'gfs25', 'icon', 'arpege'): v |= {'vertical_velocity_700hPa', 'vertical_velocity_500hPa'}
         if mkey in ('icon', 'ukmo', 'arpege', 'gfs25'): v |= SEC_UPPER                  # ترازهای فشاری همان مدل (برای شاخص‌های همرفت)
         v |= SEC_SFC                                           # ورودی هشدارها (اگر مدل نداشته باشد خوانده نمی‌شود)
     return v
@@ -1039,6 +1058,9 @@ class Engine:
         if F['t2'] is not None and 'temperature_2m' in d:                  # دمای ۲ متری با اصلاح ارتفاعی DEM (برای یخبندان/گرما)
             try: F['t2c'] = s.lapse(st, R, lambda: d['temperature_2m'])
             except Exception: pass
+        F['w700'] = G('vertical_velocity_700hPa')                              # r81
+        if 'showers' in d and dt_h > 0: F['cpr'] = R.interp(src, d['showers']) / dt_h      # بارش همرفتی (mm/h)
+        F['lcc'], F['mcc'] = G('cloud_cover_low'), G('cloud_cover_mid')
         pt = G('precipitation_type', 1.0, 0)
         if pt is not None: F['iceprec'] = np.isin(np.round(pt), [3, 8, 12]).astype(np.float32)
         # شاخص‌های موجود در موتور (K، سورینگ، گالوز-داویسون) روی همین شبکه
@@ -1206,9 +1228,16 @@ class Engine:
             return (T, {})
         if P.get('secidx'):
             c = getattr(st, '_sf', None)
-            if c is None or c[0] != (R.key, vt): c = st._sf = ((R.key, vt), secondary.indices(s.sec_fields(st, D, R, vt, dt_h)))
+            if c is None or c[0] != (R.key, vt):
+                F_ = s.sec_fields(st, D, R, vt, dt_h); c = st._sf = ((R.key, vt), secondary.indices(F_), F_)
             v = c[1].get(P['secidx'])
-            return None if v is None else (np.asarray(v, np.float32), {})
+            if v is None: return None
+            meta = {}
+            if pid in SEC_CONT and len(c) > 2:
+                fk, dv, (a, b, st_) = SEC_CONT[pid]; cf = c[2].get(fk)
+                if cf is not None: meta = dict(cont=np.asarray(cf, np.float32) / dv, cont_lvls=np.arange(a, b + st_, st_))
+            if pid == 'ccc' and c[1].get('ccc_approx'): meta['note'] = 'Approximate: model has no convective precipitation; CAPE/LI-masked total precipitation used'
+            return (np.asarray(v, np.float32), meta)
         if pid == 't2m': return (s.lapse(st, R, lambda: d['temperature_2m']), {}) if 'temperature_2m' in d else None
         if pid == 't2mr': return (I(d['temperature_2m']), {}) if 'temperature_2m' in d else None
         if pid == 'w10':

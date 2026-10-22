@@ -63,6 +63,21 @@ SC.update({
     'fzl':  dict(colors=_KI[::-1], edges=[-INF] + _sq(0, 4500) + [INF]),
     'hgz':  dict(colors=_KI, edges=[-INF] + _sq(0, 3600) + [INF]),
 })
+# r81: لایه‌های همدیدی/جبهه‌ای (دوقطبی: آبی منفی، قرمز مثبت؛ ۲۱ ردهٔ گسسته) و ابر همرفتی
+_DIV = _P['wu_tanom']
+def _sym(v): return [-INF] + [-x for x in v[::-1]] + list(v) + [INF]
+SC.update({
+    'vo':   dict(colors=_DIV, edges=_sym([1, 2, 4, 6, 9, 12, 16, 20, 25, 30])),          # 1e-5 s⁻¹
+    'dv':   dict(colors=_DIV, edges=_sym([0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10])),           # 1e-5 s⁻¹
+    'tadv': dict(colors=_DIV, edges=_sym([0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10])),           # K/6h
+    'mfc':  dict(colors=_DIV[::-1], edges=_sym([1, 2, 3, 4, 6, 8, 10, 12, 15, 20])),      # g/kg/day؛ همگرایی مثبت = سبز/آبی
+    'omg':  dict(colors=_DIV[::-1], edges=_sym([0.05, 0.1, 0.2, 0.3, 0.4, 0.6, 0.8, 1.0, 1.5, 2.0])),   # Pa/s؛ منفی (صعود) = آبی
+    'dte':  dict(colors=_DIV[::-1], edges=_sym([1, 2, 3, 4, 5, 6, 8, 10, 12, 15])),       # K؛ منفی = ناپایدار
+    'te':   dict(colors=_KI, edges=[-INF] + _sq(290, 362) + [INF]),
+    'thw':  dict(colors=_KI, edges=[-INF] + _sq(-6, 30) + [INF]),
+    'thk':  dict(colors=_P['wu_temp'][::2][:20] if len(_P['wu_temp'][::2]) >= 20 else _KI, edges=[-INF] + _sq(504, 594) + [INF]),
+    'ccc':  dict(colors=['#ffffff', '#eef2f7', '#d9e2ec', '#bcccdc', '#9fb3c8', '#829ab1', '#627d98', '#486581', '#334e68', '#243b53'], edges=[-INF, 1, 10, 20, 30, 40, 50, 60, 70, 75, INF]),
+})
 for k, v in PRECIP.items(): SC['pr_' + k] = v
 for k, v in SC.items():
     assert len(v['edges']) == len(v['colors']) + 1, (k, len(v['edges']), len(v['colors']))
