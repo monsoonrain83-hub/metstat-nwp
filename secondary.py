@@ -77,6 +77,14 @@ def td_from_rh(tc, rh):
     rh = np.clip(rh, 1, 100); g = np.log(rh / 100) + 17.67 * tc / (tc + 243.5); return 243.5 * g / (17.67 - g)
 def mixr_gkg(tc, rh, p):
     e = es(tc) * np.clip(rh, 0, 100) / 100.0; return 1000.0 * 0.622 * e / np.maximum(p - e, 1.0)
+def wetbulb(tc, rh, p):
+    """دمای تر ترمودینامیکی (°C): حل cp(T−Tw)=Lv(rs(Tw,p)−r) با نصف‌کردن (همان روش 62_synergy.js)."""
+    tc = np.asarray(tc, np.float32); r = mixr_gkg(tc, rh, p) / 1000.0
+    lo = np.minimum(td_from_rh(tc, rh) - 1, tc); hi = tc.copy(); cp, lv = 1005.7, 2.501e6
+    for _ in range(28):
+        m = 0.5 * (lo + hi); e = es(m); rs = 0.622 * e / np.maximum(p - e, 1.0); f = cp * (tc - m) - lv * (rs - r)
+        lo = np.where(f > 0, m, lo); hi = np.where(f > 0, hi, m)
+    return (0.5 * (lo + hi)).astype(np.float32)
 def theta_e(tc, td, p):
     """θe بولتون (K)."""
     T = tc + 273.15; Td = td + 273.15
@@ -194,24 +202,35 @@ def synoptic_indices(F, I, T, Td, RH):
     g = F.get
     bg = I.get('below850')                                   # تراز ۸۵۰ زیر سطح زمین (فلات ایران): میدان‌های ۸۵۰ آنجا ماسک می‌شوند (استاندارد نقشه‌های همدیدی)
     m850 = (lambda a: a) if bg is None else (lambda a: None if a is None else np.where(bg, np.nan, a).astype(np.float32))
-    if T.get(850) is not None and Td.get(850) is not None:
-        te850 = theta_e(T[850], Td[850], 850.0); I['te850'] = m850(te850); I['thw850'] = m850(thw_from_the(te850) - 273.15)
-        if T.get(500) is not None and Td.get(500) is not None: I['dte'] = m850(theta_e(T[500], Td[500], 500.0) - te850)
+    mk = lambda p: (m850 if p == 850 else (lambda a: a))
+    def tdl(p):                                              # نقطهٔ شبنم تراز p (از T و RH همان تراز؛ T/Td دیکشنری فقط ۹۲۵…۵۰۰)
+        t, r = g(f't{p}'), g(f'rh{p}')
+        return None if t is None or r is None else td_from_rh(t, r)
+    for p in (850, 700):                                     # θe، θw، Tw در ۸۵۰ و ۷۰۰ (θw دقیق Davies-Jones 2008؛ Tw تکراری برابر مرورگر)
+        t = T.get(p) if T.get(p) is not None else g(f't{p}'); td = Td.get(p) if Td.get(p) is not None else tdl(p)
+        if t is None or td is None: continue
+        te = theta_e(t, td, float(p)); I[f'te{p}'] = mk(p)(te); I[f'thw{p}'] = mk(p)(thw_from_the(te) - 273.15)
+        I[f'tw{p}'] = mk(p)(wetbulb(t, np.clip(np.nan_to_num(RH.get(p) if RH.get(p) is not None else g(f'rh{p}'), nan=50.0), 1, 100), float(p)))
+        if p == 850 and T.get(500) is not None and Td.get(500) is not None: I['dte'] = m850(theta_e(T[500], Td[500], 500.0) - te)
     if g('z500') is not None and g('msl') is not None: I['thk'] = (g('z500') - (g('msl') - 1000.0) * 8.0) / 10.0
-    if g('w700') is not None: I['w700'] = g('w700')
+    for q in (850, 700, 500, 300):
+        if g(f'w{q}') is not None: I[f'w{q}'] = mk(q)(g(f'w{q}'))
     dxm, dym = g('dxm'), g('dym')
     if dxm is not None and dym is not None:
         dxkm = float(g('dxkm') or 25.0); sg = max(0.7, 60.0 / max(dxkm, 1.0))
         ddx = lambda a: np.gradient(a, axis=1) / dxm; ddy = lambda a: np.gradient(a, axis=0) / (-dym)
-        if g('u500') is not None and g('v500') is not None:
-            u, v = _smooth(g('u500'), sg), _smooth(g('v500'), sg); I['vo500'] = ((ddx(v) - ddy(u)) * 1e5).astype(np.float32)
-        if g('u300') is not None and g('v300') is not None:
-            u, v = _smooth(g('u300'), sg), _smooth(g('v300'), sg); I['dv300'] = ((ddx(u) + ddy(v)) * 1e5).astype(np.float32)
-        if g('u850') is not None and g('v850') is not None and T.get(850) is not None:
-            u, v = _smooth(g('u850'), sg), _smooth(g('v850'), sg); t = _smooth(T[850], sg)
-            I['ta850'] = m850((-(u * ddx(t) + v * ddy(t)) * 6 * 3600).astype(np.float32))                     # K در ۶ ساعت
-            if RH.get(850) is not None:
-                q = _smooth(mixr_gkg(T[850], RH[850], 850.0), sg); I['mfc850'] = m850((-(ddx(q * u) + ddy(q * v)) * 86400).astype(np.float32))   # g/kg در روز
+        for p in (850, 700, 500, 300, 250, 200):             # تاوایی نسبی و واگرایی (×۱۰⁻⁵ s⁻¹) در همهٔ ترازها
+            if g(f'u{p}') is None or g(f'v{p}') is None: continue
+            u, v = _smooth(g(f'u{p}'), sg), _smooth(g(f'v{p}'), sg)
+            I[f'vo{p}'] = mk(p)(((ddx(v) - ddy(u)) * 1e5).astype(np.float32)); I[f'dv{p}'] = mk(p)(((ddx(u) + ddy(v)) * 1e5).astype(np.float32))
+        for p in (850, 700, 500):                            # فرارفت دما K در ۶ ساعت
+            t = T.get(p) if T.get(p) is not None else g(f't{p}')
+            if g(f'u{p}') is None or g(f'v{p}') is None or t is None: continue
+            u, v = _smooth(g(f'u{p}'), sg), _smooth(g(f'v{p}'), sg); t = _smooth(t, sg)
+            I[f'ta{p}'] = mk(p)((-(u * ddx(t) + v * ddy(t)) * 6 * 3600).astype(np.float32))
+        if g('u850') is not None and g('v850') is not None and T.get(850) is not None and RH.get(850) is not None:
+            u, v = _smooth(g('u850'), sg), _smooth(g('v850'), sg)
+            q = _smooth(mixr_gkg(T[850], RH[850], 850.0), sg); I['mfc850'] = m850((-(ddx(q * u) + ddy(q * v)) * 86400).astype(np.float32))   # g/kg در روز
     pc = None; I['ccc_approx'] = False
     if g('cpr') is not None: pc = np.maximum(np.nan_to_num(g('cpr')), 0) * 24.0
     elif g('pr') is not None and g('cape') is not None:
@@ -255,6 +274,28 @@ CV_RAMP = dict(cape=(100, 800, 1500), cin=(200, 75, 25), li=(2, -1, -4), si=(3, 
 CV_GRP = dict(cape='inst', li='inst', si='inst', ki='inst', tt='inst', gdi='inst', lapse='inst', sweat='inst', t500='inst', cin='trig', pwat='moist', rh='moist', td2m='moist', cprec='sig', soar='inst', boyd='inst', dci='inst', dte='inst', mfc='trig', w700='trig')
 CV_W = {True: dict(li=1.5, si=1.5, ki=1.3, cape=1.3, gdi=1.2, tt=1.0, lapse=1.0, sweat=0.8, t500=0.8, cin=1.0, pwat=1.0, td2m=1.0, rh=0.8, cprec=1.2, soar=0.7, boyd=0.6, dci=1.0, dte=0.9, mfc=0.8, w700=0.8),
         False: dict(li=1.2, si=1.3, ki=1.2, cape=0.6, gdi=0.8, tt=1.3, lapse=1.2, sweat=0.8, t500=1.4, cin=0.8, pwat=1.0, td2m=0.9, rh=1.1, cprec=1.2, soar=0.8, boyd=0.5, dci=0.9, dte=0.7, mfc=0.9, w700=1.0)}
+# r83: مشارکت پارامترهای «سینرژی» (θe، Tw، فرارفت، واگرایی/تاوایی، امگا) در پتانسیل همرفت — مرجع: STANDARDS_secondary_fa.md
+CV_RAMP.update(te850=(318, 328, 338), tw850=(8, 13, 18), ta500c=(0, 2, 6))       # θe850 (K)، Tw850 (°C)، سرمایش فرارفتی ۵۰۰ (K/6h)
+CV_GRP.update(te850='inst', ta500c='inst', tw850='moist')
+CV_W[True].update(te850=1.0, ta500c=0.4, tw850=0.6); CV_W[False].update(te850=0.5, ta500c=0.7, tw850=0.4)
+# «بالابری همدیدی» D (۰..۱): میانگین وزنی رمپ‌های سه‌نقطه‌ای (بی‌اثر ۰ ← متوسط ۰٫۵ ← قوی ۱)؛ واحد واگرایی/تاوایی ×۱۰⁻⁵ s⁻¹، فرارفت K/6h، امگا Pa/s (منفی = صعود)
+SYN_LIFT = {   # کلید: (کلید شاخص در I، علامت، رمپ، وزن)
+    'div300': ('dv300', +1, (0, 3, 8), 0.20), 'div200': ('dv200', +1, (0, 4, 10), 0.08), 'div500': ('dv500', +1, (0, 1.5, 4), 0.08),
+    'cnv850': ('dv850', -1, (0, 3, 8), 0.15), 'cnv700': ('dv700', -1, (0, 2, 6), 0.08),
+    'vor500': ('vo500', +1, (0, 5, 15), 0.08), 'vor850': ('vo850', +1, (0, 5, 15), 0.04), 'wadv850': ('ta850', +1, (0, 2, 6), 0.07),
+    'asc500': ('w500', -1, (0, 0.3, 1.0), 0.12), 'asc300': ('w300', -1, (0, 0.3, 0.8), 0.05), 'asc850': ('w850', -1, (0, 0.2, 0.6), 0.05)}
+LIFT_BASE, LIFT_K = 0.90, 0.35          # ضریب Fd = ۰٫۹۰ + ۰٫۳۵·D  (بازه ۰٫۹۰ … ۱٫۲۵؛ D≈۰٫۲۹ خنثی)
+def syn_lift(I):
+    """D: بالابری همدیدی ۰..۱ از شاخص‌های سینرژی (NaN جایی که هیچ‌کدام نیست)."""
+    num = 0; den = 0
+    for k, (ik, sg, r, w) in SYN_LIFT.items():
+        v = I.get(ik)
+        if v is None: continue
+        a = cv_ramp(sg * np.asarray(v, np.float32), r) if sg > 0 else cv_ramp(-np.asarray(v, np.float32), r)
+        m = ~np.isnan(a); num = num + w * np.where(m, a, 0); den = den + w * m
+    return None if isinstance(den, int) else np.where(den > 0, num / np.maximum(den, EPS), np.nan).astype(np.float32)
+def lift_factor(D):
+    return None if D is None else np.where(np.isnan(D), 1.0, LIFT_BASE + LIFT_K * D).astype(np.float32)
 def warm_season(vt):
     """فصل گرم سایت: ۲۰ فروردین (≈۹ آوریل) تا ۱۵ آبان (≈۶ نوامبر)."""
     return vt is None or (4, 9) <= (vt.month, vt.day) <= (11, 6)
@@ -420,11 +461,14 @@ def hazards(F):
         td2 = td_from_rh(g('t2'), g('rh2')) if (g('t2') is not None and g('rh2') is not None) else None
         V = dict(cape=None if I['cape'] is None else np.maximum(I['cape'], 0), cin=None if I['cin'] is None else np.abs(I['cin']), li=I.get('li'), si=I.get('show'), ki=I.get('k'), tt=I.get('tt'),
                  gdi=I.get('gdi'), lapse=I.get('lr75'), sweat=I.get('sweat'), t500=g('t500'), pwat=I.get('pw'), rh=g('rh700'), td2m=td2, cprec=(g('cpr') if g('cpr') is not None else pr), soar=I.get('soar'), boyd=I.get('boy'), dci=I.get('dci'),
-                 dte=I.get('dte'), mfc=I.get('mfc850'), w700=I.get('w700'))
+                 dte=I.get('dte'), mfc=I.get('mfc850'), w700=I.get('w700'),
+                 te850=I.get('te850'), tw850=I.get('tw850'), ta500c=None if I.get('ta500') is None else -I['ta500'])
         sc = cv_potential(V, warm_season(g('vt')), SW) if any(V[k] is not None for k in CV_GRP if CV_GRP[k] == 'inst') else None      # بدون هیچ شاخص ناپایداری، پتانسیل ساخته نمی‌شود
         cvp = None
         if sc is not None:
             if I.get('rhmid') is not None: sc = np.where(I['rhmid'] < 20, sc * 0.6, sc)            # ستون خشک
+            lf = lift_factor(syn_lift(I))
+            if lf is not None: sc = sc * lf                                                          # r83: بالابری همدیدی سینرژی (×۰٫۹۰…۱٫۲۵)
             dm = dyn_factor(dyn_forcing(F))
             if dm is not None: sc = sc * dm
             sc = skewt_filter(sc, I, F, CUTS_NEW); Pcv = np.clip(sc, 0, 1)
@@ -446,7 +490,11 @@ def hazards(F):
     dbi = None if I.get('lr85') is None or I.get('spr700') is None else wavg([(0.5, nz(I['lr85'], 7.0, 9.0)), (0.5, nz(I['spr700'], 10, 25))])
     isc = wavg([(wCB, None if cb is None else nz(cb, 2500, 40000)), (wC15, None if I['cape'] is None else nz(np.maximum(I['cape'], 0), 500, 3000)),
                 (0.15, None if I.get('s06') is None else nz(I['s06'], 10, 20)), (0.10, None if I.get('s85') is None else nz(I['s85'], 5, 18)), (0.10, None if I.get('jet') is None else nz(I['jet'], 25, 50)),
-                (0.15, None if gust is None else nz(gust, 40, 100)), (0.10, dbi)])
+                (0.15, None if gust is None else nz(gust, 40, 100)), (0.10, dbi),
+                (0.08, _fmax(None if I.get('dv300') is None else nz(I['dv300'], 2, 10), None if I.get('dv200') is None else nz(I['dv200'], 3, 12))),   # r83: واگرایی ترازهای بالا (خروجی رودبار)
+                (0.06, None if I.get('vo500') is None else nz(I['vo500'], 3, 15)),                  # تاوایی چرخندی ۵۰۰ (سازمان‌یافتگی)
+                (0.06, None if I.get('te850') is None else nz(I['te850'], 320, 342)),               # θe850: سوخت جریان صعودی
+                (0.06, None if I.get('w500') is None else nz(-I['w500'], 0.2, 1.0))])               # صعود قوی ۵۰۰
     cvi = None
     if isc is not None and cvp is not None:
         cvi = np.where(cvp >= 1, cls(np.clip(isc, 0, 1), [0.15, 0.30, 0.45, 0.60, 0.75]), 0).astype(np.float32); cvi = np.where(np.isnan(isc) | np.isnan(cvp), np.nan, cvi); cvi = capsea(cvi, np.minimum(cvp + 1, 5)); out['cvi'] = cvi
@@ -461,7 +509,12 @@ def hazards(F):
         hs = wavg([(wSH, nz(ship, 0.0, 2.0)),
                    (0.15, None if I.get('hgz') is None else nz(I['hgz'], 1200, 3200)),
                    (0.10, None if I.get('fzl') is None else nz(I['fzl'], 4800, 2800)),
-                   (wC15, nz(np.maximum(I['cape'], 0), 400, 2200)), (0.10, nz(I['lr75'], 6.0, 8.0)), (0.15, nz(I['s06'], 8, 22)), (0.08, nz(g('t500'), -12, -22))])
+                   (wC15, nz(np.maximum(I['cape'], 0), 400, 2200)), (0.10, nz(I['lr75'], 6.0, 8.0)), (0.15, nz(I['s06'], 8, 22)), (0.08, nz(g('t500'), -12, -22)),
+                   (0.07, None if I.get('ta500') is None else nz(-I['ta500'], 0, 5)),                   # r83: سرمایش فرارفتی ۵۰۰ (K/6h) — تندی کاهش دما با ارتفاع
+                   (0.07, None if I.get('dv300') is None else nz(I['dv300'], 2, 10)),                   # واگرایی ۳۰۰
+                   (0.06, None if I.get('vo500') is None else nz(I['vo500'], 2, 12)),                   # تاوایی ۵۰۰
+                   (0.06, None if I.get('w500') is None else nz(-I['w500'], 0.2, 1.0)),                 # صعود ۵۰۰
+                   (0.05, None if I.get('tw700') is None else nz(I['tw700'], 4, -4))])                  # Tw700 پایین‌تر ⇒ ذوب کمتر
         hs = np.where(I['s06'] < 8, hs * 0.6, hs)                                              # برش کم → رگبار تک‌سلولی، تگرگ درشت کم‌احتمال
         hail = np.where(cvp >= 1, cls(np.clip(hs, 0, 1), [0.12, 0.25, 0.40, 0.55, 0.70]), 0) if cvp is not None else cls(np.clip(hs, 0, 1), [0.12, 0.25, 0.40, 0.55, 0.70])
         hail = np.where(np.isnan(hs), np.nan, hail).astype(np.float32)
@@ -474,7 +527,11 @@ def hazards(F):
         if CV_MODE != 'new' and pe is not None and SW is not None: pe = np.where(SW, np.nan, pe).astype(np.float32)
         ls = wavg([(wPE, None if pe is None else nz(np.log10(1 + pe), np.log10(21), np.log10(2001))), (wC, nz(np.maximum(I['cape'], 0), 100, 2500)),
                    (_sw(0.15), None if I.get('li') is None else nz(I['li'], 2.0, -6.0)), (0.15, None if I.get('hgz') is None else nz(I['hgz'], 1000, 3500)),
-                   (0.10, None if I.get('pw') is None else nz(I['pw'], 10, 35)), (0.10, None if I.get('tt') is None else nz(I['tt'], 46, 56))])
+                   (0.10, None if I.get('pw') is None else nz(I['pw'], 10, 35)), (0.10, None if I.get('tt') is None else nz(I['tt'], 46, 56)),
+                   (0.08, None if I.get('w500') is None else nz(-I['w500'], 0.2, 1.0)),                 # r83: صعود ۵۰۰
+                   (0.07, None if I.get('dv300') is None else nz(I['dv300'], 2, 10)),                   # واگرایی ۳۰۰
+                   (0.06, None if I.get('te850') is None else nz(I['te850'], 320, 342)),                # θe850
+                   (0.05, None if I.get('mfc850') is None else nz(I['mfc850'], 0, 12))])                # همگرایی شار رطوبت
         ltg = np.where((I['cape'] >= 100) | ((CV_MODE != 'new') & (False if SW is None else SW)), cls(np.clip(ls, 0, 1), [0.15, 0.30, 0.45, 0.60, 0.75]), 0); ltg = np.where(np.isnan(ls) | np.isnan(I['cape']), np.nan, ltg).astype(np.float32)
         if cvp is not None: ltg = capsea(ltg, np.minimum(cvp + 1, 5))                          # دریا: آذرخش حداکثر یک رده بالاتر از پتانسیل همرفت
         out['ltg'] = ltg
@@ -501,6 +558,13 @@ def hazards(F):
         if g('u850') is not None and g('v850') is not None and g('u500') is not None and g('v500') is not None:
             steer = 0.5 * (np.hypot(g('u850'), g('v850')) + np.hypot(g('u500'), g('v500')))
             eff = eff + 0.15 * (1 - nz(steer, 5, 20))                                                                      # جریان هدایت ضعیف → سامانه کند حرکت می‌کند → مدت بیشتر
+        if I.get('mfc850') is not None: eff = eff + 0.15 * np.nan_to_num(nz(I['mfc850'], 0.0, 12.0), nan=0.0)          # r82: همگرایی شار رطوبت ۸۵۰ (g/kg/day) → تغذیهٔ رطوبتی پایدار
+        if I.get('w700') is not None: eff = eff + 0.10 * np.nan_to_num(nz(-I['w700'], 0.0, 1.0), nan=0.0)             # r82: صعود قوی‌تر (امگای ۷۰۰ منفی، Pa/s) → بارش کاراتر
+        if I.get('dv850') is not None: eff = eff + 0.10 * np.nan_to_num(nz(-I['dv850'], 0.0, 6.0), nan=0.0)      # r83: همگرایی ۸۵۰ (×۱۰⁻⁵ s⁻¹)
+        if I.get('dv300') is not None: eff = eff + 0.08 * np.nan_to_num(nz(I['dv300'], 0.0, 8.0), nan=0.0)       # واگرایی ۳۰۰
+        if I.get('tw850') is not None: eff = eff + 0.10 * np.nan_to_num(nz(I['tw850'], 8.0, 18.0), nan=0.0)      # Tw850 بالا ⇒ ستون گرم و مرطوب، باران کارا
+        if I.get('w500') is not None: eff = eff + 0.05 * np.nan_to_num(nz(-I['w500'], 0.0, 1.0), nan=0.0)
+        if I.get('vo850') is not None: eff = eff + 0.05 * np.nan_to_num(nz(I['vo850'], 0.0, 12.0), nan=0.0)      # تاوایی چرخندی ۸۵۰ (سامانهٔ کم‌فشار)
         # r58: بارش «همرفتی/رگباری» از «یکنواخت و طولانی» با استاندارد جدا می‌شود (نه با رطوبت خاک): CAPE (۱۰۰←۸۰۰←۱۵۰۰ جدول) یا شدت لحظه‌ای ≥ ۴ mm/h (آستانهٔ رگبار شدید)
         # ⇒ سهم همرفتی fconv؛ رطوبت خاک فقط به نسبت (۱−fconv) بر شاخهٔ بارش طولانی اثر می‌گذارد.
         fconv = np.zeros(np.shape(sc_ref), np.float32)
@@ -509,7 +573,8 @@ def hazards(F):
         if I.get('rh700') is not None: fconv = np.where(I['rh700'] > 85, fconv * 0.7, fconv)        # لایهٔ میانی کاملاً اشباع و بدون ناپایداری = بارش لایه‌ای
         wet = (1.0 + 0.25 * (1 - fconv) * np.nan_to_num(nz(g('soil'), 0.10, 0.35), nan=0.4)) if g('soil') is not None else 1.0
         a1 = None if short is None else short * slope_f * eff
-        a2 = None if longd is None else longd * slope_f * wet
+        lng = 1.0 + 0.20 * np.nan_to_num(syn_lift(I), nan=0.0)                                      # r83: بالابری همدیدی پایدار بارش طولانی را تقویت می‌کند (×۱…۱٫۲)
+        a2 = None if longd is None else longd * slope_f * wet * lng
         sc_ = a1 if a2 is None else (a2 if a1 is None else np.fmax(a1, a2))
         fl = cls(np.clip(sc_, 0, 1.2), [0.25, 0.45, 0.65, 0.85]); out['flood'] = fl
     # ---- هشدارها (سطح ۰..۳)
@@ -595,6 +660,7 @@ def hazards(F):
     return out
 
 def mx(a, b): return b if a is None else (a if b is None else np.fmax(a, b))
+def _fmax(a, b): return b if a is None else (a if b is None else np.fmax(a, b))
 
 # ---------------------------------------------------------------- تجمیع پنجره‌ای
 def end6(vt): return (vt + timedelta(hours=(3 - vt.hour) % 6)).replace(minute=0, second=0, microsecond=0)

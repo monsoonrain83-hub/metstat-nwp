@@ -76,21 +76,24 @@ def ec_weekly(mock=False):
         ta = np.stack([np.sin(LON / 7 + k) * 2.5 + (LAT - 30) * 0.05 for k in range(W)]).astype(np.float32); pa = np.stack([np.cos(LAT / 4 - k) * 12 for k in range(W)]).astype(np.float32)
         return t0, lo, la, ta, pa
     vars_ = 'temperature_2m_anomaly,precipitation_anomaly'; got = {}; t_ = None; unit = {}
+    tdead = time.time() + 600                                  # r82: بودجهٔ زمانی کل دریافت EC46؛ بعد از ۱۰ دقیقه رها می‌شود (قبلاً ساعت‌ها در ReadTimeout می‌ماند)
     for model in ('ecmwf_ec46_ensemble_mean', 'ecmwf_ec46', None):
         got.clear(); ok = True; B = 25
         for s in range(0, n, B):
             p = dict(latitude=','.join(f'{x:.2f}' for x in fa[s:s + B]), longitude=','.join(f'{x:.2f}' for x in fl[s:s + B]), weekly=vars_, timezone='GMT')
             if model: p['models'] = model
             j = None
-            for k in range(4):
+            for k in range(2):
+                if time.time() > tdead: break
                 try:
-                    r = requests.get(SAPI, params=p, timeout=240)
+                    r = requests.get(SAPI, params=p, timeout=60)
                     if r.status_code == 200: j = r.json(); break
                     log(f'  EC46 هفتگی HTTP {r.status_code}: {r.text[:160]}')
                     if r.status_code == 400: break
                 except Exception as e: log(f'  {type(e).__name__}')
                 time.sleep(4 * (k + 1))
             if j is None: ok = False; break
+            if time.time() > tdead: ok = False; break
             for i, o in enumerate(j if isinstance(j, list) else [j]):
                 w = o.get('weekly') or {}; unit.update(o.get('weekly_units') or {})
                 if not w.get('time'): ok = False; break
@@ -126,7 +129,7 @@ def ltm(kind):
     import requests
     for u in CLIM_URLS[kind]:
         try:
-            r = requests.get(u, timeout=180)
+            r = requests.get(u, timeout=90)
             if r.status_code != 200: continue
             V, D = nc_read(r.content); name = 'air' if kind == 't' else 'prate'; a = V[name].astype(np.float32)
             if kind == 't' and np.nanmean(a) > 150: a = a - 273.15
@@ -184,7 +187,11 @@ def iri_fetch(path, mock=False):
         return datetime(2026, 10, 1, tzinfo=UTC), [1.0, 2.0, 3.0, 4.0], lo, la, np.stack(out).astype(np.float32)
     import requests
     u = f'{IRI}{path}/X/{CROP[0]}/{CROP[1]}/RANGEEDGES/Y/{CROP[2]}/{CROP[3]}/RANGEEDGES/data.nc'
-    r = requests.get(u, timeout=300, headers={'User-Agent': 'MetStat-iri/1.0'}); r.raise_for_status()
+    r = None
+    for k in range(2):                                         # r82: سرور IRI کند است؛ دو تلاش با timeout=(اتصال ۳۰، خواندن ۱۸۰) و بعد رها
+        try: r = requests.get(u, timeout=(30, 180), headers={'User-Agent': 'MetStat-iri/1.0'}); r.raise_for_status(); break
+        except Exception as e: log(f'  IRI تلاش {k + 1}: {type(e).__name__}'); r = None
+    if r is None: raise RuntimeError('IRI پاسخ نداد')
     V, D = nc_read(r.content); var = 'prob' if 'prob' in V else [k for k in V if len(D[k]) >= 4][0]; dims = list(D[var]); a = V[var].astype(np.float32)
     tdim = [d for d in dims if d not in ('X', 'Y', 'C', 'L')][0]; t = V[tdim]
     # آخرین زمان صدور که داده دارد

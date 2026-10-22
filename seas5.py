@@ -51,6 +51,7 @@ def tidy(path, names):
     num = next((x for x in ('number', 'member', 'ensemble') if x in a.dims), None)
     if lead: a = a.sortby(lead)
     la = next(x for x in ('latitude', 'lat') if x in a.dims); lo = next(x for x in ('longitude', 'lon') if x in a.dims)
+    for extra in [x for x in a.dims if x in ('pressure_level', 'level', 'isobaricInhPa')]: a = a.isel({extra: 0}, drop=True)     # تراز تکی (۵۰۰ hPa) را حذف می‌کنیم
     if num is None: a = a.expand_dims('number'); num = 'number'
     yrs = a[t].dt.year.values if t else np.array([0])
     a = a.assign_coords(**{lo: (a[lo] % 360)}) if True else a
