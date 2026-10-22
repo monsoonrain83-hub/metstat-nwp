@@ -296,7 +296,7 @@ def make_model(up, mkey, run, prods, a):
             C = N.z500_clim_at(G, vt)
             if C is None: continue
             Z = L.regrid(o['z5'][0], o['z5'][1], o['z5'][2])
-            dat, lines = N.render_me(None, (Z - C) / 10, 'z500a', cont=Z / 10, cont_lvls=np.arange(480, 620, 4), bold=580)
+            dat, lines = N.render_me(None, (Z - C) / 10, 'z500a', cont=Z / 10, cont_lvls=np.arange(480, 620, 1), bold=580, cont_fine=True)   # r82: گام ۱ دکامتر مثل nwp_maps
             up.put(mkey, rid, fn, dat, meta('z500a')); made += 1
             if lines: up.put(mkey, rid, f'me/z500aL_{v}.webp', lines, meta('z500aL'))
     up.wait(); up.call('end', js={'model': mkey, 'run': rid}); log(f'✓ {mkey} {rid}: {made} نقشهٔ تازه')
