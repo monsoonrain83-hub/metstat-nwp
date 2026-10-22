@@ -10,7 +10,7 @@ from datetime import date, datetime
 
 # شناسهٔ مدل‌ها در nwp_maps.py: اروپا=ecmwf (۲۸ کیلومتر)، آمریکا=gfs (۱۳ کیلومتر؛ در نبود آن gfs25)،
 # آلمان=icon، کانادا=gem، بریتانیا=ukmo، فرانسه=arpege
-MM_MODELS = ('ecmwf', 'gfs', 'icon', 'gem', 'ukmo', 'arpege')
+MM_MODELS = ('ecmwf', 'gfs', 'icon', 'gem', 'ukmo')      # r84: ARPEGE حذف شد؛ وزن‌ها به تناسب بین بقیه پخش می‌شود
 EXCLUDED = ('navgem', 'access')                     # در ترکیب دخالت نمی‌کنند
 # هر «اسلات» از چند منبع به ترتیب اولویت پر می‌شود: اروپا ← ۹ کیلومتر تا هر گامی که دارد، وگرنه ۲۸ کیلومتر؛ آمریکا ← ۱۳ کیلومتر وگرنه ۲۸
 SLOT_SRC = {'ecmwf': ('ecmwf9', 'ecmwf'), 'gfs': ('gfs', 'gfs25')}
@@ -25,15 +25,15 @@ def pick_sources(available):
     return out
 
 FA = {'ecmwf': 'اروپا (ECMWF)', 'gfs': 'آمریکا (GFS)', 'icon': 'آلمان (ICON)', 'gem': 'کانادا (GEM)',
-      'ukmo': 'بریتانیا (UKMO)', 'arpege': 'فرانسه (ARPEGE)'}
-EN = {'ecmwf': 'ECMWF', 'gfs': 'GFS', 'icon': 'ICON', 'gem': 'GEM', 'ukmo': 'UKMO', 'arpege': 'ARPEGE'}
+      'ukmo': 'بریتانیا (UKMO)'}
+EN = {'ecmwf': 'ECMWF', 'gfs': 'GFS', 'icon': 'ICON', 'gem': 'GEM', 'ukmo': 'UKMO'}
 
 # فصل سرد: ۵ آبان تا ۳۱ اردیبهشت — فصل گرم: ۱ خرداد تا ۴ آبان
 BASE = {
-    ('cold', 'general'):    {'ecmwf': 40, 'gfs': 30, 'icon': 10, 'gem': 10, 'ukmo': 5, 'arpege': 5},
-    ('cold', 'convection'): {'gfs': 45, 'ecmwf': 30, 'icon': 10, 'gem': 10, 'arpege': 5},
+    ('cold', 'general'):    {'ecmwf': 40, 'gfs': 30, 'icon': 10, 'gem': 10, 'ukmo': 5},
+    ('cold', 'convection'): {'gfs': 45, 'ecmwf': 30, 'icon': 10, 'gem': 10},
     ('warm', 'general'):    {'gem': 45, 'gfs': 25, 'ecmwf': 15, 'icon': 10, 'ukmo': 5},
-    ('warm', 'convection'): {'gfs': 45, 'gem': 30, 'icon': 10, 'ecmwf': 10, 'arpege': 5},
+    ('warm', 'convection'): {'gfs': 45, 'gem': 30, 'icon': 10, 'ecmwf': 10},
 }
 
 # گروه پارامتر → دستهٔ وزن. (باد و دما: همهٔ سال با وزن‌های عمومی فصل سرد.)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-MetStat — ساخت خودکار نقشه‌های مدل‌های عددی (ECMWF، GFS، ICON، UKMO، GEM، ARPEGE) برای «تحلیل نقشه‌های آنلاین»
+MetStat — ساخت خودکار نقشه‌های مدل‌های عددی (ECMWF، GFS، ICON، UKMO، GEM) برای «تحلیل نقشه‌های آنلاین»
 
 منبع داده: داده‌های باز مدل‌ها در Open-Meteo روی Amazon S3 (s3://openmeteo/data_spatial، مجوز CC-BY 4.0) با بهترین
 رزولوشن رایگان هر مدل. هر گام زمانی به‌محض انتشار خوانده می‌شود (فقط محدودهٔ ایران)، پارامترهای مشتق (شاخص K، GDI،
@@ -39,7 +39,6 @@ GRIDS = {
     'ukmo_global_deterministic_10km': (2560, 1920, -90, -180, 360 / 2560, 180 / 1920),
     'cmc_gem_gdps_15km': (2400, 1201, -90, -180, 0.15, 0.15),
     'cmc_gem_gdps': (2400, 1201, -90, -180, 0.15, 0.15),
-    'meteofrance_arpege_world025': (1440, 721, -90, -180, 0.25, 0.25),
 }
 BBOX = (-14.0, 70.0, 8.0, 64.0)        # lon0, lon1, lat0, lat1 — r66: بزرگ شد تا کادر «اروپا» (EU_EXT) هم داده داشته باشد (قبلاً ۱۷..۶۸E و ۹..۴۵N بود و اروپا نوار می‌شد)
 ME_EXT = (20.0, 65.0, 12.0, 42.0)      # کادر «خاورمیانه» نمایشگر (همان کادر Tropical Tidbits)
@@ -57,7 +56,6 @@ MODELS = {
     'icon':   dict(name='ICON', label='ICON-EU 7 km + ICON 13 km', dom=['dwd_icon'], hires='dwd_icon_eu', prov='DWD', hz={'00': 180, '12': 180, '06': 120, '18': 120}, res='7 km (اروپا) / 13 km', cyc='00/06/12/18'),
     'ukmo':   dict(name='UKMO', label='UKMO Global 10 km', dom=['ukmo_global_deterministic_10km'], prov='Met Office', hz=168, res='10 km', cyc='00/06/12/18'),
     'gem':    dict(name='GEM', label='GEM GDPS 15 km', dom=['cmc_gem_gdps_15km', 'cmc_gem_gdps'], prov='ECCC', hz=240, res='15 km', cyc='00/12'),
-    'arpege': dict(name='ARPEGE', label='ARPEGE 0.25°', dom=['meteofrance_arpege_world025'], prov='Météo-France', hz=102, res='0.25°', cyc='00/06/12/18'),
 }
 # r83: حذف اختیاری مدل از تولید (فضای هاست): NWP_DROP_MODELS=arpege  (پیش‌فرض: هیچ‌کدام). پوشهٔ قدیمی را روی هاست دستی پاک کنید.
 for _m in [x.strip() for x in os.environ.get('NWP_DROP_MODELS', '').split(',') if x.strip()]: MODELS.pop(_m, None)
@@ -84,7 +82,7 @@ for pid, hh, ev, mx, v in SN_WIN:
                        en=(f'Snowfall (water equivalent), {hh}h (mm)' if hh else 'Total snowfall (water equivalent) (mm)'),
                        fa=(f'بارش برف {hh} ساعته (آب معادل)'.translate(FAD) if hh else 'برف تجمعی (آب معادل)'))
 I_EC = ['ecmwf']; I_ECA = ['ecmwf']; I_ECG = ['ecmwf', 'gfs', 'gfs25']
-I_CV = ['ecmwf', 'gfs', 'gfs25', 'icon', 'ukmo', 'arpege']      # مدل‌هایی که CAPE دارند (نتیجهٔ probe)؛ شاخص‌های ترازی از ترازهای فشاری همان مدل
+I_CV = ['ecmwf', 'gfs', 'gfs25', 'icon', 'ukmo']      # مدل‌هایی که CAPE دارند (نتیجهٔ probe)؛ شاخص‌های ترازی از ترازهای فشاری همان مدل
 PARAMS.update({
     't2m':   dict(kind='inst', sc='temp', models=I_ECA, unit='°C', en='Temperature 2m (°C)', fa='دمای ۲ متری', lapse=True),
     'tsoil': dict(kind='inst', sc='temp', models=I_ECA, unit='°C', en='Soil temperature near surface (°C)', fa='دمای خاک نزدیک سطح'),
@@ -793,9 +791,9 @@ def needed_vars(mkey, pids, kind):
             for p in (925, 850, 700, 500, 300, 250, 200):
                 v |= {f'temperature_{p}hPa', f'relative_humidity_{p}hPa', f'geopotential_height_{p}hPa', f'wind_u_component_{p}hPa', f'wind_v_component_{p}hPa'}
         if mkey in ('gfs', 'gfs25'): v |= {'cape', 'lifted_index', 'convective_inhibition', 'relative_humidity_2m', 'pressure_msl', 'wind_u_component_10m', 'wind_v_component_10m'}
-        if mkey in ('gfs', 'gfs25', 'icon', 'arpege'): v |= {f'vertical_velocity_{q}hPa' for q in (850, 700, 500, 300)}
+        if mkey in ('gfs', 'gfs25', 'icon'): v |= {f'vertical_velocity_{q}hPa' for q in (850, 700, 500, 300)}
         if mkey == 'gfs25': v |= {f'{q}_{p}hPa' for p in (250, 200) for q in ('wind_u_component', 'wind_v_component', 'geopotential_height')}   # r82: تاوایی/واگرایی ۲۵۰ و ۲۰۰
-        if mkey in ('icon', 'ukmo', 'arpege', 'gfs25'): v |= SEC_UPPER                  # ترازهای فشاری همان مدل (برای شاخص‌های همرفت)
+        if mkey in ('icon', 'ukmo', 'gfs25'): v |= SEC_UPPER                  # ترازهای فشاری همان مدل (برای شاخص‌های همرفت)
         v |= SEC_SFC                                           # ورودی هشدارها (اگر مدل نداشته باشد خوانده نمی‌شود)
     return v
 

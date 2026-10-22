@@ -16,7 +16,7 @@ MM_ID = 'mm'
 MM_NAME = 'MetStat MultiModel'
 MM_LABEL = 'MetStat MultiModel'
 MM_FA = 'مالتی مدل MetStat'
-SOURCES = ('ecmwf9', 'ecmwf', 'gfs', 'gfs25', 'icon', 'gem', 'ukmo', 'arpege')   # مدل‌هایی که میدانشان ذخیره می‌شود
+SOURCES = ('ecmwf9', 'ecmwf', 'gfs', 'gfs25', 'icon', 'gem', 'ukmo')   # مدل‌هایی که میدانشان ذخیره می‌شود
 WAIT_MAX = 45 * 60            # اگر پس از ۴۵ دقیقه از اولین میدان، منبعی نیامد، با همان‌هایی که هستند ساخته می‌شود
 MINMAX_FA = {'max': 'بیشینهٔ مدل‌ها', 'min': 'کمینهٔ مدل‌ها'}
 MINMAX_EN = {'max': 'model maximum', 'min': 'model minimum'}
@@ -25,10 +25,10 @@ SC_VOTE = ('sigwx',)           # پارامترهای رده‌ای: رأی وز
 
 def mm_extend_params(PARAMS):
     """پارامترهایی که در nwp_maps فقط برای ECMWF بودند، برای بقیهٔ مدل‌های مالتی‌مدل هم فعال می‌شود (اگر متغیرش در Open-Meteo باشد، میدان ساخته می‌شود؛ وگرنه فقط از ترکیب حذف می‌شود)."""
-    allm = ['ecmwf', 'gfs', 'gfs25', 'icon', 'ukmo', 'arpege', 'gem']
+    allm = ['ecmwf', 'gfs', 'gfs25', 'icon', 'ukmo', 'gem']
     for pid in ('t2m', 'tmax', 'tmin', 'rh', 'pw', 'gust', 'sfc'):
         if pid in PARAMS: PARAMS[pid]['models'] = list(dict.fromkeys(list(PARAMS[pid]['models']) + allm))
-    up = ['ecmwf', 'icon', 'ukmo', 'arpege', 'gfs25']          # مدل‌هایی که ترازهای فشاری‌شان در خواندن اصلی هست
+    up = ['ecmwf', 'icon', 'ukmo', 'gfs25']          # مدل‌هایی که ترازهای فشاری‌شان در خواندن اصلی هست
     for pid in ('z850', 'z700', 'z500', 'w500', 'w300'):
         if pid in PARAMS: PARAMS[pid]['models'] = list(dict.fromkeys(list(PARAMS[pid]['models']) + up))
 
