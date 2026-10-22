@@ -1,0 +1,36 @@
+name: metstat-rrqpe
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/10 * * * *"      # هر ۱۰ دقیقه (گیت‌هاب گاهی چند دقیقه دیرتر اجرا می‌کند)
+concurrency:
+  group: rrqpe
+  cancel-in-progress: true
+jobs:
+  rrqpe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: install
+        run: pip install numpy pillow netCDF4 opencv-python-headless
+      - name: build rrqpe frames
+        run: python rrqpe_ingest.py --out rrqpe_out --frames 12 --steps 6
+      - name: normalize server dir
+        id: dir
+        env:
+          D: ${{ secrets.FTP_DIR }}
+        run: d="${D:-/}"; case "$d" in */) ;; *) d="$d/";; esac; echo "dir=${d}rrqpe/" >> $GITHUB_OUTPUT
+      - name: upload to host (FTPS)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: ./rrqpe_out/
+          server-dir: ${{ steps.dir.outputs.dir }}
+          state-name: .metstat-rrqpe-state.json
