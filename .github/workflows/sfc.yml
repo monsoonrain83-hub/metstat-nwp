@@ -1,0 +1,44 @@
+name: metstat-sfc
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "23 5 1,15 * *"      # روز ۱ و ۱۵ هر ماه میلادی
+concurrency:
+  group: sfc
+jobs:
+  sfc:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: install
+        run: pip install numpy xarray netCDF4 cdsapi requests
+      - name: build sfc_idx.json + era5_iran.json
+        env:
+          CDSAPI_URL: https://cds.climate.copernicus.eu/api
+          CDSAPI_KEY: ${{ secrets.CDSAPI_KEY }}
+        run: python sfc_build.py --out sfc_out
+      - name: check output
+        run: test -s sfc_out/sfc_idx.json && ls -la sfc_out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sfc-json
+          path: sfc_out/*.json
+      - name: normalize server dir
+        id: dir
+        env:
+          D: ${{ secrets.FTP_DIR }}
+        run: d="${D:-/}"; case "$d" in */) ;; *) d="$d/";; esac; echo "dir=${d}online/data/sfc/" >> $GITHUB_OUTPUT
+      - name: upload to host (FTPS)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: ./sfc_out/
+          server-dir: ${{ steps.dir.outputs.dir }}
+          state-name: .metstat-sfc-state.json
