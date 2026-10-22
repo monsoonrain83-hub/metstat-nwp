@@ -26,18 +26,30 @@ def log(*a): print(*a, flush=True)
 def retrieve(c, grp, years, month, workdir):
     var, _, lev, area = REQ[grp]; ds = 'seasonal-monthly-pressure-levels' if lev else 'seasonal-monthly-single-levels'
     r = {'originating_centre': 'ecmwf', 'system': '51', 'variable': [var], 'product_type': ['monthly_mean'], 'year': [str(y) for y in years],
-         'month': [f'{month:02d}'], 'leadtime_month': [str(i) for i in range(1, LEADS + 1)], 'area': area, 'data_format': 'netcdf', 'download_format': 'unarchived'}
+         'month': [f'{month:02d}'], 'leadtime_month': [str(i) for i in range(1, LEADS + 1)], 'area': area, 'data_format': 'netcdf'}      # download_format برای این مجموعه‌دادهٔ فصلی پشتیبانی نمی‌شود (هشدار CDS)
     if lev: r['pressure_level'] = [lev]
     f = os.path.join(workdir, f's5_{grp}_{years[0]}_{month}.nc'); c.retrieve(ds, r, f); return f
+
+def open_any(path):
+    """CDS گاهی بدون توجه به data_format فایل را «as_source» (GRIB) یا zip می‌دهد؛ هر سه را می‌خوانیم."""
+    import xarray as xr, zipfile
+    if zipfile.is_zipfile(path):
+        d = os.path.dirname(path) or '.'
+        with zipfile.ZipFile(path) as z: nm = [n for n in z.namelist() if n.endswith(('.nc', '.grib', '.grb'))][0]; z.extract(nm, d); path = os.path.join(d, nm)
+    with open(path, 'rb') as f: head = f.read(4)
+    if head == b'GRIB':
+        return xr.open_dataset(path, engine='cfgrib', backend_kwargs={'indexpath': ''})
+    return xr.open_dataset(path)
 
 def tidy(path, names):
     """→ DataArray (year, member, lead, lat, lon) ؛ lon به ۰–۳۶۰."""
     import xarray as xr
-    d = xr.open_dataset(path); v = next((n for n in names if n in d), None) or list(d.data_vars)[0]; a = d[v]
+    d = open_any(path); v = next((n for n in names if n in d), None) or list(d.data_vars)[0]; a = d[v]
     dm = {x: None for x in a.dims}
     t = next((x for x in ('forecast_reference_time', 'time', 'start_date') if x in a.dims), None)
     lead = next((x for x in ('forecastMonth', 'step', 'leadtime_month', 'forecast_period') if x in a.dims), None)
     num = next((x for x in ('number', 'member', 'ensemble') if x in a.dims), None)
+    if lead: a = a.sortby(lead)
     la = next(x for x in ('latitude', 'lat') if x in a.dims); lo = next(x for x in ('longitude', 'lon') if x in a.dims)
     if num is None: a = a.expand_dims('number'); num = 'number'
     yrs = a[t].dt.year.values if t else np.array([0])
