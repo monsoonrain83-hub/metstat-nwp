@@ -181,10 +181,19 @@ def era5(today, workdir, mock=False):
             'src': 'ERA5 monthly averaged reanalysis (Copernicus CDS, CC BY 4.0); 0.5°'}
 
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument('--out', default='sfc_out'); ap.add_argument('--mock', action='store_true'); ap.add_argument('--no-era5', action='store_true')
+    ap = argparse.ArgumentParser(); ap.add_argument('--out', default='sfc_out'); ap.add_argument('--mock', action='store_true'); ap.add_argument('--no-era5', action='store_true'); ap.add_argument('--no-seas5', action='store_true')
     a = ap.parse_args(); os.makedirs(a.out, exist_ok=True); today = dt.date.today()
     J = build_indices(today, a.mock)
     if len(J['v']) < 8 and not a.mock: sys.exit('✗ شاخص‌های کافی دریافت نشد')
+    if a.mock or (os.environ.get('CDSAPI_KEY') and not a.no_seas5):
+        try:
+            import seas5
+            V = {k: v for k, v in J['v'].items()}
+            for (yy, mm) in [(today.year, today.month), (today.year - (today.month == 1), (today.month - 2) % 12 + 1)]:
+                try: fc = seas5.build(V, G0, mm, yy, a.out, a.mock)
+                except Exception as e: log(f'  ✗ SEAS5 {yy}-{mm:02d}:', e); continue
+                if fc and fc.get('n', 0) > 0: J['fc'] = fc; log(f'✓ پیش‌بینی SEAS5 از {yy}-{mm:02d}: شاخص‌ها {list(fc["z"])}'); break
+        except Exception as e: log('  ✗ SEAS5:', e)
     json.dump(J, open(os.path.join(a.out, 'sfc_idx.json'), 'w'), separators=(',', ':')); log(f'sfc_idx.json: {len(J["v"])} شاخص')
     if a.no_era5 or (not a.mock and not os.environ.get('CDSAPI_KEY')): log('ERA5 ساخته نشد (کلید CDSAPI_KEY نیست یا --no-era5)'); return
     try:
