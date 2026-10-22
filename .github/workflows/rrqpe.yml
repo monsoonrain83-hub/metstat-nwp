@@ -16,21 +16,6 @@ jobs:
         with:
           python-version: "3.12"
       - name: install
-        run: pip install numpy pillow netCDF4 opencv-python-headless
-      - name: build rrqpe frames
-        run: python rrqpe_ingest.py --out rrqpe_out --frames 12 --steps 6
-      - name: normalize server dir
-        id: dir
-        env:
-          D: ${{ secrets.FTP_DIR }}
-        run: d="${D:-/}"; case "$d" in */) ;; *) d="$d/";; esac; echo "dir=${d}rrqpe/" >> $GITHUB_OUTPUT
-      - name: upload to host (FTPS)
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          local-dir: ./rrqpe_out/
-          server-dir: ${{ steps.dir.outputs.dir }}
-          state-name: .metstat-rrqpe-state.json
+        run: pip install numpy pillow netCDF4 opencv-python-headless requests
+      - name: build rrqpe frames and upload to host
+        run: python rrqpe_ingest.py --out rrqpe_out --frames 12 --steps 6 --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}"

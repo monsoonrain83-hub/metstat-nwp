@@ -8,7 +8,7 @@ concurrency:
 jobs:
   sfc:
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -21,6 +21,8 @@ jobs:
           CDSAPI_URL: https://cds.climate.copernicus.eu/api
           CDSAPI_KEY: ${{ secrets.CDSAPI_KEY }}
         run: python sfc_build.py --out sfc_out
+      - name: keep previous era5 if new one was not built
+        run: test -s sfc_out/era5_iran.json || curl -fsS --max-time 60 -o sfc_out/era5_iran.json https://wtafkik.ir/online/data/sfc/era5_iran.json || rm -f sfc_out/era5_iran.json
       - name: check output
         run: test -s sfc_out/sfc_idx.json && ls -la sfc_out
       - uses: actions/upload-artifact@v4
