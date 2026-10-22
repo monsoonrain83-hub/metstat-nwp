@@ -15,7 +15,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: install
-        run: pip install numpy xarray netCDF4 cdsapi requests
+        run: pip install numpy xarray netCDF4 cdsapi requests cfgrib eccodes
       - name: build sfc_idx.json + era5_iran.json
         env:
           CDSAPI_URL: https://cds.climate.copernicus.eu/api
