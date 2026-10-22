@@ -133,7 +133,7 @@ def nowcast(frames, steps=6):
 
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument('--out', required=True); ap.add_argument('--frames', type=int, default=12)
-    ap.add_argument('--steps', type=int, default=6); a = ap.parse_args(); os.makedirs(a.out, exist_ok=True)
+    ap.add_argument('--steps', type=int, default=6); ap.add_argument('--host'); ap.add_argument('--key', default=''); a = ap.parse_args(); os.makedirs(a.out, exist_ok=True)
     arrs, times = [], []
     with tempfile.TemporaryDirectory() as td:
         for k, t in newest_keys(a.frames):
@@ -158,6 +158,23 @@ def main():
                    source='NOAA Enterprise Rain Rate (RRQPE GLB-5) — satellite-derived rain rate; nowcast: pySTEPS Lucas-Kanade extrapolation'),
               open(os.path.join(a.out, 'manifest.json'), 'w'), ensure_ascii=False, indent=1)
     print('frames', len(fr))
+    if a.host:                                               # آپلود روی هاست با همان nwp_upload.php (کلید MX_KEY)
+        import requests
+        base = f"{a.host.rstrip('/')}/nwp_upload.php"; q = {'key': a.key}
+        have = set()
+        for f in fr:
+            for k in range(3):
+                try:
+                    with open(os.path.join(a.out, f['file']), 'rb') as fh:
+                        r = requests.post(base, params=dict(q, a='rrput'), data={'file': f['file']}, files={'png': (f['file'], fh.read(), 'image/png')}, timeout=60)
+                    if r.status_code == 403: sys.exit('کلید آپلود اشتباه است (MX_KEY)')
+                    if r.json().get('ok'): have.add(f['file']); break
+                except SystemExit: raise
+                except Exception as e: print('upload retry', f['file'], e, file=sys.stderr)
+        fr2 = [f for f in fr if f['file'] in have]
+        man = json.load(open(os.path.join(a.out, 'manifest.json'))); man['frames'] = fr2
+        r = requests.post(base, params=dict(q, a='rrend'), json=man, timeout=60); print('upload', len(fr2), 'of', len(fr), r.status_code, r.text[:100])
+        if not fr2: sys.exit('هیچ فریمی آپلود نشد')
 
 
 if __name__ == '__main__': main()

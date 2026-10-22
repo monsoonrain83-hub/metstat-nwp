@@ -196,11 +196,21 @@ def main():
         except Exception as e: log('  ✗ SEAS5:', e)
     json.dump(J, open(os.path.join(a.out, 'sfc_idx.json'), 'w'), separators=(',', ':')); log(f'sfc_idx.json: {len(J["v"])} شاخص')
     if a.no_era5 or (not a.mock and not os.environ.get('CDSAPI_KEY')): log('ERA5 ساخته نشد (کلید CDSAPI_KEY نیست یا --no-era5)'); return
-    try:
-        E = era5(today, a.out, a.mock)
-        json.dump(E, open(os.path.join(a.out, 'era5_iran.json'), 'w'), separators=(',', ':')); log('era5_iran.json:', os.path.getsize(os.path.join(a.out, 'era5_iran.json')) // 1024, 'KB')
-    except Exception as e: log('✗ ERA5:', e)
+    # r85: صف CDS گاهی ساعت‌ها طول می‌کشد (اجرای قبلی بعد از ۲ ساعت و نیم لغو شد و هیچ‌چیز آپلود نشد).
+    # ERA5 در یک ترد با بودجهٔ زمانی (پیش‌فرض ۳۵ دقیقه، متغیر ERA5_BUDGET_MIN) اجرا می‌شود؛ اگر نرسید رها می‌شود و sfc_idx.json (که آماده است) آپلود می‌شود.
+    import threading
+    box = {}
+    def work():
+        try:
+            E = era5(today, a.out, a.mock)
+            json.dump(E, open(os.path.join(a.out, 'era5_iran.json'), 'w'), separators=(',', ':')); log('era5_iran.json:', os.path.getsize(os.path.join(a.out, 'era5_iran.json')) // 1024, 'KB'); box['ok'] = 1
+        except Exception as e: log('✗ ERA5:', e)
+    th = threading.Thread(target=work, daemon=True); th.start(); th.join(float(os.environ.get('ERA5_BUDGET_MIN', '35')) * 60)
+    if th.is_alive(): log('✗ ERA5: صف CDS در بودجهٔ زمانی تمام نشد؛ این بار فقط شاخص‌ها آپلود می‌شوند (era5_iran.json قبلی روی هاست می‌ماند)')
     for f in os.listdir(a.out):
-        if not f.endswith('.json'): os.remove(os.path.join(a.out, f))
+        if not f.endswith('.json'):
+            try: os.remove(os.path.join(a.out, f))
+            except Exception: pass
+    sys.stdout.flush(); os._exit(0)
 
 if __name__ == '__main__': main()

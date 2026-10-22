@@ -76,9 +76,9 @@ def ec_weekly(mock=False):
         ta = np.stack([np.sin(LON / 7 + k) * 2.5 + (LAT - 30) * 0.05 for k in range(W)]).astype(np.float32); pa = np.stack([np.cos(LAT / 4 - k) * 12 for k in range(W)]).astype(np.float32)
         return t0, lo, la, ta, pa
     vars_ = 'temperature_2m_anomaly,precipitation_anomaly'; got = {}; t_ = None; unit = {}
-    tdead = time.time() + 600                                  # r82: بودجهٔ زمانی کل دریافت EC46؛ بعد از ۱۰ دقیقه رها می‌شود (قبلاً ساعت‌ها در ReadTimeout می‌ماند)
+    tdead = time.time() + 900                                  # r82: بودجهٔ زمانی کل دریافت EC46؛ بعد از ۱۰ دقیقه رها می‌شود (قبلاً ساعت‌ها در ReadTimeout می‌ماند)
     for model in ('ecmwf_ec46_ensemble_mean', 'ecmwf_ec46', None):
-        got.clear(); ok = True; B = 25
+        got.clear(); ok = True; B = 10                           # r85: دسته‌های کوچک‌تر (۲۵ نقطه × اعضا از IP گیت‌هاب ReadTimeout می‌داد)
         for s in range(0, n, B):
             p = dict(latitude=','.join(f'{x:.2f}' for x in fa[s:s + B]), longitude=','.join(f'{x:.2f}' for x in fl[s:s + B]), weekly=vars_, timezone='GMT')
             if model: p['models'] = model
@@ -86,7 +86,7 @@ def ec_weekly(mock=False):
             for k in range(2):
                 if time.time() > tdead: break
                 try:
-                    r = requests.get(SAPI, params=p, timeout=60)
+                    r = requests.get(SAPI, params=p, timeout=(15, 120))
                     if r.status_code == 200: j = r.json(); break
                     log(f'  EC46 هفتگی HTTP {r.status_code}: {r.text[:160]}')
                     if r.status_code == 400: break
