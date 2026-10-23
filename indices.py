@@ -60,7 +60,7 @@ GEFS = {
  'aao': ('aao_gefs', 'AAO — پیش‌بینی روزانهٔ GEFS', 'AAO', 'norm.daily.aao.gefs.z700.120days.csv', 'aao_index', 'Z700'),
 }
 GEFS_GRP = 'پیش‌بینی روزانه (GEFS)'
-GEFS_PERIODS = {'d60': 60, 'd30': 30, 'd120': 120}          # ترتیب آپلود = ترتیب پیش‌فرض در منو
+GEFS_PERIODS = {'d90': 90, 'd30': 30, 'd60': 60, 'd120': 120}          # پیش‌فرض = d90 (۳ ماه اخیر + پیش‌بینی)
 GEFS_PHASE_W = 0.5                                           # آستانهٔ فاز (هم‌خوان با سایت)
 GEFS_STALE_WARN, GEFS_STALE_FAIL = 7, 14                     # روز
 
