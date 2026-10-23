@@ -29,18 +29,16 @@ jobs:
         with:
           name: sfc-json
           path: sfc_out/*.json
-      - name: normalize server dir
-        id: dir
+      - name: upload to host (nwp_upload.php)
         env:
-          D: ${{ secrets.FTP_DIR }}
-        run: d="${D:-/}"; case "$d" in */) ;; *) d="$d/";; esac; echo "dir=${d}online/data/sfc/" >> $GITHUB_OUTPUT
-      - name: upload to host (FTPS)
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          local-dir: ./sfc_out/
-          server-dir: ${{ steps.dir.outputs.dir }}
-          state-name: .metstat-sfc-state.json
+          MX_HOST: ${{ secrets.MX_HOST }}
+          MX_KEY: ${{ secrets.MX_KEY }}
+        run: |
+          host="${MX_HOST%/}"; ok=0; fail=0
+          for f in sfc_out/*.json; do
+            n=$(basename "$f")
+            code=$(curl -sS -m 180 -o /tmp/r.txt -w "%{http_code}" -X POST --data-binary @"$f" "$host/nwp_upload.php?a=sfput&name=$n&key=$MX_KEY")
+            echo "$n -> $code $(head -c 120 /tmp/r.txt)"
+            if [ "$code" = "200" ]; then ok=$((ok+1)); else fail=$((fail+1)); fi
+          done
+          echo "uploaded=$ok failed=$fail"; test $ok -gt 0 && test $fail -eq 0
