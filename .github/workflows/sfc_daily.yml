@@ -1,0 +1,26 @@
+name: metstat-sfc-daily
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "20 0 * * *"      # هر روز ~۰۳:۵۰ به وقت تهران
+concurrency:
+  group: sfc-daily
+jobs:
+  pre:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install playwright && python -m playwright install --with-deps chromium
+      - name: build forecast in headless Chromium and upload
+        env:
+          MX_HOST: ${{ secrets.MX_HOST }}
+          MX_KEY: ${{ secrets.MX_KEY }}
+        run: python sfc_precompute.py --site https://wtafkik.ir --out sfc_pre
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sfc-result
+          path: sfc_pre/*.json
