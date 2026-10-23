@@ -1,8 +1,9 @@
-numpy
-matplotlib
+omfiles[fsspec]
+s3fs
 requests
-xarray
-cfgrib
-eccodes
-ecmwf-opendata
-cdsapi
+numpy
+scipy
+pillow
+matplotlib
+netCDF4
+
