@@ -1,0 +1,33 @@
+name: ecmwf-indices
+on:
+  schedule:
+    - cron: "40 7 * * *"
+  workflow_dispatch: {}
+concurrency:
+  group: ecmwf-indices
+  cancel-in-progress: false
+jobs:
+  ecmwf:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: install
+        run: pip install -r requirements.txt
+      - name: cache climatology
+        uses: actions/cache@v4
+        with:
+          path: ecmwf_idx_clim.npz
+          key: ecmwf-idx-clim-v1
+      - name: build climatology (first run only)
+        env:
+          CDSAPI_URL: https://cds.climate.copernicus.eu/api
+          CDSAPI_KEY: ${{ secrets.CDSAPI_KEY }}
+        run: '[ -f ecmwf_idx_clim.npz ] || python ecmwf_indices.py --build-clim'
+      - name: math self-test
+        run: python test_ecmwf_core.py
+      - name: ecmwf indices
+        run: python ecmwf_indices.py --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}"
