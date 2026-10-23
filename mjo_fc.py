@@ -11,7 +11,11 @@
 import argparse, io, json, math, os, sys, datetime as dt, urllib.request
 import numpy as np
 URL = 'https://psl.noaa.gov/mjo/mjoindex/omi.1x.txt'
-URL_BOM = 'https://www.bom.gov.au/climate/mjo/graphics/rmm.74toRealtime.txt'   # RMM (BoM) — جایگزین وقتی OMI قدیمی است
+ALT = [('CPC RMM', 'https://www.cpc.ncep.noaa.gov/products/precip/CWlink/daily_mjo_index/proj_norm_order.ascii'),
+       ('BoM RMM', 'https://www.bom.gov.au/climate/mjo/graphics/rmm.74toRealtime.txt')]      # جایگزین وقتی OMI قدیمی است (BoM از ۲۰۲۴ به‌روز نمی‌شود)
+PROBE = ['https://psl.noaa.gov/mjo/mjoindex/', 'https://psl.noaa.gov/mjo/mjoindex/omi.1x.txt', 'https://psl.noaa.gov/mjo/mjoindex/omi.1x.orig.txt',
+         'https://www.cpc.ncep.noaa.gov/products/precip/CWlink/daily_mjo_index/', 'https://www.cpc.ncep.noaa.gov/products/precip/CWlink/daily_mjo_index/ensemble_mjo/',
+         'https://www.cpc.ncep.noaa.gov/products/precip/CWlink/daily_mjo_index/rmm.txt']
 UA = {'User-Agent': 'MetStat/1.0 (wtafkik.ir)'}
 LEADS = 30; K = 30; SRC = ['NOAA PSL OMI']
 def log(*a): print(*a, flush=True)
@@ -104,15 +108,25 @@ def main():
         with urllib.request.urlopen(req, timeout=90) as r: D = parse(r.read().decode('utf-8', 'replace'))
         age = (dt.date.today() - max(D)).days if D else 9999
         log(f'OMI: {len(D)} روز، آخرین روز {max(D) if D else "—"} (سن {age} روز)')
-        if age > 10:      # فایل OMI قدیمی است؛ RMM بوم (استرالیا) را امتحان کن
-            try:
-                req = urllib.request.Request(URL_BOM, headers=UA)
-                with urllib.request.urlopen(req, timeout=90) as r: txt = r.read().decode('utf-8', 'replace')
-                B = parse_bom(txt); ab = (dt.date.today() - max(B)).days if B else 9999
-                log(f'BoM RMM: {len(B)} روز، آخرین روز {max(B) if B else "—"} (سن {ab} روز)')
-                if B and ab < age and len(B) >= 3000: D = B; SRC[0] = 'BoM RMM'
-                elif not B: log('  شروع فایل BoM:', txt[:300].replace('\n', ' | '))
-            except Exception as e: log(f'✗ BoM در دسترس نیست: {e}')
+        if age > 10:      # فایل OMI قدیمی است؛ منابع جایگزین را امتحان کن و تازه‌ترین را بردار
+            best = (age, None, None)
+            for name, u in ALT:
+                try:
+                    req = urllib.request.Request(u, headers=UA)
+                    with urllib.request.urlopen(req, timeout=60) as r: txt = r.read().decode('utf-8', 'replace')
+                    B = parse_bom(txt); ab = (dt.date.today() - max(B)).days if B else 9999
+                    log(f'{name}: {len(B)} روز، آخرین روز {max(B) if B else "—"} (سن {ab} روز)')
+                    if not B: log('   شروع فایل:', txt[:300].replace('\n', ' | '))
+                    if B and len(B) >= 3000 and ab < best[0]: best = (ab, B, name)
+                except Exception as e: log(f'✗ {name}: {str(e)[:120]}')
+            if best[1]: D = best[1]; SRC[0] = best[2]; log(f'✓ منبع جایگزین: {best[2]}')
+            else:
+                log('؟ همهٔ منابع قدیمی‌اند. بررسی آدرس‌های دیگر (فقط تشخیصی):')
+                for u in PROBE:
+                    try:
+                        with urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=40) as r: t = r.read(600).decode('utf-8', 'replace')
+                        log('  ✓', u, '|', t[:250].replace('\n', ' | '))
+                    except Exception as e: log('  ✗', u, str(e)[:80])
     if len(D) < 3000: sys.exit(f'✗ دادهٔ OMI ناکافی ({len(D)} روز)')
     ser, last, amp, ph = build(D, now)
     meta = dict(fa='MJO — نمودار فازی و پیش‌بینی آماری (OMI)', en='MJO phase diagram · OMI + statistical analog forecast', grp='MJO', src=SRC[0] + ' + MetStat analog forecast', last=last.isoformat(), upd=now, unit='', kind='mjo', val=round(amp, 2),
