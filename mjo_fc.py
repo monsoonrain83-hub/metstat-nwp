@@ -12,9 +12,9 @@ import argparse, io, json, math, os, sys, datetime as dt, urllib.request
 import numpy as np
 URL = 'https://psl.noaa.gov/mjo/mjoindex/omi.1x.txt'
 # PSL رسماً می‌گوید OMI فقط تا ۲۴ ژوئن ۲۰۲۶ به‌روز شده (ورودی OLR). جایگزین‌های بلادرنگ (فرمت ستون‌ها هنوز با دادهٔ واقعی تأیید نشده؛ لاگ شروع فایل را چاپ می‌کند):
-ALT = [('RMM-r (Stony Brook)', 'https://mjo.somas.stonybrook.edu/MJO/RMM-r/rmm1+2.txt'),
-       ('ROMI (PSL، فقط OLR)', 'https://psl.noaa.gov/mjo/mjoindex/romi.cpcolr.1x.txt'),
-       ('BoM RMM', 'https://www.bom.gov.au/climate/mjo/graphics/rmm.74toRealtime.txt')]      # BoM از ۲۰۲۴ به‌روز نمی‌شود
+ALT = [('RMM-r (Stony Brook)', 'https://mjo.somas.stonybrook.edu/MJO/RMM-r/rmm1+2.txt', 0, False),
+       ('ROMI (PSL، فقط OLR)', 'https://psl.noaa.gov/mjo/mjoindex/romi.cpcolr.1x.txt', 1, True),   # ستون چهارم = ساعت؛ هم‌ترازی علامت/جابه‌جایی محورها با OMI در بازهٔ مشترک
+       ('BoM RMM', 'https://www.bom.gov.au/climate/mjo/graphics/rmm.74toRealtime.txt', 0, False)]      # BoM از ۲۰۲۴ به‌روز نمی‌شود
 PROBE = []
 UA = {'User-Agent': 'MetStat/1.0 (wtafkik.ir)'}
 LEADS = 30; K = 30; SRC = ['NOAA PSL OMI']
@@ -29,17 +29,29 @@ def parse(txt):
         if not (1900 < y < 2100 and 1 <= m <= 12 and 1 <= d <= 31) or max(abs(p1), abs(p2), abs(a)) >= 99: continue
         D[dt.date(y, m, d)] = (p2, -p1)       # (RMM1, RMM2)
     return D
-def parse_bom(txt):
+def parse_bom(txt, skip=0):
     """BoM RMM: ستون‌ها سال ماه روز RMM1 RMM2 فاز دامنه [منبع]؛ مقدار گمشده 1.E36 یا 999."""
     D = {}
     for ln in txt.splitlines():
         t = ln.replace(',', ' ').split()
-        if len(t) < 5: continue
-        try: y, m, d = int(float(t[0])), int(float(t[1])), int(float(t[2])); x, yy = float(t[3]), float(t[4])
+        if len(t) < 5 + skip: continue
+        try: y, m, d = int(float(t[0])), int(float(t[1])), int(float(t[2])); x, yy = float(t[3 + skip]), float(t[4 + skip])
         except ValueError: continue
         if not (1900 < y < 2100 and 1 <= m <= 12 and 1 <= d <= 31) or max(abs(x), abs(yy)) >= 99: continue
         D[dt.date(y, m, d)] = (x, yy)
     return D
+def align_to(B, REF):
+    """ROMI → هم‌قرارداد با OMI (x=RMM1=PC2، y=RMM2=−PC1): از ۸ حالت (جابه‌جایی محور × علامت) آن‌که در روزهای مشترک کمترین خطا را دارد انتخاب می‌شود."""
+    com = sorted(set(B) & set(REF))[-3000:]
+    if len(com) < 500: log('   ⚠ بازهٔ مشترک با OMI کم است؛ هم‌ترازی انجام نشد'); return B
+    b = np.array([B[d] for d in com]); r = np.array([REF[d] for d in com]); best = None
+    for sw in (0, 1):
+        for sx in (1, -1):
+            for sy in (1, -1):
+                bb = b[:, ::-1] if sw else b; t = np.stack([sx * bb[:, 0], sy * bb[:, 1]], 1); e = float(np.sqrt(((t - r) ** 2).mean()))
+                if best is None or e < best[0]: best = (e, sw, sx, sy)
+    e, sw, sx, sy = best; log(f'   هم‌ترازی با OMI (روزهای مشترک {len(com)}): جابه‌جایی={sw} علامت‌ها=({sx},{sy}) خطای RMS={e:.2f}')
+    return {d: ((sx * (v[1] if sw else v[0])), (sy * (v[0] if sw else v[1]))) for d, v in B.items()}
 def fill(D):
     ds = sorted(D); d0, d1 = ds[0], ds[-1]; n = (d1 - d0).days + 1
     T = [d0 + dt.timedelta(days=i) for i in range(n)]; X = np.full(n, np.nan); Y = np.full(n, np.nan)
@@ -110,11 +122,11 @@ def main():
         log(f'OMI: {len(D)} روز، آخرین روز {max(D) if D else "—"} (سن {age} روز)')
         if age > 10:      # فایل OMI قدیمی است؛ منابع جایگزین را امتحان کن و تازه‌ترین را بردار
             best = (age, None, None)
-            for name, u in ALT:
+            for name, u, skip, align in ALT:
                 try:
                     req = urllib.request.Request(u, headers=UA)
                     with urllib.request.urlopen(req, timeout=60) as r: txt = r.read().decode('utf-8', 'replace')
-                    B = parse_bom(txt); ab = (dt.date.today() - max(B)).days if B else 9999
+                    B = parse_bom(txt, skip); B = align_to(B, D) if (align and B) else B; ab = (dt.date.today() - max(B)).days if B else 9999
                     log(f'{name}: {len(B)} روز، آخرین روز {max(B) if B else "—"} (سن {ab} روز)')
                     log('   شروع فایل:', ' | '.join(txt.strip().splitlines()[:3])[:260], '|| پایان:', ' | '.join(txt.strip().splitlines()[-2:])[:200])
                     if B:
