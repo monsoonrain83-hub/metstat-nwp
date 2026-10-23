@@ -11,8 +11,9 @@
 import argparse, io, json, math, os, sys, datetime as dt, urllib.request
 import numpy as np
 URL = 'https://psl.noaa.gov/mjo/mjoindex/omi.1x.txt'
+URL_BOM = 'https://www.bom.gov.au/climate/mjo/graphics/rmm.74toRealtime.txt'   # RMM (BoM) — جایگزین وقتی OMI قدیمی است
 UA = {'User-Agent': 'MetStat/1.0 (wtafkik.ir)'}
-LEADS = 30; K = 30
+LEADS = 30; K = 30; SRC = ['NOAA PSL OMI']
 def log(*a): print(*a, flush=True)
 def parse(txt):
     D = {}
@@ -23,6 +24,17 @@ def parse(txt):
         except ValueError: continue
         if not (1900 < y < 2100 and 1 <= m <= 12 and 1 <= d <= 31) or max(abs(p1), abs(p2), abs(a)) >= 99: continue
         D[dt.date(y, m, d)] = (p2, -p1)       # (RMM1, RMM2)
+    return D
+def parse_bom(txt):
+    """BoM RMM: ستون‌ها سال ماه روز RMM1 RMM2 فاز دامنه [منبع]؛ مقدار گمشده 1.E36 یا 999."""
+    D = {}
+    for ln in txt.splitlines():
+        t = ln.replace(',', ' ').split()
+        if len(t) < 5: continue
+        try: y, m, d = int(float(t[0])), int(float(t[1])), int(float(t[2])); x, yy = float(t[3]), float(t[4])
+        except ValueError: continue
+        if not (1900 < y < 2100 and 1 <= m <= 12 and 1 <= d <= 31) or max(abs(x), abs(yy)) >= 99: continue
+        D[dt.date(y, m, d)] = (x, yy)
     return D
 def fill(D):
     ds = sorted(D); d0, d1 = ds[0], ds[-1]; n = (d1 - d0).days + 1
@@ -78,7 +90,7 @@ def render(ser, days, meta):
     ax.set_xlim(-R, R); ax.set_ylim(-R, R); ax.set_aspect('equal'); ax.set_xlabel('RMM1 (OMI PC2)'); ax.set_ylabel('RMM2 (−OMI PC1)')
     ax.text(-R + .15, -R + .2, 'Indian Ocean ← → Maritime Continent / W. Pacific', fontsize=7.5, color='#888')
     ax.set_title(f'MJO phase diagram · last {days} d (black) + analog forecast {LEADS} d (purple: mean, thin: members)', fontsize=10.5)
-    fig.text(.01, .012, f'MetStat · OMI: NOAA PSL · statistical analog forecast (not a dynamical model) · updated {meta["upd"]}', fontsize=8, color='#666')
+    fig.text(.01, .012, f'MetStat · {SRC[0]} · statistical analog forecast (not a dynamical model) · updated {meta["upd"]}', fontsize=8, color='#666')
     b = io.BytesIO(); fig.savefig(b, format='png'); plt.close(fig); return b.getvalue()
 def mock():
     rng = np.random.default_rng(3); n = 365 * 30; t = np.arange(n); ph = 2 * np.pi * t / 48.0 + np.cumsum(rng.normal(0, .08, n)); a = 1.1 + .9 * np.sin(2 * np.pi * t / 700) + rng.normal(0, .15, n)
@@ -90,9 +102,20 @@ def main():
     else:
         req = urllib.request.Request(URL, headers=UA)
         with urllib.request.urlopen(req, timeout=90) as r: D = parse(r.read().decode('utf-8', 'replace'))
+        age = (dt.date.today() - max(D)).days if D else 9999
+        log(f'OMI: {len(D)} روز، آخرین روز {max(D) if D else "—"} (سن {age} روز)')
+        if age > 10:      # فایل OMI قدیمی است؛ RMM بوم (استرالیا) را امتحان کن
+            try:
+                req = urllib.request.Request(URL_BOM, headers=UA)
+                with urllib.request.urlopen(req, timeout=90) as r: txt = r.read().decode('utf-8', 'replace')
+                B = parse_bom(txt); ab = (dt.date.today() - max(B)).days if B else 9999
+                log(f'BoM RMM: {len(B)} روز، آخرین روز {max(B) if B else "—"} (سن {ab} روز)')
+                if B and ab < age and len(B) >= 3000: D = B; SRC[0] = 'BoM RMM'
+                elif not B: log('  شروع فایل BoM:', txt[:300].replace('\n', ' | '))
+            except Exception as e: log(f'✗ BoM در دسترس نیست: {e}')
     if len(D) < 3000: sys.exit(f'✗ دادهٔ OMI ناکافی ({len(D)} روز)')
     ser, last, amp, ph = build(D, now)
-    meta = dict(fa='MJO — نمودار فازی و پیش‌بینی آماری (OMI)', en='MJO phase diagram · OMI + statistical analog forecast', grp='MJO', src='NOAA PSL OMI + MetStat analog forecast', last=last.isoformat(), upd=now, unit='', kind='mjo', val=round(amp, 2),
+    meta = dict(fa='MJO — نمودار فازی و پیش‌بینی آماری (OMI)', en='MJO phase diagram · OMI + statistical analog forecast', grp='MJO', src=SRC[0] + ' + MetStat analog forecast', last=last.isoformat(), upd=now, unit='', kind='mjo', val=round(amp, 2),
                 note='پیش‌بینی ۳۰ روزهٔ آماری (آنالوگ) است؛ جایگزین پیش‌بینی دینامیکی ECMWF/GEFS نیست', since=f'فاز {ph}')
     b = json.dumps(ser, ensure_ascii=False, separators=(',', ':')).encode()
     if a.out: os.makedirs(a.out, exist_ok=True); open(os.path.join(a.out, 'mjo_fc.json'), 'wb').write(b)
