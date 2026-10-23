@@ -1,0 +1,20 @@
+name: mjo-forecast
+on:
+  schedule:
+    - cron: "20 9 * * *"
+  workflow_dispatch: {}
+concurrency:
+  group: mjo-forecast
+  cancel-in-progress: false
+jobs:
+  mjo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install numpy matplotlib requests
+      - name: MJO phase diagram + analog forecast
+        run: python mjo_fc.py --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}"
