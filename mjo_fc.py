@@ -16,6 +16,8 @@ ALT = [('RMM-r (Stony Brook)', 'https://mjo.somas.stonybrook.edu/MJO/RMM-r/rmm1+
        ('ROMI (PSL، فقط OLR)', 'https://psl.noaa.gov/mjo/mjoindex/romi.cpcolr.1x.txt'),
        ('BoM RMM', 'https://www.bom.gov.au/climate/mjo/graphics/rmm.74toRealtime.txt')]      # BoM از ۲۰۲۴ به‌روز نمی‌شود
 PROBE = []
+UA = {'User-Agent': 'MetStat/1.0 (wtafkik.ir)'}
+LEADS = 30; K = 30; SRC = ['NOAA PSL OMI']
 def log(*a): print(*a, flush=True)
 def parse(txt):
     D = {}
