@@ -11,13 +11,11 @@
 import argparse, io, json, math, os, sys, datetime as dt, urllib.request
 import numpy as np
 URL = 'https://psl.noaa.gov/mjo/mjoindex/omi.1x.txt'
-ALT = [('CPC RMM', 'https://www.cpc.ncep.noaa.gov/products/precip/CWlink/daily_mjo_index/proj_norm_order.ascii'),
-       ('BoM RMM', 'https://www.bom.gov.au/climate/mjo/graphics/rmm.74toRealtime.txt')]      # جایگزین وقتی OMI قدیمی است (BoM از ۲۰۲۴ به‌روز نمی‌شود)
-PROBE = ['https://psl.noaa.gov/mjo/mjoindex/', 'https://psl.noaa.gov/mjo/mjoindex/omi.1x.txt', 'https://psl.noaa.gov/mjo/mjoindex/omi.1x.orig.txt',
-         'https://www.cpc.ncep.noaa.gov/products/precip/CWlink/daily_mjo_index/', 'https://www.cpc.ncep.noaa.gov/products/precip/CWlink/daily_mjo_index/ensemble_mjo/',
-         'https://www.cpc.ncep.noaa.gov/products/precip/CWlink/daily_mjo_index/rmm.txt']
-UA = {'User-Agent': 'MetStat/1.0 (wtafkik.ir)'}
-LEADS = 30; K = 30; SRC = ['NOAA PSL OMI']
+# PSL رسماً می‌گوید OMI فقط تا ۲۴ ژوئن ۲۰۲۶ به‌روز شده (ورودی OLR). جایگزین‌های بلادرنگ (فرمت ستون‌ها هنوز با دادهٔ واقعی تأیید نشده؛ لاگ شروع فایل را چاپ می‌کند):
+ALT = [('RMM-r (Stony Brook)', 'https://mjo.somas.stonybrook.edu/MJO/RMM-r/rmm1+2.txt'),
+       ('ROMI (PSL، فقط OLR)', 'https://psl.noaa.gov/mjo/mjoindex/romi.cpcolr.1x.txt'),
+       ('BoM RMM', 'https://www.bom.gov.au/climate/mjo/graphics/rmm.74toRealtime.txt')]      # BoM از ۲۰۲۴ به‌روز نمی‌شود
+PROBE = []
 def log(*a): print(*a, flush=True)
 def parse(txt):
     D = {}
@@ -116,12 +114,14 @@ def main():
                     with urllib.request.urlopen(req, timeout=60) as r: txt = r.read().decode('utf-8', 'replace')
                     B = parse_bom(txt); ab = (dt.date.today() - max(B)).days if B else 9999
                     log(f'{name}: {len(B)} روز، آخرین روز {max(B) if B else "—"} (سن {ab} روز)')
-                    if not B: log('   شروع فایل:', txt[:300].replace('\n', ' | '))
+                    log('   شروع فایل:', ' | '.join(txt.strip().splitlines()[:3])[:260], '|| پایان:', ' | '.join(txt.strip().splitlines()[-2:])[:200])
+                    if B:
+                        v = np.array(list(B.values())[-2000:]); log(f'   RMS مؤلفه‌ها (باید حدود ۰٫۸–۱٫۵): {np.sqrt((v ** 2).mean(0)).round(2)}')
                     if B and len(B) >= 3000 and ab < best[0]: best = (ab, B, name)
                 except Exception as e: log(f'✗ {name}: {str(e)[:120]}')
             if best[1]: D = best[1]; SRC[0] = best[2]; log(f'✓ منبع جایگزین: {best[2]}')
             else:
-                log('؟ همهٔ منابع قدیمی‌اند. بررسی آدرس‌های دیگر (فقط تشخیصی):')
+                log('؟ همهٔ منابع قدیمی‌اند یا خوانده نشدند')
                 for u in PROBE:
                     try:
                         with urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=40) as r: t = r.read(600).decode('utf-8', 'replace')
