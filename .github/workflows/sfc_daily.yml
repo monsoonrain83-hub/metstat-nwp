@@ -2,7 +2,7 @@ name: metstat-sfc-daily
 on:
   workflow_dispatch: {}
   schedule:
-    - cron: "20 0 * * *"      # هر روز ~۰۳:۵۰ به وقت تهران
+    - cron: "0 6 * * *"      # هر روز ~۰۹:۳۰ به وقت تهران (تمام‌شدن پیش از ظهر)
 concurrency:
   group: sfc-daily
 jobs:
