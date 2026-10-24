@@ -56,11 +56,22 @@ def month_index(times, attrs):
         out.append(k)
     return np.array(out, dtype=int)
 
+def _open_dims(path, n):
+    try:
+        from netCDF4 import Dataset
+        ds = Dataset(path); v = ds.variables[n]; r = type("V", (), {"shape": v.shape})(); ds.close(); return r
+    except ImportError:
+        from scipy.io import netcdf_file
+        ds = netcdf_file(path, mmap=False); r = type("V", (), {"shape": ds.variables[n].shape})(); ds.close(); return r
+
 def extract(path, bbox):
     """bbox = (south, north, west, east) ← (k_months[], lat[], lon[], data[t,lat,lon] mm/month)"""
     names, get, close = _open(path)
     pick = lambda c: next((n for n in c if n in names), None)
     vlat, vlon, vt, vp = pick(["lat", "latitude"]), pick(["lon", "longitude"]), pick(["time"]), pick(["precip", "precipitation", "pre", "pr"])
+    if vp is None:   # نام متغیر بارش ناشناخته: فقط اگر دقیقاً یک متغیر سه‌بعدی غیر از شمارندهٔ ایستگاه باشد برمی‌داریم
+        c3 = [n for n in names if n not in (vlat, vlon, vt) and len(getattr(_open_dims(path, n), "shape", ())) == 3 and not re.search(r"gauge|interp|error|numgauge|count", n, re.I)]
+        if len(c3) == 1: vp = c3[0]
     if not all([vlat, vlon, vt, vp]): raise RuntimeError(f"متغیرهای لازم پیدا نشد؛ موجود: {names}")
     lat, _ = get(vlat); lon, _ = get(vlon); tm, ta = get(vt); P, pa = get(vp)
     log("   متغیرها:", names, "| واحد بارش:", pa.get("units"), "| شکل:", P.shape)
