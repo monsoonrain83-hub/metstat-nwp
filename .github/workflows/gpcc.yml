@@ -1,0 +1,52 @@
+name: gpcc-build
+# بارش شبکه‌ای GPCC V2025 (تفکیک ۰٫۲۵°) ← برش ایران ← هاست. هر ماه ۱۲ام و هر زمان دستی.
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "list = فقط فهرست و حجم فایل‌ها (اول این)؛ build = ساخت و ارسال"
+        default: list
+        type: choice
+        options:
+          - list
+          - build
+      bbox:
+        description: "جنوب,شمال,غرب,شرق (پیش‌فرض ایران با حاشیه)"
+        default: "24,41,43,64"
+      region:
+        description: "نام منطقه (فقط حروف کوچک انگلیسی/عدد)"
+        default: "iran"
+  schedule:
+    - cron: "0 5 12 * *"
+concurrency:
+  group: gpcc-build
+  cancel-in-progress: false
+jobs:
+  gpcc:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install numpy scipy netCDF4 requests
+      - run: python3 test_gpcc_build.py || true   # آزمون ساختگی؛ نتیجه فقط گزارش می‌شود
+      - name: list
+        if: ${{ inputs.mode == 'list' }}
+        run: python3 gpcc_build.py --list
+      - uses: actions/cache@v4
+        if: ${{ inputs.mode != 'list' }}
+        with:
+          path: gpcc_cache
+          key: gpcc-cache-${{ github.run_id }}
+          restore-keys: gpcc-cache-
+      - name: build
+        if: ${{ inputs.mode != 'list' }}
+        run: |
+          df -h . | tail -1
+          python3 gpcc_build.py --region "${{ inputs.region || 'iran' }}" --bbox "${{ inputs.bbox || '24,41,43,64' }}" --out out
+          ls -l out
+      - name: upload
+        if: ${{ inputs.mode != 'list' }}
+        run: python3 gpcc_build.py --region "${{ inputs.region || 'iran' }}" --upload out --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}"
