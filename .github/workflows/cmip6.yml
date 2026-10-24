@@ -1,0 +1,88 @@
+name: cmip6-build
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "probe = فقط بررسی دسترسی مدل‌ها (اول این)؛ build = دانلود و ساخت کامل"
+        default: probe
+        type: choice
+        options:
+          - probe
+          - build
+      models:
+        description: "فهرست مدل‌ها با ویرگول (خالی = پیش‌فرض ۱۲ مدل)"
+        default: ""
+concurrency:
+  group: cmip6-build
+  cancel-in-progress: false
+env:
+  CDSAPI_URL: https://cds.climate.copernicus.eu/api
+  CDSAPI_KEY: ${{ secrets.CDSAPI_KEY }}
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      models: ${{ steps.m.outputs.models }}
+    steps:
+      - id: m
+        run: |
+          D='["access_cm2","canesm5","cnrm_cm6_1","ec_earth3","gfdl_esm4","inm_cm5_0","ipsl_cm6a_lr","miroc6","mpi_esm1_2_lr","mri_esm2_0","noresm2_mm","ukesm1_0_ll"]'
+          IN="${{ inputs.models }}"
+          if [ -z "$IN" ]; then echo "models=$D" >> $GITHUB_OUTPUT; else echo "models=$(python3 -c "import json,sys;print(json.dumps([m.strip() for m in sys.argv[1].split(',') if m.strip()]))" "$IN")" >> $GITHUB_OUTPUT; fi
+  probe:
+    if: ${{ inputs.mode == 'probe' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install cdsapi xarray netCDF4 cftime numpy scipy requests
+      - run: python3 test_cmip6_core.py
+      - name: probe (هر ترکیب یک درخواست یک‌ساله)
+        run: python3 cmip6_build.py --probe ${{ inputs.models && format('--models {0}', inputs.models) || '' }} | tee probe.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cmip6-probe
+          path: probe.txt
+  build:
+    if: ${{ inputs.mode == 'build' }}
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        model: ${{ fromJson(needs.plan.outputs.models) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install cdsapi xarray netCDF4 cftime numpy scipy requests
+      - run: python3 test_cmip6_core.py
+      - run: python3 cmip6_build.py --model ${{ matrix.model }} --part part_${{ matrix.model }}.npz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: part-${{ matrix.model }}
+          path: part_${{ matrix.model }}.npz
+  merge:
+    if: ${{ always() && inputs.mode == 'build' && needs.build.result != 'cancelled' }}
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install numpy scipy requests
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: part-*
+          path: parts
+      - run: python3 cmip6_build.py --merge parts --out cmip6_iran.json
+      - run: python3 cmip6_build.py --upload cmip6_iran.json --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}"
+      - uses: actions/upload-artifact@v4
+        with: { name: cmip6_iran.json, path: cmip6_iran.json }
