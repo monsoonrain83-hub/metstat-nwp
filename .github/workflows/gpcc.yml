@@ -24,7 +24,7 @@ concurrency:
 jobs:
   gpcc:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 345
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -35,7 +35,7 @@ jobs:
       - name: list
         if: ${{ inputs.mode == 'list' }}
         run: python3 gpcc_build.py --list
-      - uses: actions/cache@v4
+      - uses: actions/cache/restore@v4
         if: ${{ inputs.mode != 'list' }}
         with:
           path: gpcc_cache
@@ -47,6 +47,11 @@ jobs:
           df -h . | tail -1
           python3 gpcc_build.py --region "${{ inputs.region || 'iran' }}" --bbox "${{ inputs.bbox || '24,41,43,64' }}" --out out
           ls -l out
+      - uses: actions/cache/save@v4
+        if: ${{ always() && inputs.mode != 'list' }}
+        with:
+          path: gpcc_cache
+          key: gpcc-cache-${{ github.run_id }}
       - name: upload
         if: ${{ inputs.mode != 'list' }}
         run: python3 gpcc_build.py --region "${{ inputs.region || 'iran' }}" --upload out --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}"
