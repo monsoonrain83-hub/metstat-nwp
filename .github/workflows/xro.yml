@@ -1,14 +1,17 @@
 name: xro-forecast
 # پیش‌بینی ماهانهٔ نینو ۳٫۴ و IOD با مدل XRO (Zhao و همکاران، Nature 2024)
-# ⚠ نخستین بار mode=probe را اجرا کنید و لاگ را بخوانید؛ سپس mode=forecast.
+# mode=probe    : آزمون API و مهارت (بدون آپلود)
+# mode=realtime : وضعیت اولیهٔ به‌روز (ERSST + WWV از ORAS5/CDS) ← پیش‌بینی ← آپلود   (بار اول چند ساعت؛ بعد کش)
+# mode=realtime_nowwv : همان بدون WWV (فقط SST؛ ضعیف‌تر)
+# mode=forecast : از آخرین ماهِ فایل آموزشی (کهنه؛ آپلود نمی‌کند مگر allow-stale)
 on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "probe (آزمون API و مهارت) یا forecast (پیش‌بینی و آپلود)"
+        description: "probe | realtime | realtime_nowwv | forecast"
         default: "probe"
         type: choice
-        options: [probe, forecast]
+        options: [probe, realtime, realtime_nowwv, forecast]
   schedule:
     - cron: "30 6 12 * *"
 concurrency:
@@ -17,31 +20,49 @@ concurrency:
 jobs:
   xro:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - name: install
-        run: pip install XRO xarray netcdf4 scipy numpy matplotlib requests
-      - name: plumbing self-test
-        run: python test_xro_plumbing.py
+        run: pip install XRO xarray netcdf4 scipy numpy matplotlib requests "cdsapi>=0.7.2"
+      - name: self-tests
+        run: |
+          python test_xro_plumbing.py
+          python test_xro_realtime.py
+      - name: CDS key
+        run: |
+          printf 'url: https://cds.climate.copernicus.eu/api\nkey: %s\n' "${{ secrets.CDSAPI_KEY }}" > ~/.cdsapirc
+      - name: cache Z20 series
+        uses: actions/cache@v4
+        with:
+          path: wwv_z20.json
+          key: wwv-z20-v1-${{ github.run_id }}
+          restore-keys: wwv-z20-v1-
       - name: get XRO repo data (CC-BY-4.0)
         run: |
           git clone --depth 1 https://github.com/senclimate/XRO xro_repo
-          find xro_repo -name "*.nc" | head -20
           F=$(find xro_repo -iname "*indices*oras5*.nc" | head -1)
           echo "DATA=$F" >> "$GITHUB_ENV"; echo "using: $F"
       - name: probe + skill
         if: ${{ github.event.inputs.mode == 'probe' }}
         run: python xro_forecast.py --data "$DATA" --probe --skill --out xro_out
-      - name: forecast and upload
-        if: ${{ github.event.inputs.mode == 'forecast' || github.event_name == 'schedule' }}
+      - name: realtime forecast and upload
+        if: ${{ github.event.inputs.mode == 'realtime' || github.event_name == 'schedule' }}
+        run: python xro_forecast.py --data "$DATA" --realtime --wwv --out xro_out --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}"
+      - name: realtime (SST only)
+        if: ${{ github.event.inputs.mode == 'realtime_nowwv' }}
+        run: python xro_forecast.py --data "$DATA" --realtime --out xro_out --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}"
+      - name: forecast from training-file end
+        if: ${{ github.event.inputs.mode == 'forecast' }}
         run: python xro_forecast.py --data "$DATA" --out xro_out --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: xro_out
-          path: xro_out
+          path: |
+            xro_out
+            wwv_z20.json
           if-no-files-found: ignore
