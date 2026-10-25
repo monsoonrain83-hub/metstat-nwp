@@ -37,6 +37,12 @@ def parse_ym(text):
     k = sorted(d)
     return [_d.datetime(y, m, 1) for y, m in k], np.array([d[i] for i in k], float)
 
+def detrend_linear(t, v):
+    """حذف روند خطی کل دوره (فقط مقدارهای محدود)؛ پایان‌نقطه روی روند اثر دارد، پس با هر ماه تازه کمی بازمحاسبه می‌شود."""
+    v = np.asarray(v, float); x = np.arange(len(v), dtype=float); ok = np.isfinite(v)
+    c = np.polyfit(x[ok], v[ok], 1)
+    return v - np.polyval(c, x)
+
 IDX = {
  'nino34': ('نینو ۳٫۴ (SST)', 'Niño 3.4 SST anomaly', 'ENSO', '°C', 'bar', [PSL + 'nina34.anom.data'], (0.5, -0.5)),
  'nino3':  ('نینو ۳ (SST)', 'Niño 3 SST anomaly', 'ENSO', '°C', 'bar', [PSL + 'nina3.anom.data'], (0.5, -0.5)),
@@ -56,6 +62,7 @@ IDX = {
  'pdo':    ('PDO نوسان دههای اقیانوس آرام', 'Pacific Decadal Oscillation (PDO)', 'Ocean', '', 'bar', [PSL + 'pdo.data', 'https://www.ncei.noaa.gov/pub/data/cmb/ersst/v5/index/ersst.v5.pdo.dat'], (0.0,)),
  'amo':    ('AMO نوسان چندده‌ای اطلس', 'Atlantic Multidecadal Oscillation (AMO)', 'Ocean', '°C', 'bar', [PSL + 'amon.us.data'], (0.0,)),
  'amo_ncei': ('AMO رسمی NCEI (SST اطلس ۰–۶۰°N، ERSSTv5، بدون حذف روند)', 'AMO — NOAA NCEI (ERSSTv5, North Atlantic 0–60N SSTA, not detrended)', 'Ocean', '°C', 'bar', [NCEI_AMO], (0.0,)),
+ 'amo_ncei_dt': ('AMO NCEI بدون روند (حذف روند خطی)', 'AMO — NCEI ERSSTv5, linearly detrended', 'Ocean', '°C', 'bar', [NCEI_AMO], (0.0,)),
  'amo_csu': ('AMO کلرادو (کلوتسباخ و گری، SST+SLP)', 'AMO — CSU (Klotzbach & Gray 2008; SST+SLP)', 'Ocean', 'σ', 'bar', [], (0.0,)),
  'tna':    ('TNA اطلس شمالی گرمسیری', 'Tropical North Atlantic (TNA)', 'Ocean', '°C', 'bar', [PSL + 'tna.data'], (0.0,)),
  'tsa':    ('TSA اطلس جنوبی گرمسیری', 'Tropical South Atlantic (TSA)', 'Ocean', '°C', 'bar', [PSL + 'tsa.data'], (0.0,)),
@@ -490,7 +497,8 @@ def run_monthly(a, now, requests):
         else:
             for u in urls:
                 try:
-                    t, v = (parse_ym if iid == 'amo_ncei' else parse)(fetch(u)); src = u.split('/')[2]
+                    t, v = (parse_ym if iid.startswith('amo_ncei') else parse)(fetch(u)); src = u.split('/')[2]
+                    if iid == 'amo_ncei_dt' and len(t) > 24: v = detrend_linear(t, v); src += ' · detrended'
                     if len(t) > 24: break
                     log(f'  ؟ {iid}: داده‌ٔ کم از {u}')
                 except Exception as e: log(f'  ✗ {iid}: {u} → {e}'); t = None
