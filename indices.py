@@ -40,6 +40,7 @@ IDX = {
  'dmi':    ('DMI / IOD دوقطبی اقیانوس هند', 'Dipole Mode Index (IOD/DMI)', 'Indian Ocean', '°C', 'bar', ['https://psl.noaa.gov/gcos_wgsp/Timeseries/Data/dmi.had.long.data', PSL + 'dmi.data'], (0.4, -0.4)),
  'pdo':    ('PDO نوسان دههای اقیانوس آرام', 'Pacific Decadal Oscillation (PDO)', 'Ocean', '', 'bar', [PSL + 'pdo.data', 'https://www.ncei.noaa.gov/pub/data/cmb/ersst/v5/index/ersst.v5.pdo.dat'], (0.0,)),
  'amo':    ('AMO نوسان چندده‌ای اطلس', 'Atlantic Multidecadal Oscillation (AMO)', 'Ocean', '°C', 'bar', [PSL + 'amon.us.data'], (0.0,)),
+ 'amo_csu': ('AMO کلرادو (کلوتسباخ و گری، SST+SLP)', 'AMO — CSU (Klotzbach & Gray 2008; SST+SLP)', 'Ocean', 'σ', 'bar', [], (0.0,)),
  'tna':    ('TNA اطلس شمالی گرمسیری', 'Tropical North Atlantic (TNA)', 'Ocean', '°C', 'bar', [PSL + 'tna.data'], (0.0,)),
  'tsa':    ('TSA اطلس جنوبی گرمسیری', 'Tropical South Atlantic (TSA)', 'Ocean', '°C', 'bar', [PSL + 'tsa.data'], (0.0,)),
 }
@@ -416,6 +417,22 @@ def post(a, iid, per, png, meta, requests, ser=None):
     return False
 
 
+CSU_AMO = 'https://tropical.colostate.edu/archive_amo.html'
+def amo_csu(text=None):
+    """AMO کلرادو (Klotzbach & Gray 2008): ۶۰٪ SST اطلس شمالی دور (۵۰–۶۰N، ۵۰–۱۰W) + ۴۰٪ SLP اطلس شمالی؛ استانداردشده (مبنا ۱۹۸۱–۲۰۱۰). جدول HTML صفحه (ردیف=سال، ستون=ماه)."""
+    import re
+    if text is None: text = fetch(CSU_AMO)
+    t, v = [], []
+    for row in re.findall(r'<tr[^>]*>(.*?)</tr>', text, re.S | re.I):
+        cells = [re.sub(r'<[^>]+>|&nbsp;', '', c).strip() for c in re.findall(r'<t[dh][^>]*>(.*?)</t[dh]>', row, re.S | re.I)]
+        if not cells or not re.fullmatch(r'(19|20)\d\d', cells[0]): continue
+        for m, c in enumerate(cells[1:13], 1):
+            try: x = float(c)
+            except ValueError: continue
+            if abs(x) < 10: t.append(dt.date(int(cells[0]), m, 1)); v.append(x)
+    if len(t) < 24: raise ValueError('جدول AMO کلرادو پیدا نشد')
+    o = np.argsort(t); return [t[k] for k in o], np.array(v)[o]
+
 ERSST_URL = 'https://downloads.psl.noaa.gov/Datasets/noaa.ersst.v5/sst.mnmean.nc'
 def amo_from_sst(sst, lat, lon, t, c0=1991, c1=2020):
     """AMO به روش Trenberth & Shea (2006): ناهنجاری SST اطلس شمالی (۰–۶۰N، ۸۰W–۰) منهای ناهنجاری میانگین جهانی ۶۰S–۶۰N؛ بدون حذف روند.
@@ -461,6 +478,9 @@ def run_monthly(a, now, requests):
                     if len(t) > 24: break
                     log(f'  ؟ {iid}: داده‌ٔ کم از {u}')
                 except Exception as e: log(f'  ✗ {iid}: {u} → {e}'); t = None
+        if iid == 'amo_csu' and not a.mock:
+            try: t, v = amo_csu(); src = 'tropical.colostate.edu (Klotzbach & Gray 2008)'
+            except Exception as e: log(f'  ✗ AMO کلرادو: {e}'); t = None
         if iid == 'amo' and not a.mock:         # r102k: منبع PSL از ژانویهٔ ۲۰۲۳ به‌روز نمی‌شود؛ AMO را خودمان از ERSSTv5 می‌سازیم
             try:
                 t2, v2 = amo_ersst()

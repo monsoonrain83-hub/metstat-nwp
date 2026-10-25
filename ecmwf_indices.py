@@ -92,9 +92,16 @@ def fetch_ens(workdir):
     from ecmwf.opendata import Client
     import xarray as xr
     cl = Client(source='ecmwf'); res = {}; init = None
+    # r102k: اجرای ۰۶/۱۸ UTC فقط تا ۱۴۴ ساعت دارد و با گام ۳۶۰ خطا می‌داد؛ فقط ۰۰ و ۱۲ را بررسی و تازه‌ترین را برمی‌داریم
+    runs = []
+    for hh in (0, 12):
+        try: runs.append(cl.latest(type='cf', stream='enfo', param='gh', levtype='pl', levelist=[500, 1000], step=STEPS, time=hh))
+        except Exception as e: log(f'  ؟ اجرای {hh:02d}Z در دسترس نیست: {str(e)[:80]}')
+    if not runs: raise RuntimeError('هیچ اجرای ۰۰/۱۲Z با گام کامل پیدا نشد')
+    run = max(runs); log(f'  اجرای ECMWF: {run:%Y-%m-%d %H}Z')
     for typ in ('cf', 'pf'):
         f = os.path.join(workdir, f'ens_{typ}.grib2')
-        cl.retrieve(type=typ, stream='enfo', param='gh', levtype='pl', levelist=[500, 1000], step=STEPS, target=f)
+        cl.retrieve(type=typ, stream='enfo', param='gh', levtype='pl', levelist=[500, 1000], step=STEPS, date=run.strftime('%Y%m%d'), time=run.hour, target=f)
         for lev in (500, 1000):
             ds = xr.open_dataset(f, engine='cfgrib', backend_kwargs={'filter_by_keys': {'typeOfLevel': 'isobaricInhPa', 'level': lev}, 'indexpath': ''})
             a = ds['gh'].values; init = init or dt.date.fromisoformat(str(ds['time'].values)[:10])

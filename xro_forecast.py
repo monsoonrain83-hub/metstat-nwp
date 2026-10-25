@@ -93,14 +93,18 @@ def skill_test(ds, a):
 
 def month_days(y, m): return (dt.date(y + (m == 12), m % 12 + 1, 1) - dt.date(y, m, 1)).days
 
-def build_ser(ds, var, mem, thr, a, init_date):
+def build_ser(ds, var, mem, thr, a, init_date, obs=None):
     """ ساخت JSON نمودار (kind=plume): obs ماهانه (به شکل روز ۱۵ هر ماه) + گروه پیش‌بینی با پیشروی به روز نسبت به init """
-    o = ds[var].dropna("time").isel(time=slice(-a.hist, None)); ot = [str(t)[:7] + "-15" for t in o.time.values]
+    if obs is not None:
+        mm, vv = obs; ok = [i for i, x in enumerate(vv) if np.isfinite(x) and mm[i] <= init_date.strftime("%Y-%m")][-a.hist:]
+        ot = [mm[i] + "-15" for i in ok]; ov = [float(vv[i]) for i in ok]
+    else:
+        o = ds[var].dropna("time").isel(time=slice(-a.hist, None)); ot = [str(t)[:7] + "-15" for t in o.time.values]; ov = [float(x) for x in o.values]
     n = mem.shape[1]; lead = []; labs = []
     y, m = init_date.year, init_date.month
     for k in range(n):
         yy, mm = y + (m - 1 + k) // 12, (m - 1 + k) % 12 + 1; mid = dt.date(yy, mm, 15); lead.append((mid - init_date).days); labs.append(f"{yy}-{mm:02d}")
-    ser = {"kind": "plume", "obs": {"t": ot, "v": [round(float(v), 3) for v in o.values]},
+    ser = {"kind": "plume", "obs": {"t": ot, "v": [round(float(v), 3) for v in ov]},
            "fc": {"init": init_date.isoformat(), "lead": lead, "mem": [[round(float(x), 3) for x in r] for r in mem[:a.show]], "mean": [round(float(x), 3) for x in mem.mean(0)]},
            "cite": CITE}
     summ = [{"l": labs[k], "v": float(mem[:, k].mean()), "lo": float(np.quantile(mem[:, k], .1)), "hi": float(np.quantile(mem[:, k], .9)),
@@ -137,15 +141,25 @@ def main():
     ap.add_argument("--probe", action="store_true"); ap.add_argument("--skill", action="store_true")
     ap.add_argument("--train0", default="1979-01"); ap.add_argument("--train1", default=None); ap.add_argument("--vars", default="Nino34,WWV,NPMM,SPMM,IOD,SIOD,TNA,ATL3,SASD")
     ap.add_argument("--ac", type=int, default=2); ap.add_argument("--months", type=int, default=21); ap.add_argument("--members", type=int, default=100); ap.add_argument("--show", type=int, default=40)
-    ap.add_argument("--hist", type=int, default=36); ap.add_argument("--max-age", type=int, default=3, help="حداکثر عمر وضعیت اولیه (ماه) برای آپلود"); ap.add_argument("--allow-stale", action="store_true"); ap.add_argument("--host"); ap.add_argument("--key"); ap.add_argument("--out")
+    ap.add_argument("--hist", type=int, default=36); ap.add_argument("--max-age", type=int, default=3, help="حداکثر عمر وضعیت اولیه (ماه) برای آپلود"); ap.add_argument("--allow-stale", action="store_true")
+    ap.add_argument("--realtime", action="store_true", help="وضعیت اولیهٔ به‌روز از ERSST (+WWV از ORAS5 با --wwv)"); ap.add_argument("--wwv", action="store_true")
+    ap.add_argument("--z20-from", default="2005-01"); ap.add_argument("--z20-cache", default="wwv_z20.json"); ap.add_argument("--min-r", type=float, default=0.85); ap.add_argument("--min-init", default=None); ap.add_argument("--ersst", default=None); ap.add_argument("--host"); ap.add_argument("--key"); ap.add_argument("--out")
     a = ap.parse_args(); ds = load_ds(a.data)
     a.train1 = a.train1 or str(ds.time.values[-1])[:7]
     if a.probe: probe(ds, a)
     if a.skill: skill_test(ds, a)
     if a.probe or a.skill:
         if not a.host and not a.out: return
-    m, fit, train = fit_model(ds, a); last = ds.time.values[-1]; init_date = dt.date(int(str(last)[:4]), int(str(last)[5:7]), 1)
-    init = ds[list(train.data_vars)].sel(time=slice(str(last)[:7], str(last)[:7]))
+    obs_over = {}
+    if a.realtime:
+        import xro_realtime as RT, xarray as xr
+        vals, im, hist, rep = RT.build_state(ds, a, a.ersst); [log("  ", r) for r in rep]; log("وضعیت اولیهٔ به‌روز:", im, {k: round(v, 2) for k, v in vals.items()})
+        a.vars = ",".join(k for k in a.vars.split(",") if k in vals); log("متغیرهای مدل:", a.vars)
+        m, fit, train = fit_model(ds, a); init_date = dt.date(int(im[:4]), int(im[5:7]), 1)
+        init = xr.Dataset({k: ("time", [vals[k]]) for k in train.data_vars}, coords={"time": [np.datetime64(f"{im}-01")]}); obs_over = {k: hist[k] for k in hist}
+    else:
+        m, fit, train = fit_model(ds, a); last = ds.time.values[-1]; init_date = dt.date(int(str(last)[:4]), int(str(last)[5:7]), 1)
+        init = ds[list(train.data_vars)].sel(time=slice(str(last)[:7], str(last)[:7]))
     age = (dt.date.today().year - init_date.year) * 12 + dt.date.today().month - init_date.month
     log("آغاز پیش‌بینی از:", init_date, f"(عمر وضعیت اولیه {age} ماه)")
     if a.host and age > a.max_age and not a.allow_stale: sys.exit(f"✗ وضعیت اولیه {age} ماه قدیمی است؛ آپلود نشد تا پیش‌بینیِ کهنه در سایت نیاید. (وضعیت اولیهٔ به‌روز باید ساخته شود؛ یا --allow-stale)")
@@ -153,7 +167,7 @@ def main():
     now = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d"); ok = 0
     for var, (iid, fa, en, thr) in OUT.items():
         if var not in fc: log("✗ در خروجی XRO نیست:", var); continue
-        mem = to_arrays(fc, var); ser, summ, labs = build_ser(ds, var, mem, thr, a, init_date)
+        mem = to_arrays(fc, var); ser, summ, labs = build_ser(ds, var, mem, thr, a, init_date, obs_over.get(var))
         meta = dict(fa=fa + " — XRO", en=en + " · XRO", grp="XRO", src="XRO model (Zhao et al. 2024, Nature) · trained on ORAS5 indices · run by MetStat", last=init_date.isoformat(), upd=now, unit="°C", kind="plume", mdl="xro", fc=summ,
                     note="XRO: گروه ۱۰۰ عضوی از شبیه‌سازی نوفه‌دار مدل نوسان‌گر شارژ مجدد؛ آغاز پیش‌بینی = آخرین ماه فایل شاخص‌ها. " + CITE)
         png = render_png(ser, f"{en} — XRO ensemble forecast", thr)
