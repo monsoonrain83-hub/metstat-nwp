@@ -426,12 +426,12 @@ def ser_gefs(G, days=400, hist=None):
     return out
 
 def post(a, iid, per, png, meta, requests, ser=None):
-    u = f'{a.host.rstrip("/")}/nwp_upload.php?a=idxput&key={requests.utils.quote(a.key)}'
+    u = f'{a.host.rstrip("/")}/nwp_upload.php?a=idxput'
     files = {'png': (f'{iid}_{per}.png', png, 'image/png')}
     if ser is not None: files['ser'] = (f'{iid}.json', ser, 'application/json')
     for k in range(4):
         try:
-            r = requests.post(u, data=dict(id=iid, per=per, meta=json.dumps(meta)), files=files, timeout=90)
+            r = requests.post(u, data=dict(id=iid, per=per, meta=json.dumps(meta), key=a.key), files=files, timeout=90)
             if r.status_code == 403: sys.exit('✗ کلید آپلود اشتباه است')
             if r.json().get('ok'): return True
             log(f'  ✗ پاسخ هاست {iid}/{per}: {r.text[:120]}')
@@ -563,7 +563,7 @@ def main():
     if only_gefs or not a.only or any(k in a.only or GEFS[k][0] in a.only for k in GEFS):
         o, f = run_gefs(a, now, requests); ok += o; fail += f
     if a.host:
-        requests.post(f'{a.host.rstrip("/")}/nwp_upload.php?a=idxend&key={requests.utils.quote(a.key)}', timeout=60)
+        requests.post(f'{a.host.rstrip("/")}/nwp_upload.php?a=idxend', data={'key': a.key}, timeout=60)
     log(f'پایان: {ok} شاخص موفق، {fail} ناموفق'); sys.exit(0 if ok else 1)
 
 if __name__ == '__main__': main()

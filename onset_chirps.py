@@ -112,10 +112,10 @@ def save(out, lat, lon, y0, y1, thr, region, outdir, args):
 def upload(outdir, region, host, key):
     import requests
     for nm in (f"onset_{region}.json", f"onset_{region}.bin"):
-        p = os.path.join(outdir, nm); u = f"{host.rstrip('/')}/nwp_upload.php?a=onsetput&key={requests.utils.quote(key)}"
+        p = os.path.join(outdir, nm); u = f"{host.rstrip('/')}/nwp_upload.php?a=onsetput"
         for k in range(4):
             try:
-                r = requests.post(u, data={"name": nm}, files={"f": (nm, open(p, "rb"))}, timeout=180)
+                r = requests.post(u, data={"name": nm, "key": key}, files={"f": (nm, open(p, "rb"))}, timeout=180)
                 if r.status_code == 403: sys.exit("✗ کلید آپلود اشتباه است")
                 if r.json().get("ok"): log(f"✓ ارسال {nm}"); break
                 log(f"  ✗ {nm}: {r.text[:120]}")

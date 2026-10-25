@@ -166,7 +166,7 @@ def main():
             if a.out: open(os.path.join(a.out, f'{iid}_{per}.png'), 'wb').write(png)
             if a.host: IX.post(a, iid, per, png, dict(meta, perfa=f'{IX.fa(days)} روز اخیر + پیش‌بینی'), requests, ser if first else None); first = False
         log(f'✓ {iid} (ران {init}، کنترل+میانگین)'); ok += 1
-    if a.host: requests.post(f'{a.host.rstrip("/")}/nwp_upload.php?a=idxend&key={requests.utils.quote(a.key)}', timeout=60)
+    if a.host: requests.post(f'{a.host.rstrip("/")}/nwp_upload.php?a=idxend', data={'key': a.key}, timeout=60)
     log(f'پایان: {ok} موفق، {fail} ناموفق'); sys.exit(0 if ok else 1)
 
 if __name__ == '__main__': main()

@@ -8,7 +8,7 @@ xro_forecast.py — پیش‌بینی ماهانهٔ شاخص‌های اقلی�
 ⚠ این اسکریپت در محیط توسعه نصب‌شدنیِ XRO نداشت و فقط از روی مستندات نوشته شده است. حالت --probe همهٔ فرض‌ها (نام متغیرها، امضای توابع)
   را چاپ و یک بازپیش‌بینی آزمایشی با امتیاز مهارت می‌دهد؛ پیش از اعتماد به خروجی، یک بار --probe را در GitHub اجرا و بخوانید.
 ⚠ حالت اولیه: وضعیت اولیه = آخرین ماهِ فایل شاخص‌های ORAS5 (indices_oras5.nc). اگر این فایل به‌روز نباشد، پیش‌بینی از آن ماه شروع می‌شود
-  (در خروجی و روی نمودار «آغاز پیش‌بینی» نوشته می‌شود). به‌روزرسانی بی‌درنگ وضعیت اولیه (WWV از ORAS5/CDS) هنوز پیاده نشده است.
+  (در خروجی و روی نمودار «آغاز پیش‌بینی» نوشته می‌شود). وضعیت اولیهٔ بی‌درنگ با --realtime (SST از ERSST) و اختیاریاً --wwv (Z20 از ORAS5/CDS، کالیبره‌شده با رگرسیون به متغیر WWV فایل آموزشی؛ جانشین آماری است نه WWV اندازه‌گیری‌شده) ساخته می‌شود؛ خروجی آزمایشی است و اعتبارسنجی تاریخی کامل نشده.
 خروجی: <id>.json (kind=plume، سازگار با نمودار سایت) + PNG؛ آپلود با nwp_upload.php?a=idxput
 """
 import argparse, io, json, os, sys, datetime as dt, inspect
@@ -124,10 +124,10 @@ def render_png(ser, title, thr):
     ax.set_xlabel("XRO forecast · init " + F["init"] + " · " + CITE[:42] + "…", fontsize=8); fig.tight_layout(); b = io.BytesIO(); fig.savefig(b, format="png"); plt.close(fig); return b.getvalue()
 
 def post(a, iid, png, meta, ser, requests):
-    u = f'{a.host.rstrip("/")}/nwp_upload.php?a=idxput&key={requests.utils.quote(a.key)}'
+    u = f'{a.host.rstrip("/")}/nwp_upload.php?a=idxput'
     for k in range(4):
         try:
-            r = requests.post(u, data=dict(id=iid, per="fc", meta=json.dumps(meta)), files={"png": (f"{iid}_fc.png", png, "image/png"), "ser": (f"{iid}.json", json.dumps(ser).encode(), "application/json")}, timeout=90)
+            r = requests.post(u, data=dict(id=iid, per="fc", meta=json.dumps(meta), key=a.key), files={"png": (f"{iid}_fc.png", png, "image/png"), "ser": (f"{iid}.json", json.dumps(ser).encode(), "application/json")}, timeout=90)
             if r.status_code == 403: sys.exit("✗ کلید آپلود اشتباه است")
             if r.json().get("ok"): return True
             log("  ✗ پاسخ هاست:", r.text[:120])
@@ -174,7 +174,7 @@ def main():
         if a.out: os.makedirs(a.out, exist_ok=True); open(os.path.join(a.out, f"{iid}.json"), "w").write(json.dumps(ser)); open(os.path.join(a.out, f"{iid}_fc.png"), "wb").write(png)
         if a.host and post(a, iid, png, dict(meta, perfa="پیش‌بینی گروهی ۲۱ ماه"), ser, requests): ok += 1
         log("✓", iid, "پیشرو آخر: میانگین", round(float(mem[:, -1].mean()), 2), "بازهٔ ۱۰–۹۰٪", round(float(np.quantile(mem[:, -1], .1)), 2), round(float(np.quantile(mem[:, -1], .9)), 2))
-    if a.host: requests.post(f'{a.host.rstrip("/")}/nwp_upload.php?a=idxend&key={requests.utils.quote(a.key)}', timeout=60)
+    if a.host: requests.post(f'{a.host.rstrip("/")}/nwp_upload.php?a=idxend', data={'key': a.key}, timeout=60)
     if not ok and a.host: sys.exit(1)
 
 if __name__ == "__main__": main()
