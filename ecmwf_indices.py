@@ -99,16 +99,35 @@ def fetch_ens(workdir):
         except Exception as e: log(f'  ؟ اجرای {hh:02d}Z در دسترس نیست: {str(e)[:80]}')
     if not runs: raise RuntimeError('هیچ اجرای ۰۰/۱۲Z با گام کامل پیدا نشد')
     run = max(runs); log(f'  اجرای ECMWF: {run:%Y-%m-%d %H}Z')
-    for typ in ('cf', 'pf'):
-        f = os.path.join(workdir, f'ens_{typ}.grib2')
-        cl.retrieve(type=typ, stream='enfo', param='gh', levtype='pl', levelist=[500, 1000], step=STEPS, date=run.strftime('%Y%m%d'), time=run.hour, target=f)
-        for lev in (500, 1000):
+    # r102o: دریافت گام‌به‌گام (نوع × گام × تراز)؛ ترکیبی که در اوپن‌دیتا نیست رد و در لاگ ثبت می‌شود، نه توقف کل اجرا
+    got, miss = {}, []
+    def grab(typ, st, levs):
+        f = os.path.join(workdir, f'ens_{typ}_{st}_{"_".join(map(str, levs))}.grib2')
+        cl.retrieve(type=typ, stream='enfo', param='gh', levtype='pl', levelist=levs, step=st, date=run.strftime('%Y%m%d'), time=run.hour, target=f)
+        for lev in levs:
             ds = xr.open_dataset(f, engine='cfgrib', backend_kwargs={'filter_by_keys': {'typeOfLevel': 'isobaricInhPa', 'level': lev}, 'indexpath': ''})
-            a = ds['gh'].values; init = init or dt.date.fromisoformat(str(ds['time'].values)[:10])
-            if typ == 'pf': npf = a.shape[0]; a = a.mean(0)
-            else: npf = 0
-            g = coarsen(a, ds['latitude'].values, ds['longitude'].values); res.setdefault(lev, {})[typ] = (g, npf)
-    return init, {lev: (v['cf'][0], v['pf'][0], v['pf'][1]) for lev, v in res.items()}
+            a = ds['gh'].values; npf = 0
+            if typ == 'pf': npf = a.shape[0] if a.ndim == 3 else 1; a = a.mean(0) if a.ndim == 3 else a
+            init_ = dt.date.fromisoformat(str(ds['time'].values)[:10])
+            got[(typ, st, lev)] = (coarsen(a, ds['latitude'].values, ds['longitude'].values), npf, init_)
+    for typ in ('cf', 'pf'):
+        for st in STEPS:
+            try: grab(typ, st, [500, 1000])
+            except Exception as e:
+                for lev in (500, 1000):
+                    try: grab(typ, st, [lev])
+                    except Exception as e2: miss.append(f'{typ}/گام{st}/{lev}hPa: {str(e2)[:60]}')
+    if miss: log(f'  ⚠ ترکیب‌های ناموجود در اوپن‌دیتا ({len(miss)}):'); [log('    ', m) for m in miss[:12]]
+    out = {}
+    for lev in (500, 1000):
+        pfs = [got.get(('pf', st, lev)) for st in STEPS]
+        if any(p is None for p in pfs): raise RuntimeError(f'اعضای pf برای {lev}hPa کامل نیست (جزئیات در لاگ بالا)')
+        cfs = [got.get(('cf', st, lev)) for st in STEPS]
+        nm = sum(c is None for c in cfs)
+        if nm: log(f'  ⚠ کنترل (cf) در {nm} گام برای {lev}hPa نیست؛ جایش میانگین اعضا (pf) به‌کار رفت')
+        ctrl = np.stack([(c or p)[0] for c, p in zip(cfs, pfs)]); mean = np.stack([p[0] for p in pfs])
+        init = init or pfs[0][2]; out[lev] = (ctrl, mean, pfs[0][1])
+    return init, out
 
 def hist_get(host, iid, requests):
     try:
