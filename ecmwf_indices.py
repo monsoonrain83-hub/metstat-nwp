@@ -88,33 +88,20 @@ def build_clim(path=CLIM):
 
 # ───────── ECMWF open-data ─────────
 def fetch_ens(workdir):
-    """خروجی: init (date), {lev: (ctrl[steps,lat,lon], mean_pf[steps,lat,lon], npf)} — شبکهٔ ۲٫۵°.
-    اجرای ۰۰Z/۱۲Z تا ۳۶۰ ساعت است (۰۶Z/۱۸Z فقط تا ۱۴۴)؛ پس ابتدا time=0 سپس time=12 را امتحان می‌کنیم و اگر کنترل (cf) نبود، فقط میانگین اعضا."""
+    """خروجی: init (date), {lev: (ctrl[steps,lat,lon], mean_pf[steps,lat,lon], npf)} — شبکهٔ ۲٫۵°."""
     from ecmwf.opendata import Client
     import xarray as xr
-    cl = Client(source='ecmwf'); res = {}; init = None; used = None; last_err = None
-    for tm in (0, 12):
-        for typ in ('cf', 'pf'):
-            f = os.path.join(workdir, f'ens_{typ}_{tm}.grib2')
-            try:
-                cl.retrieve(type=typ, stream='enfo', time=tm, param='gh', levtype='pl', levelist=[500, 1000], step=STEPS, target=f)
-            except Exception as e:
-                last_err = e; log(f'  ؟ time={tm} type={typ}: {str(e)[:160]}'); continue
-            for lev in (500, 1000):
-                ds = xr.open_dataset(f, engine='cfgrib', backend_kwargs={'filter_by_keys': {'typeOfLevel': 'isobaricInhPa', 'level': lev}, 'indexpath': ''})
-                a = ds['gh'].values; init = dt.date.fromisoformat(str(ds['time'].values)[:10]) if init is None else init
-                npf = 0
-                if typ == 'pf': npf = a.shape[0] if a.ndim == 4 else 1; a = a.mean(0) if a.ndim == 4 else a
-                g = coarsen(a, ds['latitude'].values, ds['longitude'].values); res.setdefault(lev, {})[typ] = (g, npf)
-        if res and all('pf' in v for v in res.values()): used = tm; break
-        res = {}; init = None
-    if not res: raise RuntimeError(f'ECMWF open-data در دسترس نبود: {last_err}')
-    log(f'  ECMWF ENS: اجرای {used:02d}Z، تاریخ {init}')
-    out = {}
-    for lev, v in res.items():
-        pf, npf = v['pf']; cf = v['cf'][0] if 'cf' in v else pf               # بدون کنترل: میانگین اعضا جایگزین
-        out[lev] = (cf, pf, npf)
-    return init, out
+    cl = Client(source='ecmwf'); res = {}; init = None
+    for typ in ('cf', 'pf'):
+        f = os.path.join(workdir, f'ens_{typ}.grib2')
+        cl.retrieve(type=typ, stream='enfo', param='gh', levtype='pl', levelist=[500, 1000], step=STEPS, target=f)
+        for lev in (500, 1000):
+            ds = xr.open_dataset(f, engine='cfgrib', backend_kwargs={'filter_by_keys': {'typeOfLevel': 'isobaricInhPa', 'level': lev}, 'indexpath': ''})
+            a = ds['gh'].values; init = init or dt.date.fromisoformat(str(ds['time'].values)[:10])
+            if typ == 'pf': npf = a.shape[0]; a = a.mean(0)
+            else: npf = 0
+            g = coarsen(a, ds['latitude'].values, ds['longitude'].values); res.setdefault(lev, {})[typ] = (g, npf)
+    return init, {lev: (v['cf'][0], v['pf'][0], v['pf'][1]) for lev, v in res.items()}
 
 def hist_get(host, iid, requests):
     try:
@@ -126,7 +113,7 @@ def hist_get(host, iid, requests):
 def make_G(init, ctrl, mean, hist_t, hist_v):
     steps = np.array(STEPS) // 24; d = [init + dt.timedelta(days=int(s)) for s in steps]
     ot = [x for x in hist_t if x < init] + [init]; ov = [v for x, v in zip(hist_t, hist_v) if x < init] + [float(ctrl[0])]      # گام ۰ = تحلیل
-    ot, ov = ot[-120:], ov[-120:]
+    ot, ov = ot[-400:], ov[-400:]
     F = np.vstack([ctrl, mean])
     return dict(obs_t=ot, obs_v=np.array(ov), obs_end=ot[-1], init=init, lead=steps, fc=F, members=2, leads=(0, int(steps[-1])), age=(dt.datetime.now(dt.timezone.utc).date() - init).days)
 
