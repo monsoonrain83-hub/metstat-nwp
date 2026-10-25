@@ -1,0 +1,47 @@
+name: xro-forecast
+# پیش‌بینی ماهانهٔ نینو ۳٫۴ و IOD با مدل XRO (Zhao و همکاران، Nature 2024)
+# ⚠ نخستین بار mode=probe را اجرا کنید و لاگ را بخوانید؛ سپس mode=forecast.
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "probe (آزمون API و مهارت) یا forecast (پیش‌بینی و آپلود)"
+        default: "probe"
+        type: choice
+        options: [probe, forecast]
+  schedule:
+    - cron: "30 6 12 * *"
+concurrency:
+  group: xro-forecast
+  cancel-in-progress: false
+jobs:
+  xro:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: install
+        run: pip install XRO xarray netcdf4 scipy numpy matplotlib requests
+      - name: plumbing self-test
+        run: python test_xro_plumbing.py
+      - name: get XRO repo data (CC-BY-4.0)
+        run: |
+          git clone --depth 1 https://github.com/senclimate/XRO xro_repo
+          find xro_repo -name "*.nc" | head -20
+          F=$(find xro_repo -iname "*indices*oras5*.nc" | head -1)
+          echo "DATA=$F" >> "$GITHUB_ENV"; echo "using: $F"
+      - name: probe + skill
+        if: ${{ github.event.inputs.mode == 'probe' }}
+        run: python xro_forecast.py --data "$DATA" --probe --skill --out xro_out
+      - name: forecast and upload
+        if: ${{ github.event.inputs.mode == 'forecast' || github.event_name == 'schedule' }}
+        run: python xro_forecast.py --data "$DATA" --out xro_out --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: xro_out
+          path: xro_out
+          if-no-files-found: ignore

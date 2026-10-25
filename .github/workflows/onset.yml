@@ -1,0 +1,60 @@
+name: onset-chirps
+# آغاز و پایان فصل بارش از CHIRPS روزانه (۷ روش) ← برش ایران ← هاست. دستی؛ یک‌بار در سال (آبان) هم خودکار.
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "list = فقط بررسی وجود فایل‌های CHIRPS (اول این)؛ build = دانلود، محاسبه، ارسال"
+        default: list
+        type: choice
+        options:
+          - list
+          - build
+      years:
+        description: "سال آغاز سال آبی: از-تا (مثلاً 1981-2024)"
+        default: "1981-2024"
+      methods:
+        description: "روش‌ها با کاما: siv,cam,mor,fer,cum,irn,prs"
+        default: "siv,cam,mor,fer,cum,irn"
+      bbox:
+        description: "جنوب,شمال,غرب,شرق"
+        default: "24,41,43,64"
+  schedule:
+    - cron: "0 4 20 10 *"
+concurrency:
+  group: onset-chirps
+  cancel-in-progress: false
+jobs:
+  onset:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install numpy scipy netCDF4 requests
+      - run: python3 test_onset.py          # آزمون ساختگی روش‌ها (باید «ok» بدهد)
+      - name: list
+        if: ${{ inputs.mode == 'list' }}
+        run: python3 onset_chirps.py --list
+      - uses: actions/cache/restore@v4
+        if: ${{ inputs.mode != 'list' }}
+        with:
+          path: chirps_cache
+          key: chirps-cache-${{ github.run_id }}
+          restore-keys: chirps-cache-
+      - name: build
+        if: ${{ inputs.mode != 'list' }}
+        run: |
+          df -h . | tail -1
+          python3 onset_chirps.py --region iran --bbox "${{ inputs.bbox || '24,41,43,64' }}" --years "${{ inputs.years || '1981-2024' }}" --methods "${{ inputs.methods || 'siv,cam,mor,fer,cum,irn' }}" --cache chirps_cache --out out
+          ls -l out
+      - uses: actions/cache/save@v4
+        if: ${{ always() && inputs.mode != 'list' }}
+        with:
+          path: chirps_cache
+          key: chirps-cache-${{ github.run_id }}
+      - name: upload
+        if: ${{ inputs.mode != 'list' }}
+        run: python3 onset_chirps.py --upload --region iran --out out --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}"
