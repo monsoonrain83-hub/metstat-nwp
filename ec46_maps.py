@@ -11,7 +11,7 @@ UTC = timezone.utc; log = N.log
 API = 'https://seasonal-api.open-meteo.com/v1/seasonal'
 STEP = 1.5; LO0, LO1, LA0, LA1 = E.CROP
 E.MODELS['ec46c'] = dict(label='ECMWF EC46 — کنترل (۴۶ روزه)', name='ECMWF-EC46-CTRL', res='~0.25° (نقطه‌ای ۱٫۵°)', cyc='00 (روزانه)', prov='ECMWF EC46 · Open-Meteo (CC BY 4.0)', src='om', mean=False, days=46)
-E.MODELS['ec46m'] = dict(label='ECMWF EC46 — میانگین اعضا (۴۶ روزه)', name='ECMWF-EC46-MEAN', res='~0.25° (نقطه‌ای ۱٫۵°)', cyc='00 (روزانه)', prov='ECMWF EC46 · Open-Meteo (CC BY 4.0)', src='om', mean=True, days=46)
+E.MODELS['ec46m'] = dict(label='ECMWF EC46 — میانگین اعضا (۴۶ روزه؛ بارش: PMM)', name='ECMWF-EC46-MEAN', res='~0.25° (نقطه‌ای ۱٫۵°)', cyc='00 (روزانه)', prov='ECMWF EC46 · Open-Meteo (CC BY 4.0)', src='om', mean=True, days=46)
 E.PARAMS = {k: v for k, v in E.PARAMS.items() if k != 'z500a'}
 
 def fetch(lats, lons, tries=3, model='ecmwf_ec46_ensemble_mean'):
@@ -35,7 +35,7 @@ def collect(mock=False, model='ecmwf_ec46_ensemble_mean'):
         pr = np.maximum(np.sin(LON[None] / 6 + np.arange(nd)[:, None, None] * .5) * 6 + rng.normal(0, 1, (nd,) + LON.shape), 0).astype(np.float32)
         tm = (22 + 12 * np.cos(np.radians(LAT - 25) * 2))[None].repeat(nd, 0).astype(np.float32)
         return t0, lo, la, pr, tm
-    pr = np.full((nd, n), np.nan, np.float32); tm = pr.copy(); t0 = None; B = 25
+    pr = np.full((nd, n), np.nan, np.float32); tm = pr.copy(); t0 = None; B = 25; MEM = {}
     def do(s):
         nonlocal t0
         res = fetch(fa[s:s + B], fl[s:s + B], tries=4, model=model)
@@ -47,6 +47,9 @@ def collect(mock=False, model='ecmwf_ec46_ensemble_mean'):
             for arr, key in ((pr, 'precipitation_sum'), (tm, 'temperature_2m_mean')):
                 v = d.get(key)
                 if v: arr[:len(v), s + i] = np.array([np.nan if x is None else x for x in v], np.float32)
+            for kk, vv in d.items():                      # r102g: اعضای جدا (در صورت وجود) برای PMM
+                if kk.startswith('precipitation_sum_member') and vv:
+                    MEM.setdefault(kk, np.full((nd, n), np.nan, np.float32))[:len(vv), s + i] = np.array([np.nan if x is None else x for x in vv], np.float32)
         return True
     failed = [s for s in range(0, n, B) if not do(s) or time.sleep(1.0)]
     for rnd in range(3):                                   # دورهای دوباره برای دسته‌های ناموفق
@@ -56,6 +59,7 @@ def collect(mock=False, model='ecmwf_ec46_ensemble_mean'):
     if failed or miss > 0.02:
         log(f'✗ EC46: {len(failed)} دسته دریافت نشد ({miss * 100:.1f}٪ نقاط خالی)؛ برای جلوگیری از نقشهٔ حفره‌دار چیزی آپلود نشد'); return None
     if t0 is None or not np.isfinite(pr).any(): return None
+    collect.members = [m_.reshape((nd,) + LON.shape) for m_ in MEM.values()]
     return t0, lo, la, pr.reshape((nd,) + LON.shape), tm.reshape((nd,) + LON.shape)
 
 def main():
@@ -64,15 +68,20 @@ def main():
     if not a.host and not a.out: sys.exit('--host یا --out لازم است')
     if a.mock: N.z500_clim_at = lambda R, d: None
     up = N.Uploader(a.host, a.key, a.out)
-    for mk, om in (('ec46m', 'ecmwf_ec46_ensemble_mean'), ('ec46c', 'ecmwf_ec46')):
+    MEMB = []
+    for mk, om in (('ec46c', 'ecmwf_ec46'), ('ec46m', 'ecmwf_ec46_ensemble_mean')):
         if mk == 'ec46c' and a.mock: continue
         R = collect(a.mock, om)
         if not R: log(f'✗ {mk}: داده‌ای از Open-Meteo گرفته نشد'); continue
         t0, lo, la, pr, tm = R; log(f'▶ {mk}: شروع {t0:%Y-%m-%d} ، {pr.shape[0]} روز')
+        if mk == 'ec46c': MEMB = list(getattr(collect, 'members', []) or []); log(f'  اعضای جدا در پاسخ Open-Meteo: {len(MEMB)}')
+        usepmm = mk == 'ec46m' and len(MEMB) >= 10
+        if mk == 'ec46m': log('  PMM فعال (توزیع شدت از %d عضو)' % len(MEMB) if usepmm else '  ⚠ اعضای جدا در دسترس نیست؛ میانگین ساده (هموار) نمایش داده می‌شود')
         prods = {}; cum = np.zeros(pr.shape[1:], np.float32)
         for k in range(1, pr.shape[0] + 1):
             p = pr[k - 1]
             if not np.isfinite(p).any(): continue
+            if usepmm: p = E.pmm(p, [m_[k - 1] for m_ in MEMB])
             cum = cum + np.nan_to_num(p); o = dict(p24=(np.maximum(p, 0), lo, la), ptot=(cum.copy(), lo, la))
             if np.isfinite(tm[k - 1]).any(): o['t2m'] = (tm[k - 1], lo, la)
             prods[k] = o

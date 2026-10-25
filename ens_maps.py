@@ -18,9 +18,9 @@ CROP = (16.0, 69.0, 8.0, 46.0)            # lon0, lon1, lat0, lat1 (کمی بز�
 EC_BUCKET = 'ecmwf-forecasts'; CFS_BUCKET = 'noaa-cfs-pds'
 MODELS = {
     'ecenc': dict(label='ECMWF ENS — کنترل', name='ECMWF-ENS-CTRL', res='0.25°', cyc='00/12', prov='ECMWF Open Data (CC-BY-4.0)', src='ec', mean=False, days=15),
-    'ecenm': dict(label='ECMWF ENS — میانگین اعضا', name='ECMWF-ENS-MEAN', res='0.25°', cyc='00/12', prov='ECMWF Open Data (CC-BY-4.0)', src='ec', mean=True, days=15),
+    'ecenm': dict(label='ECMWF ENS — میانگین اعضا (بارش: PMM)', name='ECMWF-ENS-MEAN', res='0.25°', cyc='00/12', prov='ECMWF Open Data (CC-BY-4.0)', src='ec', mean=True, days=15),
     'cfsc':  dict(label='CFS — کنترل (عضو ۱ از ۴ عضو هر اجرا)', name='CFS-CTRL', res='~0.5°', cyc='00/06/12/18', prov='NOAA CFSv2', src='cfs', mean=False, days=45),
-    'cfsm':  dict(label='CFS — میانگین ۴ عضو (هموارتر؛ برای بازهٔ بلند مطمئن‌تر)', name='CFS-MEAN', res='~0.5°', cyc='00/06/12/18', prov='NOAA CFSv2', src='cfs', mean=True, days=45),
+    'cfsm':  dict(label='CFS — میانگین ۴ عضو (بارش: PMM)', name='CFS-MEAN', res='~0.5°', cyc='00/06/12/18', prov='NOAA CFSv2', src='cfs', mean=True, days=45),
 }
 PARAMS = {  # id: (فارسی, واحد, دسته, ترتیب, مقیاس رنگ, خط‌های روی نقشه)
     'p24':   ('بارش ۲۴ ساعته', 'mm', 'pr', 10, 'pr_h24', 0),
@@ -78,6 +78,24 @@ def ec_pick_run(fs):
             except Exception as e: log(f'  … بررسی {base}: {e}')
     return None, None
 
+def pmm(mean, members):
+    """r102g: میانگین تطبیق‌یافته با احتمال (Probability-Matched Mean، Ebert 2001).
+    الگوی مکانی = میانگین اعضا (رتبهٔ هر نقطه)، ولی توزیع شدت = توزیع واقعی مقادیر اعضا (مجموعهٔ همهٔ اعضا مرتب و هر K‌امین برداشته می‌شود).
+    نتیجه: همان محل بارش میانگین، اما بدون «پخش‌شدن یکنواخت و بارش ضعیف همه‌جا»."""
+    m = np.asarray(mean, np.float64); K = len(members)
+    if K < 3: return mean
+    ok = np.isfinite(m)
+    if not ok.any(): return mean
+    pool = np.concatenate([np.asarray(x, np.float64)[ok].ravel() for x in members])
+    pool = pool[np.isfinite(pool)]
+    n = int(ok.sum())
+    if pool.size < n: return mean
+    pool.sort(); vals = pool[(np.arange(n) * K + K // 2).clip(0, pool.size - 1)]
+    order = np.argsort(m[ok], kind='stable')              # از کم به زیاد
+    res = np.full(m.shape, np.nan); tmp = np.empty(n); tmp[order] = vals
+    res[ok] = tmp
+    return res.astype(np.float32)
+
 def ec_collect(fs, run, base, days, mean):
     """خروجی: dict var→{step: (arr, lon, lat)}  (برای mean: میانگین ۵۱ عضو؛ وگرنه کنترل)"""
     steps = list(range(6, 24 * days + 1, 6))
@@ -103,6 +121,7 @@ def ec_collect(fs, run, base, days, mean):
         with LOCK:
             d = acc.setdefault(var, {}).setdefault(step, dict(sum=np.zeros_like(a, np.float64), n=0, lo=lo, la=la))
             d['sum'] += np.nan_to_num(a, nan=0.0); d['n'] += 1
+            if var == 'tp' and mean: d.setdefault('mem', []).append(np.nan_to_num(a, nan=0.0).astype(np.float32))
     t0 = time.time(); errs = [0]
     with ThreadPoolExecutor(16) as ex:
         futs = []
@@ -130,6 +149,8 @@ def ec_collect(fs, run, base, days, mean):
     out = {}
     for var, m in acc.items():
         out[var] = {s: ((d['sum'] / max(d['n'], 1)).astype(np.float32), d['lo'], d['la']) for s, d in m.items() if d['n'] >= (1 if not mean else 10)}
+    if mean and 'tp' in acc:                            # r102g: اعضای بارش برای PMM
+        out['tp_mem'] = {s: d.get('mem', []) for s, d in acc['tp'].items() if d['n'] >= 10}
     return out
 
 def ec_products(raw, days):
@@ -142,6 +163,12 @@ def ec_products(raw, days):
             a, lo, la = tp[24 * k]; b = tp[24 * (k - 1)][0] if k > 1 else 0.0
             o['p24'] = (np.maximum(a - b, 0) * 1000.0, lo, la)                 # m → mm
             o['ptot'] = (np.maximum(a, 0) * 1000.0, lo, la)                    # تجمعی از ابتدای اجرا
+            tm_ = raw.get('tp_mem', {})
+            if tm_.get(24 * k) and len(tm_[24 * k]) >= 10:                    # r102g: PMM (الگوی میانگین + توزیع شدت واقعی اعضا)
+                M1 = tm_[24 * k]; M0 = tm_.get(24 * (k - 1)) if k > 1 else None
+                if k == 1 or (M0 and len(M0) == len(M1)):
+                    d24 = [np.maximum(x - (M0[q] if M0 else 0), 0) * 1000.0 for q, x in enumerate(M1)]
+                    o['p24'] = (pmm(o['p24'][0], d24), lo, la); o['ptot'] = (pmm(o['ptot'][0], [np.maximum(x, 0) * 1000.0 for x in M1]), lo, la)
         ss = [24 * (k - 1) + h for h in (6, 12, 18, 24)]
         if all(s in t2 for s in ss):
             o['t2m'] = (np.mean([t2[s][0] for s in ss], axis=0) - 273.15, t2[ss[0]][1], t2[ss[0]][2])
@@ -242,6 +269,7 @@ def cfs_collect(fs, run, days, mean):
         for s in set().union(*[r[var].keys() for r in R]):
             xs = [r[var][s] for r in R if s in r[var]]
             if len(xs) == len(mems) or (not mean and xs): out[var][s] = (np.mean([x[0] for x in xs], axis=0).astype(np.float32), xs[0][1], xs[0][2])
+            if var == 'tp' and mean and len(xs) == len(mems): out.setdefault('tp_mem', {})[s] = [x[0] for x in xs]
     return out
 
 def cfs_products(raw, days):
@@ -250,6 +278,11 @@ def cfs_products(raw, days):
         o = {}; tp, t2, z5 = raw['tp'], raw['t2'], raw['z5']
         if 24 * k in tp: o['ptot'] = (np.maximum(tp[24 * k][0], 0), tp[24 * k][1], tp[24 * k][2])
         if 24 * k in tp and (k == 1 or 24 * (k - 1) in tp): o['p24'] = (np.maximum(tp[24 * k][0] - (tp[24 * (k - 1)][0] if k > 1 else 0.0), 0), tp[24 * k][1], tp[24 * k][2])
+        tmm = raw.get('tp_mem', {})
+        if 'p24' in o and tmm.get(24 * k) and (k == 1 or tmm.get(24 * (k - 1))) and len(tmm[24 * k]) >= 3:     # r102g: PMM با ۴ عضو CFS (شدت پراکنده‌تر از میانگین ساده)
+            M1 = tmm[24 * k]; M0 = tmm.get(24 * (k - 1)) if k > 1 else None
+            o['p24'] = (pmm(o['p24'][0], [np.maximum(x - (M0[q] if M0 else 0), 0) for q, x in enumerate(M1)]), o['p24'][1], o['p24'][2])
+            o['ptot'] = (pmm(o['ptot'][0], [np.maximum(x, 0) for x in M1]), o['ptot'][1], o['ptot'][2])
         ss = [24 * (k - 1) + h for h in (6, 12, 18, 24)]
         if all(s in t2 for s in ss): o['t2m'] = (np.mean([t2[s][0] for s in ss], axis=0) - 273.15, t2[ss[0]][1], t2[ss[0]][2])
         if 24 * k in z5: o['z5'] = z5[24 * k]
