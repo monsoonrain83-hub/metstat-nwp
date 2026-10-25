@@ -22,6 +22,21 @@ plt.rcParams['axes.unicode_minus'] = True
 
 PSL = 'https://psl.noaa.gov/data/correlation/'
 # id: (نام فارسی, نام انگلیسی, گروه, واحد, نوع نمودار, [آدرس‌ها به ترتیب اولویت], آستانه‌ها)
+NCEI_AMO = 'https://www.ncei.noaa.gov/pub/data/cmb/ersst/v5/index/ersst.v5.amo.dat'
+
+def parse_ym(text):
+    """قالب بلند «سال ماه مقدار» (فایل AMO مرکز NCEI)؛ -99.99/-9999 = گمشده؛ خروجی (t, v) مرتب و بدون تکرار."""
+    import datetime as _d
+    d = {}
+    for ln in text.splitlines():
+        p = ln.split()
+        if len(p) == 3 and p[0].isdigit() and p[1].isdigit() and 1 <= int(p[1]) <= 12:
+            try: x = float(p[2])
+            except ValueError: continue
+            d[(int(p[0]), int(p[1]))] = np.nan if x <= -99 else x
+    k = sorted(d)
+    return [_d.datetime(y, m, 1) for y, m in k], np.array([d[i] for i in k], float)
+
 IDX = {
  'nino34': ('نینو ۳٫۴ (SST)', 'Niño 3.4 SST anomaly', 'ENSO', '°C', 'bar', [PSL + 'nina34.anom.data'], (0.5, -0.5)),
  'nino3':  ('نینو ۳ (SST)', 'Niño 3 SST anomaly', 'ENSO', '°C', 'bar', [PSL + 'nina3.anom.data'], (0.5, -0.5)),
@@ -40,6 +55,7 @@ IDX = {
  'dmi':    ('DMI / IOD دوقطبی اقیانوس هند', 'Dipole Mode Index (IOD/DMI)', 'Indian Ocean', '°C', 'bar', ['https://psl.noaa.gov/gcos_wgsp/Timeseries/Data/dmi.had.long.data', PSL + 'dmi.data'], (0.4, -0.4)),
  'pdo':    ('PDO نوسان دههای اقیانوس آرام', 'Pacific Decadal Oscillation (PDO)', 'Ocean', '', 'bar', [PSL + 'pdo.data', 'https://www.ncei.noaa.gov/pub/data/cmb/ersst/v5/index/ersst.v5.pdo.dat'], (0.0,)),
  'amo':    ('AMO نوسان چندده‌ای اطلس', 'Atlantic Multidecadal Oscillation (AMO)', 'Ocean', '°C', 'bar', [PSL + 'amon.us.data'], (0.0,)),
+ 'amo_ncei': ('AMO رسمی NCEI (SST اطلس ۰–۶۰°N، ERSSTv5، بدون حذف روند)', 'AMO — NOAA NCEI (ERSSTv5, North Atlantic 0–60N SSTA, not detrended)', 'Ocean', '°C', 'bar', [NCEI_AMO], (0.0,)),
  'amo_csu': ('AMO کلرادو (کلوتسباخ و گری، SST+SLP)', 'AMO — CSU (Klotzbach & Gray 2008; SST+SLP)', 'Ocean', 'σ', 'bar', [], (0.0,)),
  'tna':    ('TNA اطلس شمالی گرمسیری', 'Tropical North Atlantic (TNA)', 'Ocean', '°C', 'bar', [PSL + 'tna.data'], (0.0,)),
  'tsa':    ('TSA اطلس جنوبی گرمسیری', 'Tropical South Atlantic (TSA)', 'Ocean', '°C', 'bar', [PSL + 'tsa.data'], (0.0,)),
@@ -474,7 +490,7 @@ def run_monthly(a, now, requests):
         else:
             for u in urls:
                 try:
-                    t, v = parse(fetch(u)); src = u.split('/')[2]
+                    t, v = (parse_ym if iid == 'amo_ncei' else parse)(fetch(u)); src = u.split('/')[2]
                     if len(t) > 24: break
                     log(f'  ؟ {iid}: داده‌ٔ کم از {u}')
                 except Exception as e: log(f'  ✗ {iid}: {u} → {e}'); t = None
