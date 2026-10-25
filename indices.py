@@ -385,8 +385,17 @@ def ser_monthly(t, v, years=40):
     n = min(len(t), years * 12)
     return {'kind': 'monthly', 't': [f'{d:%Y-%m}' for d in t[-n:]], 'v': list(v[-n:])}
 
-def ser_gefs(G, days=120):
-    ot, ov = G['obs_t'][-days:], G['obs_v'][-days:]
+def hist_get(host, iid, requests):
+    """تاریخچهٔ تحلیل‌های ذخیره‌شده روی هاست (برای ساختن تا ۴۰۰ روز گذشته؛ هر اجرا چند روز اضافه می‌کند)"""
+    try:
+        r = requests.get(f'{host.rstrip("/")}/data/idx/{iid}.json', timeout=30)
+        if r.ok: j = r.json(); return {dt.date.fromisoformat(x): v for x, v in zip(j['obs']['t'], j['obs']['v']) if v is not None}
+    except Exception: pass
+    return {}
+
+def ser_gefs(G, days=400, hist=None):
+    m = dict(hist or {}); m.update({d: float(v) for d, v in zip(G['obs_t'], G['obs_v'])})
+    ks = sorted(m)[-days:]; ot, ov = ks, [m[k] for k in ks]
     out = {'kind': 'plume', 'obs': {'t': [d.isoformat() for d in ot], 'v': list(ov)}}
     if G['fc'] is not None:
         F = G['fc']; out['fc'] = {'init': G['init'].isoformat(), 'lead': [int(x) for x in G['lead']], 'mem': [list(r) for r in F], 'mean': list(np.nanmean(F, axis=0))}
@@ -406,6 +415,39 @@ def post(a, iid, per, png, meta, requests, ser=None):
         except Exception as e: log(f'  … {e}'); time.sleep(4 * (k + 1))
     return False
 
+
+ERSST_URL = 'https://downloads.psl.noaa.gov/Datasets/noaa.ersst.v5/sst.mnmean.nc'
+def amo_from_sst(sst, lat, lon, t, c0=1991, c1=2020):
+    """AMO به روش Trenberth & Shea (2006): ناهنجاری SST اطلس شمالی (۰–۶۰N، ۸۰W–۰) منهای ناهنجاری میانگین جهانی ۶۰S–۶۰N؛ بدون حذف روند.
+    sst: (زمان, عرض, طول) با nan برای دادهٔ نبودی؛ lon بر حسب ۰–۳۶۰. ناهنجاری نسبت به میانگین ماهانهٔ c0–c1."""
+    sst = np.asarray(sst, float); lat = np.asarray(lat, float); lon = np.asarray(lon, float) % 360
+    mo = np.array([d.month for d in t]); yr = np.array([d.year for d in t]); an = np.full_like(sst, np.nan)
+    for m in range(1, 13):
+        sel = mo == m; ref = sel & (yr >= c0) & (yr <= c1)
+        if ref.sum() < 10: raise ValueError('دورهٔ مبنا کوتاه است')
+        an[sel] = sst[sel] - np.nanmean(sst[ref], axis=0)
+    w = np.cos(np.deg2rad(lat))[:, None] * np.ones((1, len(lon)))
+    def wm(box):
+        la0, la1, lo0, lo1 = box; mk = (lat[:, None] >= la0) & (lat[:, None] <= la1) & (((lon >= lo0) & (lon <= lo1))[None, :])
+        out = []
+        for k in range(an.shape[0]):
+            a = an[k]; ok = mk & np.isfinite(a); ww = w * ok
+            out.append(float((a * ww)[ok].sum() / ww.sum()) if ww.sum() > 0 else np.nan)
+        return np.array(out)
+    na = wm((0, 60, 280, 360)); gl = wm((-60, 60, 0, 360))
+    return na - gl
+
+def amo_ersst(fetch_bytes=None):
+    """دانلود ERSSTv5 (PSL، ماهانه، ۲°) و محاسبهٔ AMO تا آخرین ماه. خروجی (t, v) یا لغزش با خطا."""
+    import tempfile, netCDF4, requests
+    p = os.path.join(tempfile.mkdtemp(), 'sst.nc')
+    r = requests.get(ERSST_URL, timeout=300); r.raise_for_status(); open(p, 'wb').write(r.content)
+    ds = netCDF4.Dataset(p); tv = ds.variables['time']; times = netCDF4.num2date(tv[:], tv.units, only_use_cftime_datetimes=False)
+    t = [dt.date(x.year, x.month, 1) for x in times]; sst = np.ma.filled(ds.variables['sst'][:].astype(float), np.nan)
+    sst[np.abs(sst) > 100] = np.nan
+    v = amo_from_sst(sst, ds.variables['lat'][:], ds.variables['lon'][:], t)
+    ok = np.isfinite(v); return [d for d, k in zip(t, ok) if k], v[ok]
+
 def run_monthly(a, now, requests):
     ok = fail = 0
     for iid, (fa_, en, grp, unit, kind, urls, thr) in IDX.items():
@@ -419,6 +461,11 @@ def run_monthly(a, now, requests):
                     if len(t) > 24: break
                     log(f'  ؟ {iid}: داده‌ٔ کم از {u}')
                 except Exception as e: log(f'  ✗ {iid}: {u} → {e}'); t = None
+        if iid == 'amo' and not a.mock:         # r102k: منبع PSL از ژانویهٔ ۲۰۲۳ به‌روز نمی‌شود؛ AMO را خودمان از ERSSTv5 می‌سازیم
+            try:
+                t2, v2 = amo_ersst()
+                if not t or t2[-1] > t[-1]: t, v, src = t2, v2, 'NOAA ERSSTv5 · computed by MetStat (Trenberth & Shea 2006)'; log(f'  AMO از ERSSTv5 تا {t2[-1]:%Y-%m}')
+            except Exception as e: log(f'  ✗ AMO از ERSST ساخته نشد: {e}')
         if not t or len(t) < 24: log(f'✗ {iid}: داده‌ای نشد'); fail += 1; continue
         last = [d for d, x in zip(t, v) if np.isfinite(x)][-1]
         meta = dict(fa=fa_, en=en, grp=GRP_FA.get(grp, grp), src=src, last=f'{last:%Y-%m}', upd=now, unit=unit, kind=kind, note='')
@@ -449,7 +496,7 @@ def run_gefs(a, now, requests):
         meta = dict(fa=fa_, en=f'{en} · GEFS ensemble forecast', grp=GEFS_GRP, src=src, last=f'{ref:%Y-%m-%d}', upd=now, unit='', kind='plume', mdl='gfs',
                     note=f'GEFS {lev}، {G["members"]} عضو')
         meta.update(gefs_summary(G))
-        ser = ser_bytes(ser_gefs(G)); first = True
+        ser = ser_bytes(ser_gefs(G, hist=(hist_get(a.host, iid, requests) if a.host else None))); first = True
         if a.out: os.makedirs(a.out, exist_ok=True); open(os.path.join(a.out, f'{iid}.json'), 'wb').write(ser)
         for per, days in GEFS_PERIODS.items():
             pfa = f'{fa(days)} روز اخیر + پیش‌بینی'

@@ -137,7 +137,7 @@ def main():
     ap.add_argument("--probe", action="store_true"); ap.add_argument("--skill", action="store_true")
     ap.add_argument("--train0", default="1979-01"); ap.add_argument("--train1", default=None); ap.add_argument("--vars", default="Nino34,WWV,NPMM,SPMM,IOD,SIOD,TNA,ATL3,SASD")
     ap.add_argument("--ac", type=int, default=2); ap.add_argument("--months", type=int, default=21); ap.add_argument("--members", type=int, default=100); ap.add_argument("--show", type=int, default=40)
-    ap.add_argument("--hist", type=int, default=36); ap.add_argument("--host"); ap.add_argument("--key"); ap.add_argument("--out")
+    ap.add_argument("--hist", type=int, default=36); ap.add_argument("--max-age", type=int, default=3, help="حداکثر عمر وضعیت اولیه (ماه) برای آپلود"); ap.add_argument("--allow-stale", action="store_true"); ap.add_argument("--host"); ap.add_argument("--key"); ap.add_argument("--out")
     a = ap.parse_args(); ds = load_ds(a.data)
     a.train1 = a.train1 or str(ds.time.values[-1])[:7]
     if a.probe: probe(ds, a)
@@ -146,7 +146,10 @@ def main():
         if not a.host and not a.out: return
     m, fit, train = fit_model(ds, a); last = ds.time.values[-1]; init_date = dt.date(int(str(last)[:4]), int(str(last)[5:7]), 1)
     init = ds[list(train.data_vars)].sel(time=slice(str(last)[:7], str(last)[:7]))
-    log("آغاز پیش‌بینی از:", init_date); fc = forecast(m, fit, init, a); import requests
+    age = (dt.date.today().year - init_date.year) * 12 + dt.date.today().month - init_date.month
+    log("آغاز پیش‌بینی از:", init_date, f"(عمر وضعیت اولیه {age} ماه)")
+    if a.host and age > a.max_age and not a.allow_stale: sys.exit(f"✗ وضعیت اولیه {age} ماه قدیمی است؛ آپلود نشد تا پیش‌بینیِ کهنه در سایت نیاید. (وضعیت اولیهٔ به‌روز باید ساخته شود؛ یا --allow-stale)")
+    fc = forecast(m, fit, init, a); import requests
     now = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d"); ok = 0
     for var, (iid, fa, en, thr) in OUT.items():
         if var not in fc: log("✗ در خروجی XRO نیست:", var); continue
