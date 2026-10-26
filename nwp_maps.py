@@ -57,8 +57,8 @@ MODELS = {
     'ukmo':   dict(name='UKMO', label='UKMO Global 10 km', dom=['ukmo_global_deterministic_10km'], prov='Met Office', hz=168, res='10 km', cyc='00/06/12/18'),
     'gem':    dict(name='GEM', label='GEM GDPS 15 km', dom=['cmc_gem_gdps_15km', 'cmc_gem_gdps'], prov='ECCC', hz=240, res='15 km', cyc='00/12'),
 }
-# r83: حذف اختیاری مدل از تولید (فضای هاست): NWP_DROP_MODELS=arpege  (پیش‌فرض: هیچ‌کدام). پوشهٔ قدیمی را روی هاست دستی پاک کنید.
-for _m in [x.strip() for x in os.environ.get('NWP_DROP_MODELS', '').split(',') if x.strip()]: MODELS.pop(_m, None)
+# r83: حذف اختیاری مدل از تولید (فضای هاست): NWP_DROP_MODELS=arpege  (r109: پیش‌فرض arpege حذف است؛ برای نگه‌داشتن: NWP_DROP_MODELS=none). پوشهٔ قدیمی را روی هاست دستی پاک کنید.
+for _m in [x.strip() for x in os.environ.get('NWP_DROP_MODELS', 'arpege').split(',') if x.strip()]: MODELS.pop(_m, None)
 REGIONS = {'iran': dict(geo=(-1506.432, 35.07327, 1611.463, -40.47955), en='Iran', fa='ایران'),
            'fars': dict(geo=(-4387.15, 89.808, 3366.55, -103.991), en='Fars', fa='فارس')}
 FX0, FX1, FY0, FY1 = 2, 757, 2, 614
@@ -657,7 +657,7 @@ def render(region, field, sc_key, title, valid, run, model, unit, marker, cont=N
     t2 = vi.strftime('%a %Y-%m-%d, %H:%M') + ' GMT+0330'
     d.text((W - 10, 629), 'Valid for', font=F_S, fill=(0, 0, 0), anchor='ra'); d.text((W - 10, 645), t2, font=F_S, fill=(0, 0, 0), anchor='ra')
     # نوار رنگ: ردیف ۶۸۰ فقط رنگ‌های نوار (بدون خط جداکننده) — همان چیدمان weather.us
-    bx0, bx1, by0, by1 = 3, 757, 671, 689
+    bx0, bx1, by0, by1 = FX0, FX1, 671, 689   # r109: عرض نوار = عرض نقشه
     xs = [round(bx0 + (bx1 + 1 - bx0) * j / n) for j in range(n + 1)]
     for j in range(n): d.rectangle([xs[j], by0, xs[j + 1] - 1, by1], fill=cols[j])
     d.line([bx0, by0 - 1, bx1, by0 - 1], fill=(0, 0, 0)); d.line([bx0, by1 + 1, bx1, by1 + 1], fill=(0, 0, 0))
