@@ -802,12 +802,12 @@ FORCED = set()
 class Uploader:
     def __init__(s, host, key, outdir):
         s.host, s.key, s.out = (host.rstrip('/') if host else None), key, outdir
-        s.pool = ThreadPoolExecutor(4); s.fut = []; s.lock = threading.Lock(); s.n = 0
+        s.pool = ThreadPoolExecutor(3); s.fut = []; s.lock = threading.Lock(); s.n = 0
     def call(s, a, js=None, files=None, data=None):
         if not s.host: return {'have': [], 'ok': True}
         import requests
         u = f"{s.host}/nwp_upload.php?a={a}&key={requests.utils.quote(s.key)}"
-        for k in range(5):
+        for k in range(8):                                  # r103: ۸ تلاش با عقب‌نشینی نمایی (هاست زیر بار ۵۰۲ می‌داد)
             try:
                 r = requests.post(u, json=js, files=files, data=data, timeout=90)
                 if r.status_code == 403: sys.exit('✗ کلید آپلود اشتباه است (upload_key در mx_config.json روی هاست)')
@@ -815,7 +815,7 @@ class Uploader:
                 except Exception: raise RuntimeError(f'HTTP {r.status_code} [{a}] پاسخ: {r.text[:160]!r}')
             except SystemExit: raise
             except Exception as e:
-                log(f'  … خطای ارتباط با هاست ({e}); تلاش دوباره'); time.sleep(5 * (k + 1))
+                log(f'  … خطای ارتباط با هاست ({str(e)[:120]}); تلاش دوباره'); time.sleep(min(90, 5 * 2 ** k) + (hash((a, k, time.time())) % 7))
         return {}
     def put(s, mkey, run, fname, png, meta):
         def job():
