@@ -573,7 +573,8 @@ def hazards(F):
         if I.get('rh700') is not None: fconv = np.where(I['rh700'] > 85, fconv * 0.7, fconv)        # لایهٔ میانی کاملاً اشباع و بدون ناپایداری = بارش لایه‌ای
         wet = (1.0 + 0.25 * (1 - fconv) * np.nan_to_num(nz(g('soil'), 0.10, 0.35), nan=0.4)) if g('soil') is not None else 1.0
         a1 = None if short is None else short * slope_f * eff
-        lng = 1.0 + 0.20 * np.nan_to_num(syn_lift(I), nan=0.0)                                      # r83: بالابری همدیدی پایدار بارش طولانی را تقویت می‌کند (×۱…۱٫۲)
+        _sl = syn_lift(I)                                                                          # r112: GFS/GEM شاخص سینرژی ندارند ← None (قبلاً TypeError و از دست رفتن همهٔ نقشه‌های ثانویه)
+        lng = 1.0 + (0.20 * np.nan_to_num(_sl, nan=0.0) if _sl is not None else 0.0)                                      # r83: بالابری همدیدی پایدار بارش طولانی را تقویت می‌کند (×۱…۱٫۲)
         a2 = None if longd is None else longd * slope_f * wet * lng
         sc_ = a1 if a2 is None else (a2 if a1 is None else np.fmax(a1, a2))
         fl = cls(np.clip(sc_, 0, 1.2), [0.25, 0.45, 0.65, 0.85]); out['flood'] = fl

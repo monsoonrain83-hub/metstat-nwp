@@ -803,33 +803,44 @@ class Uploader:
     def __init__(s, host, key, outdir):
         s.host, s.key, s.out = (host.rstrip('/') if host else None), key, outdir
         s.pool = ThreadPoolExecutor(3); s.fut = []; s.lock = threading.Lock(); s.n = 0
+        s.sem = threading.BoundedSemaphore(36)              # r112: فشار برگشتی — صف آپلود از ۳۶ نقشه بیشتر نمی‌شود (قبلاً بی‌نهایت؛ پایان کار ساعت‌ها منتظر می‌ماند و job با «operation was canceled» کشته می‌شد)
+        s.cool_until = 0.0; s.fails = 0; s.deadline = None   # r112: مکث مشترک پس از خطای ۵xx هاست (همهٔ رشته‌ها با هم)؛ deadline = زمان قطعی پایان
     def call(s, a, js=None, files=None, data=None):
         if not s.host: return {'have': [], 'ok': True}
         import requests
         u = f"{s.host}/nwp_upload.php?a={a}&key={requests.utils.quote(s.key)}"
         for k in range(8):                                  # r103: ۸ تلاش با عقب‌نشینی نمایی (هاست زیر بار ۵۰۲ می‌داد)
+            if s.deadline and time.time() > s.deadline: return {}            # r112: پس از ضرب‌الاجل دیگر تلاش نکن
+            w = s.cool_until - time.time()
+            if w > 0: time.sleep(min(w, 120))                                # r112: مکث مشترک
             try:
                 r = requests.post(u, json=js, files=files, data=data, timeout=90)
+                if r.status_code >= 500: raise RuntimeError(f'HTTP {r.status_code} [{a}]')
+                s.fails = 0
                 if r.status_code == 403: sys.exit('✗ کلید آپلود اشتباه است (upload_key در mx_config.json روی هاست)')
                 try: return r.json()
                 except Exception: raise RuntimeError(f'HTTP {r.status_code} [{a}] پاسخ: {r.text[:160]!r}')
             except SystemExit: raise
             except Exception as e:
-                log(f'  … خطای ارتباط با هاست ({str(e)[:120]}); تلاش دوباره'); time.sleep(min(90, 5 * 2 ** k) + (hash((a, k, time.time())) % 7))
+                s.fails += 1; s.cool_until = max(s.cool_until, time.time() + min(120, 8 * 2 ** min(s.fails, 4)))
+                log(f'  … خطای ارتباط با هاست ({str(e)[:120]}); مکث {min(120, 8 * 2 ** min(s.fails, 4))} ثانیه و تلاش دوباره'); time.sleep(1 + (hash((a, k, time.time())) % 5))
         return {}
     def put(s, mkey, run, fname, png, meta):
+        s.sem.acquire()                                                      # r112: پشت‌سر‌هم‌بودن تولید و آپلود
         def job():
+          try:
             if s.out:
                 p = os.path.join(s.out, mkey, run, fname); os.makedirs(os.path.dirname(p), exist_ok=True); open(p, 'wb').write(png)
             if s.host:
                 r = s.call('put', data={'model': mkey, 'run': run, 'file': fname, 'meta': json.dumps(meta)}, files={'png': (os.path.basename(fname), png, 'image/webp' if fname.endswith('.webp') else 'image/png')})
                 if not r.get('ok'): log(f'  ✗ آپلود {mkey}/{fname}: {r}'); return
             with s.lock: s.n += 1
+          finally: s.sem.release()
         s.fut.append(s.pool.submit(job))
     def wait(s):
         for f in s.fut:
-            try: f.result()
-            except Exception as e: log(f'  ✗ {e}')
+            try: f.result(timeout=max(1, (s.deadline - time.time())) if s.deadline else None)         # r112: حداکثر تا ضرب‌الاجل
+            except Exception as e: log(f'  ✗ {type(e).__name__} {e}')
         s.fut = []
 
 def scales_payload():
@@ -903,6 +914,7 @@ class Engine:
         for i, vt in enumerate(vts):
             if i <= st.done_i: continue
             if s.a.max_steps and i >= s.a.max_steps: break
+            if getattr(s, 't_end', None) and time.time() > s.t_end: break      # r112: tick می‌تواند ساعت‌ها بدون بررسی سقف زمان بماند
             if not S.exists(run, vt):                           # هنوز منتشر نشده؛ دور بعد
                 if not hasattr(st, 'wlog'): st.wlog = set()
                 if i not in st.wlog and i == st.done_i + 1: st.wlog.add(i); log(f'  ⏳ {M["name"]} {rid}: گام {vt:%Y%m%d%H} هنوز روی data_spatial نیست ({S.tpath(run, vt)[-60:]})؛ دور بعد دوباره بررسی می‌شود')
@@ -917,7 +929,11 @@ class Engine:
             except Exception as e:
                 m_ = str(e)
                 if 'Not an OM file' in m_ or 'Corrupted' in m_ or 'Deflated' in m_ or 'Decoder error' in m_:
-                    log(f'  ⏳ {M["name"]} {vt:%Y%m%d%H}: فایل هنوز کامل نشده؛ دور بعد دوباره تلاش می‌شود'); break
+                    if not hasattr(st, 'badf'): st.badf = {}
+                    n_, t_ = st.badf.get(i, (0, time.time())); st.badf[i] = (n_ + 1, t_)
+                    if n_ + 1 >= 3 and time.time() - t_ > 900:        # r112: گامی که ≥ ۱۵ دقیقه و ≥ ۳ بار ناخواندنی بماند رد می‌شود؛ قبلاً کل مدل برای همیشه روی همین گام می‌ماند (ECMWF 9km روی گام ۰ → صفر نقشه، و مدل‌های بعدی هم هیچ‌وقت به آخرین فریم نمی‌رسیدند)
+                        log(f'  ⏭ {M["name"]} {vt:%Y%m%d%H}: فایل پس از {n_ + 1} تلاش هنوز خراب/ناقص است ({m_[:80]}); این گام رد شد و ادامه داده می‌شود'); st.done_i = i; continue
+                    log(f'  ⏳ {M["name"]} {vt:%Y%m%d%H}: فایل هنوز کامل نشده ({m_[:80]})؛ دور بعد دوباره تلاش می‌شود (تلاش {n_ + 1})'); break
                 traceback.print_exc(); log(f'  ✗ {M["name"]} {vt:%Y%m%d%H}: {e}'); break
             st.done_i = i; st.prev_vt = vt
             if s.mm: s.mm.progress(mkey, run, vt)
@@ -1357,6 +1373,8 @@ def main():
         for k in list(PARAMS):
             if k not in keep: PARAMS.pop(k)
     eng = Engine(a)
+    eng.t_end = t_end
+    if t_end: eng.up.deadline = t_end + float(os.environ.get('NWP_UP_GRACE_MIN', '12')) * 60                         # r112: ۱۲ دقیقه پس از پایان حلقه، آپلودها قطعاً متوقف می‌شوند
     if 'me' in a.regions: id_init(a.host)
     if a.mm:                                      # مالتی‌مدل MetStat: میدان هر مدل در a.mm ذخیره و ترکیب می‌شود
         import mm_maps; MM_ON = True; mm_maps.mm_extend_params(PARAMS)
@@ -1418,6 +1436,7 @@ def main():
         time.sleep(1); eng.mm.tick(final=True)
         eng.up.wait()
     log(f'پایان: {eng.up.n} نقشه ارسال شد')
+    sys.stdout.flush(); os._exit(0)                                   # r112: رشته‌های آپلودِ گیرکرده مانع خروج نشوند
 
 if __name__ == '__main__':
     main()
