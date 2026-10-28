@@ -800,47 +800,98 @@ def needed_vars(mkey, pids, kind):
 FORCE = bool(os.environ.get('NWP_FORCE', '').strip() not in ('', '0')) or os.path.exists('FORCE_REGEN') or '--force' in sys.argv     # r58
 FORCED = set()
 class Uploader:
+    """r114: آپلود دسته‌ای. قبلاً هر نقشه یک درخواست HTTPS جدا با «Connection: close» بود (هزاران اتصال TLS تازه از یک IP)
+    ← فایروال/پراکسی هاست اتصال را قطع می‌کرد (Connection reset / Remote end closed / 502). اکنون: چند نقشه در یک درخواست
+    (a=putm، اگر هاست اعلام کند)، اتصال پایدار (keep-alive) برای هر رشته، و مکث مشترک پس از خطا. سرور قدیمی ← همان روش تکی."""
     def __init__(s, host, key, outdir):
         s.host, s.key, s.out = (host.rstrip('/') if host else None), key, outdir
         s.pool = ThreadPoolExecutor(int(os.environ.get('NWP_UP_WORKERS', '2'))); s.fut = []; s.lock = threading.Lock(); s.n = 0
-        s.sem = threading.BoundedSemaphore(36)              # r112: فشار برگشتی — صف آپلود از ۳۶ نقشه بیشتر نمی‌شود (قبلاً بی‌نهایت؛ پایان کار ساعت‌ها منتظر می‌ماند و job با «operation was canceled» کشته می‌شد)
-        s.cool_until = 0.0; s.fails = 0; s.deadline = None   # r112: مکث مشترک پس از خطای ۵xx هاست (همهٔ رشته‌ها با هم)؛ deadline = زمان قطعی پایان
+        s.sem = threading.BoundedSemaphore(36)              # r112: فشار برگشتی برای حالت تکی
+        s.bsem = threading.BoundedSemaphore(int(os.environ.get('NWP_UP_BATCHQ', '3')))   # r114: حداکثر دسته‌های در صف
+        s.cool_until = 0.0; s.fails = 0; s.deadline = None
+        s.putm = False; s.bn = 15; s.bb = 1_500_000; s.buf = {}; s.tl = threading.local(); s.reqs = 0
+    def _sess(s):
+        import requests
+        if getattr(s.tl, 'ss', None) is None: s.tl.ss = requests.Session()
+        return s.tl.ss
+    def _caps(s, r):
+        if not isinstance(r, dict) or 'putm' not in (r.get('caps') or []) or os.environ.get('NWP_UP_BATCH', '1') == '0': return
+        L = r.get('lim') or {}; f = int(L.get('files') or 20); post = int(L.get('post') or 0); up = int(L.get('up') or 0)
+        n = max(1, min(int(os.environ.get('NWP_UP_BATCH_N', '15')), f - 1 if f > 1 else 1))
+        lim = min(x for x in (post, 6_000_000) if x > 0) if post else 1_500_000
+        if not s.putm: log(f'  ↺ آپلود دسته‌ای فعال شد: تا {n} نقشه و {lim * 0.7 / 1e6:.1f} MB در هر درخواست (max_file_uploads={f}, post_max_size={post}, upload_max_filesize={up})')
+        s.putm, s.bn, s.bb = True, n, int(lim * 0.7)
     def call(s, a, js=None, files=None, data=None):
         if not s.host: return {'have': [], 'ok': True}
-        import requests
-        u = f"{s.host}/nwp_upload.php?a={a}"                    # r113: کلید در هدر X-Upload-Key (در لاگ GitHub دیده نشود)
-        for k in range(8):                                  # r103: ۸ تلاش با عقب‌نشینی نمایی (هاست زیر بار ۵۰۲ می‌داد)
-            if s.deadline and time.time() > s.deadline: return {}            # r112: پس از ضرب‌الاجل دیگر تلاش نکن
+        u = f"{s.host}/nwp_upload.php?a={a}"                    # r113: کلید در هدر X-Upload-Key
+        for k in range(8):
+            if s.deadline and time.time() > s.deadline: return {}
             w = s.cool_until - time.time()
-            if w > 0: time.sleep(min(w, 120))                                # r112: مکث مشترک
+            if w > 0: time.sleep(min(w, 180))
             try:
-                time.sleep(float(os.environ.get('NWP_UP_GAP', '0.4')))                  # r113: فاصلهٔ کوتاه بین درخواست‌ها (محدودیت نرخ هاست)
-                r = requests.post(u, json=js, files=files, data=data, headers={'Connection': 'close', 'X-Upload-Key': s.key}, timeout=90)
+                time.sleep(float(os.environ.get('NWP_UP_GAP', '0.4')))
+                with s.lock: s.reqs += 1
+                r = s._sess().post(u, json=js, files=files, data=data, headers={'X-Upload-Key': s.key}, timeout=(20, 150))
                 if r.status_code >= 500: raise RuntimeError(f'HTTP {r.status_code} [{a}]')
                 s.fails = 0
                 if r.status_code == 403: sys.exit('✗ کلید آپلود اشتباه است (upload_key در mx_config.json روی هاست)')
-                try: return r.json()
+                try: j = r.json()
                 except Exception: raise RuntimeError(f'HTTP {r.status_code} [{a}] پاسخ: {r.text[:160]!r}')
+                if a == 'begin': s._caps(j)
+                return j
             except SystemExit: raise
             except Exception as e:
-                s.fails += 1; s.cool_until = max(s.cool_until, time.time() + min(120, 8 * 2 ** min(s.fails, 4)))
-                log(f'  … خطای ارتباط با هاست ({str(e)[:120]}); مکث {min(120, 8 * 2 ** min(s.fails, 4))} ثانیه و تلاش دوباره'); time.sleep(1 + (hash((a, k, time.time())) % 5))
+                try: s.tl.ss.close()
+                except Exception: pass
+                s.tl.ss = None                                   # اتصال خراب دور ریخته می‌شود
+                with s.lock: s.fails += 1; f = s.fails
+                d = min(180, 10 * 2 ** min(f, 4)); s.cool_until = max(s.cool_until, time.time() + d)
+                log(f'  … خطای ارتباط با هاست ({str(e)[:120]}); مکث {d} ثانیه و تلاش دوباره'); time.sleep(1 + (hash((a, k, time.time())) % 5))
         return {}
+    def _flush(s, key):
+        with s.lock:
+            B = s.buf.pop(key, None)
+        if not B or not B['it']: return
+        mkey, run = key; it = B['it']
+        s.bsem.acquire()
+        def job():
+            try:
+                lst = [{'file': f, 'meta': m} for f, _, m in it]
+                files = [('png[]', (os.path.basename(f), b, 'image/webp' if f.endswith('.webp') else 'image/png')) for f, b, _ in it]
+                r = s.call('putm', data={'model': mkey, 'run': run, 'list': json.dumps(lst)}, files=files)
+                if not r.get('ok'): log(f'  ✗ آپلود دسته‌ای {mkey} ({len(it)} نقشه): {str(r)[:160]}'); return
+                if r.get('bad'): log(f'  ✗ {len(r["bad"])} نقشه رد شد: {r["bad"][:3]}')
+                with s.lock: s.n += int(r.get('n') or 0)
+            finally: s.bsem.release()
+        s.fut.append(s.pool.submit(job))
     def put(s, mkey, run, fname, png, meta):
-        s.sem.acquire()                                                      # r112: پشت‌سر‌هم‌بودن تولید و آپلود
+        if s.out:
+            p = os.path.join(s.out, mkey, run, fname); os.makedirs(os.path.dirname(p), exist_ok=True); open(p, 'wb').write(png)
+        if not s.host: 
+            with s.lock: s.n += 1
+            return
+        if s.putm:
+            key = (mkey, run); now = time.time(); full = []
+            with s.lock:
+                B = s.buf.setdefault(key, {'it': [], 'sz': 0, 't': now}); B['it'].append((fname, png, meta)); B['sz'] += len(png)
+                if len(B['it']) >= s.bn or B['sz'] >= s.bb: full.append(key)
+                full += [k for k, v in s.buf.items() if k != key and now - v['t'] > 90]     # دسته‌های کهنه (بیش از ۹۰ ثانیه)
+            for k in full: s._flush(k)
+            return
+        s.sem.acquire()
         def job():
           try:
-            if s.out:
-                p = os.path.join(s.out, mkey, run, fname); os.makedirs(os.path.dirname(p), exist_ok=True); open(p, 'wb').write(png)
-            if s.host:
-                r = s.call('put', data={'model': mkey, 'run': run, 'file': fname, 'meta': json.dumps(meta)}, files={'png': (os.path.basename(fname), png, 'image/webp' if fname.endswith('.webp') else 'image/png')})
-                if not r.get('ok'): log(f'  ✗ آپلود {mkey}/{fname}: {r}'); return
+            r = s.call('put', data={'model': mkey, 'run': run, 'file': fname, 'meta': json.dumps(meta)}, files={'png': (os.path.basename(fname), png, 'image/webp' if fname.endswith('.webp') else 'image/png')})
+            if not r.get('ok'): log(f'  ✗ آپلود {mkey}/{fname}: {r}'); return
             with s.lock: s.n += 1
           finally: s.sem.release()
         s.fut.append(s.pool.submit(job))
+    def flush_all(s):
+        for k in list(s.buf.keys()): s._flush(k)
     def wait(s):
-        for f in s.fut:
-            try: f.result(timeout=max(1, (s.deadline - time.time())) if s.deadline else None)         # r112: حداکثر تا ضرب‌الاجل
+        s.flush_all()
+        for f in list(s.fut):
+            try: f.result(timeout=max(1, (s.deadline - time.time())) if s.deadline else None)
             except Exception as e: log(f'  ✗ {type(e).__name__} {e}')
         s.fut = []
 
