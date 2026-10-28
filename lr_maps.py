@@ -14,7 +14,7 @@ BASE = 'https://ftp.cpc.ncep.noaa.gov/NMME/realtime_anom/'
 MODELS = {
     'nmme':    ('ENSMEAN', 'NMME میانگین چندمدلی', 'NMME ensemble mean'),
     'cfsv2':   ('CFSv2', 'CFSv2 (NOAA)', 'CFSv2'),
-    'ccsm4':   ('CCSM4', 'NCAR CCSM4', 'NCAR CCSM4'),
+    # r113: CCSM4 از تولید حذف شد (درخواست کاربر)
     'gemnemo': ('GEM5_NEMO', 'GEM5-NEMO (ECCC)', 'GEM5-NEMO'),
     'nasa':    ('NASA', 'NASA GEOS-S2S', 'NASA GEOS-S2S'),
     'gfdl':    ('GFDL', 'GFDL SPEAR', 'GFDL SPEAR'),
