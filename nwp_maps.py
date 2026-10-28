@@ -54,7 +54,7 @@ MODELS = {
     'gfs':    dict(name='GFS 13km', label='GFS 13km (0.11°)', dom=['ncep_gfs013'], upper='ncep_gfs025', prov='NOAA NCEP', hz=384, res='0.11° (13 km)', cyc='00/06/12/18'),
     'gfs25':  dict(name='GFS 28km', label='GFS 28km (0.25°)', dom=['ncep_gfs025'], prov='NOAA NCEP', hz=384, res='0.25° (28 km)', cyc='00/06/12/18'),
     'icon':   dict(name='ICON', label='ICON-EU 7 km + ICON 13 km', dom=['dwd_icon'], hires='dwd_icon_eu', prov='DWD', hz={'00': 180, '12': 180, '06': 120, '18': 120}, res='7 km (اروپا) / 13 km', cyc='00/06/12/18'),
-    'ukmo':   dict(name='UKMO', label='UKMO Global 10 km', dom=['ukmo_global_deterministic_10km'], prov='Met Office', hz=168, res='10 km', cyc='00/06/12/18'),
+    'ukmo':   dict(name='UKMO', label='UKMO Global 10 km', dom=['ukmo_global_deterministic_10km'], prov='Met Office', hz=168, res='10 km', cyc='00/12', only_cyc=(0, 12)),   # r113: فقط ران ۰۰ و ۱۲ (ران‌های ۰۶ و ۱۸ کوتاه‌اند)
     'gem':    dict(name='GEM', label='GEM GDPS 15 km', dom=['cmc_gem_gdps_15km', 'cmc_gem_gdps'], prov='ECCC', hz=240, res='15 km', cyc='00/12'),
 }
 # r83: حذف اختیاری مدل از تولید (فضای هاست): NWP_DROP_MODELS=arpege  (r109: پیش‌فرض arpege حذف است؛ برای نگه‌داشتن: NWP_DROP_MODELS=none). پوشهٔ قدیمی را روی هاست دستی پاک کنید.
