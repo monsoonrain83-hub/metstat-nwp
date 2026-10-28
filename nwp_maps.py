@@ -138,7 +138,7 @@ for _l, _r in _ZC.items():
     for _q in ('ta', 'te', 'thw', 'tw'): SEC_CONT[f'{_q}{_l}'] = (f'z{_l}', 10.0, _r)
 # r83: لایه‌های سینرژی روی صفحهٔ اصلی منتشر نمی‌شوند (فضای هاست)؛ فقط در تب سینرژی‌اند و در نقشه‌های ثانویه مشارکت می‌کنند (secondary.py).
 #      برای انتشار دوباره: متغیر محیطی NWP_PUBLISH_DY=all  یا  فهرست جداشده با کاما مثل vo500,dv300
-_PUB = os.environ.get('NWP_PUBLISH_DY', 'ccc').strip()
+_PUB = os.environ.get('NWP_PUBLISH_DY', 'ccc,swt').strip()   # r113: SWEAT دوباره منتشر می‌شود (برای مالتی‌مدل سفارشی)
 PUBLISH_DY = set(SEC_IDX) if _PUB == 'all' else {x for x in _PUB.split(',') if x}
 for _p, (_k, _sck, _u, _en, _fa) in SEC_IDX.items():
     if _p not in PUBLISH_DY: continue
