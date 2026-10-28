@@ -802,19 +802,20 @@ FORCED = set()
 class Uploader:
     def __init__(s, host, key, outdir):
         s.host, s.key, s.out = (host.rstrip('/') if host else None), key, outdir
-        s.pool = ThreadPoolExecutor(3); s.fut = []; s.lock = threading.Lock(); s.n = 0
+        s.pool = ThreadPoolExecutor(int(os.environ.get('NWP_UP_WORKERS', '2'))); s.fut = []; s.lock = threading.Lock(); s.n = 0
         s.sem = threading.BoundedSemaphore(36)              # r112: فشار برگشتی — صف آپلود از ۳۶ نقشه بیشتر نمی‌شود (قبلاً بی‌نهایت؛ پایان کار ساعت‌ها منتظر می‌ماند و job با «operation was canceled» کشته می‌شد)
         s.cool_until = 0.0; s.fails = 0; s.deadline = None   # r112: مکث مشترک پس از خطای ۵xx هاست (همهٔ رشته‌ها با هم)؛ deadline = زمان قطعی پایان
     def call(s, a, js=None, files=None, data=None):
         if not s.host: return {'have': [], 'ok': True}
         import requests
-        u = f"{s.host}/nwp_upload.php?a={a}&key={requests.utils.quote(s.key)}"
+        u = f"{s.host}/nwp_upload.php?a={a}"                    # r113: کلید در هدر X-Upload-Key (در لاگ GitHub دیده نشود)
         for k in range(8):                                  # r103: ۸ تلاش با عقب‌نشینی نمایی (هاست زیر بار ۵۰۲ می‌داد)
             if s.deadline and time.time() > s.deadline: return {}            # r112: پس از ضرب‌الاجل دیگر تلاش نکن
             w = s.cool_until - time.time()
             if w > 0: time.sleep(min(w, 120))                                # r112: مکث مشترک
             try:
-                r = requests.post(u, json=js, files=files, data=data, timeout=90)
+                time.sleep(float(os.environ.get('NWP_UP_GAP', '0.4')))                  # r113: فاصلهٔ کوتاه بین درخواست‌ها (محدودیت نرخ هاست)
+                r = requests.post(u, json=js, files=files, data=data, headers={'Connection': 'close', 'X-Upload-Key': s.key}, timeout=90)
                 if r.status_code >= 500: raise RuntimeError(f'HTTP {r.status_code} [{a}]')
                 s.fails = 0
                 if r.status_code == 403: sys.exit('✗ کلید آپلود اشتباه است (upload_key در mx_config.json روی هاست)')
