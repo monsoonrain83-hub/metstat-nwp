@@ -817,7 +817,7 @@ class Uploader:
         s.pool = ThreadPoolExecutor(int(os.environ.get('NWP_UP_WORKERS', '2'))); s.fut = []; s.lock = threading.Lock(); s.n = 0
         s.sem = threading.BoundedSemaphore(36)              # r112: فشار برگشتی برای حالت تکی
         s.bsem = threading.BoundedSemaphore(int(os.environ.get('NWP_UP_BATCHQ', '3')))   # r114: حداکثر دسته‌های در صف
-        s.cool_until = 0.0; s.fails = 0; s.deadline = None
+        s.cool_until = 0.0; s.fails = 0; s.deadline = None; s.down_since = None; s.dead = False; s.diag_done = False
         s.putm = False; s.bn = 15; s.bb = 1_500_000; s.buf = {}; s.tl = threading.local(); s.reqs = 0
     def _sess(s):
         import requests
@@ -834,6 +834,7 @@ class Uploader:
         if not s.host: return {'have': [], 'ok': True}
         u = f"{s.host}/nwp_upload.php?a={a}"                    # r113: کلید در هدر X-Upload-Key
         for k in range(8):
+            if s.dead: return {}                                 # r119: قطع‌کنندهٔ مدار — هاست بیش از NWP_UP_GIVEUP_MIN دقیقه پیاپی خطا داده؛ دیگر منتظر نمی‌مانیم
             if s.deadline and time.time() > s.deadline: return {}
             w = s.cool_until - time.time()
             if w > 0: time.sleep(min(w, 180))
@@ -841,8 +842,8 @@ class Uploader:
                 time.sleep(float(os.environ.get('NWP_UP_GAP', '0.4')))
                 with s.lock: s.reqs += 1
                 r = s._sess().post(u, json=js, files=files, data=data, headers={'X-Upload-Key': s.key}, timeout=(20, 150))
-                if r.status_code >= 500: raise RuntimeError(f'HTTP {r.status_code} [{a}]')
-                s.fails = 0
+                if r.status_code >= 500: raise RuntimeError(f'HTTP {r.status_code} [{a}] {r.text[:200]!r}')           # r119: بدنهٔ پاسخ (error/msg از nwp_upload.php) در لاگ دیده شود
+                s.fails = 0; s.down_since = None
                 if r.status_code == 403: sys.exit('✗ کلید آپلود اشتباه است (upload_key در mx_config.json روی هاست)')
                 try: j = r.json()
                 except Exception: raise RuntimeError(f'HTTP {r.status_code} [{a}] پاسخ: {r.text[:160]!r}')
@@ -854,7 +855,18 @@ class Uploader:
                 except Exception: pass
                 s.tl.ss = None                                   # اتصال خراب دور ریخته می‌شود
                 with s.lock: s.fails += 1; f = s.fails
-                d = min(180, 10 * 2 ** min(f, 4)); s.cool_until = max(s.cool_until, time.time() + d)
+                now = time.time()
+                with s.lock:
+                    if s.down_since is None: s.down_since = now
+                    gu = float(os.environ.get('NWP_UP_GIVEUP_MIN', '15')) * 60
+                    if now - s.down_since > gu and not s.dead:
+                        s.dead = True; log(f'  ✗✗ هاست {gu / 60:.0f} دقیقه پیاپی خطا داد؛ آپلود متوقف شد (job دیگر منتظر نمی‌ماند). nwp_upload.php?a=diag را روی هاست ببینید.')
+                    dg = not s.diag_done and a != 'diag'; s.diag_done = True
+                if dg:                                           # r119: یک بار تشخیص هاست را در لاگ می‌آورد (آخرین خطای مرگبار، حافظه، فضای دیسک)
+                    try:
+                        q = s._sess().post(f"{s.host}/nwp_upload.php?a=diag", headers={'X-Upload-Key': s.key}, timeout=(10, 30)); log(f'  ⓘ diag هاست: HTTP {q.status_code} {q.text[:700]}')
+                    except Exception as e2: log(f'  ⓘ diag هاست در دسترس نیست: {str(e2)[:100]}')
+                d = int(os.environ.get('NWP_UP_TESTD', '0')) or min(180, 10 * 2 ** min(f, 4)); s.cool_until = max(s.cool_until, time.time() + d)
                 log(f'  … خطای ارتباط با هاست ({str(e)[:120]}); مکث {d} ثانیه و تلاش دوباره'); time.sleep(1 + (hash((a, k, time.time())) % 5))
         return {}
     def _flush(s, key):
@@ -1425,7 +1437,7 @@ class Engine:
         if pid in ('w500', 'w300'):
             p = int(pid[1:]); u = d.get(f'wind_u_component_{p}hPa'); v = d.get(f'wind_v_component_{p}hPa')
             if u is None: return None
-            U, V = I(u), I(v)
+            U, V = np.asarray(I(u), dtype=float), np.asarray(I(v), dtype=float)        # r119: GFS 28km گاهی آرایهٔ dtype=object می‌داد → «'float' object has no attribute 'hypot'»
             return (np.hypot(U, V) * 3.6, dict(barbs=(U * 1.94384, V * 1.94384)))
         return None
 
@@ -1515,7 +1527,7 @@ def main():
         time.sleep(1); eng.mm.tick(final=True)
         eng.up.wait()
     log(f'پایان: {eng.up.n} نقشه ارسال شد')
-    sys.stdout.flush(); os._exit(0)                                   # r112: رشته‌های آپلودِ گیرکرده مانع خروج نشوند
+    sys.stdout.flush(); os._exit(3 if eng.up.dead and eng.up.n == 0 else 0)       # r119: اگر هاست از کار افتاده و هیچ نقشه‌ای نرفته، job قرمز شود                                   # r112: رشته‌های آپلودِ گیرکرده مانع خروج نشوند
 
 if __name__ == '__main__':
     main()
