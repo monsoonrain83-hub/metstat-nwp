@@ -49,8 +49,8 @@ EU_EXT = (-12.0, 68.0, 12.0, 62.0); EU_PXD = 16
 EUW, EUH = int((EU_EXT[1] - EU_EXT[0]) * EU_PXD), int((EU_EXT[3] - EU_EXT[2]) * EU_PXD)
 EU_PIDS = ('z850', 'z700', 'z500', 'z500a', 'w500', 'w300', 'w250', 'w200', 'sfc', 'w10')
 MODELS = {
-    'ecmwf':  dict(name='ECMWF 28km', label='ECMWF IFS 28km (0.25°)', dom=['ecmwf_ifs025'], prov='ECMWF', hz={'00': 360, '12': 360, '06': 144, '18': 144}, res='0.25°', cyc='00/12', only_cyc=(0, 12)),
-    'ecmwf9': dict(name='ECMWF 9km', label='ECMWF IFS 9km (HRES)', dom=['ecmwf_ifs'], prov='ECMWF', hz={'00': 240, '12': 240, '06': 144, '18': 144}, res='0.1° (9 km)', cyc='00/12', only_cyc=(0, 12)),   # فقط پارامترهای سطحی؛ ترازهای فشاری در HRES نیست
+    'ecmwf':  dict(name='ECMWF 28km', label='ECMWF IFS 28km (0.25°)', dom=['ecmwf_ifs025'], prov='ECMWF', hz={'00': 360, '12': 360, '06': 144, '18': 144}, res='0.25°', cyc='00/06/12/18'),   # r120: ران‌های ۰۶ و ۱۸ (افق ۱۴۴ ساعت) دوباره فعال شد
+    'ecmwf9': dict(name='ECMWF 9km', label='ECMWF IFS 9km (HRES)', dom=['ecmwf_ifs'], prov='ECMWF', hz={'00': 240, '12': 240, '06': 144, '18': 144}, res='0.1° (9 km)', cyc='00/06/12/18'),   # فقط پارامترهای سطحی؛ ترازهای فشاری در HRES نیست
     'gfs':    dict(name='GFS 13km', label='GFS 13km (0.11°)', dom=['ncep_gfs013'], upper='ncep_gfs025', prov='NOAA NCEP', hz=384, res='0.11° (13 km)', cyc='00/06/12/18'),
     'gfs25':  dict(name='GFS 28km', label='GFS 28km (0.25°)', dom=['ncep_gfs025'], prov='NOAA NCEP', hz=384, res='0.25° (28 km)', cyc='00/06/12/18'),
     'icon':   dict(name='ICON', label='ICON-EU 7 km + ICON 13 km', dom=['dwd_icon'], hires='dwd_icon_eu', prov='DWD', hz={'00': 180, '12': 180, '06': 120, '18': 120}, res='7 km (اروپا) / 13 km', cyc='00/06/12/18'),
@@ -967,7 +967,7 @@ class Engine:
         hz = min(hz, s.a.horizon or hz)
         vts = sorted({datetime.strptime(v[:16], '%Y-%m-%dT%H:%M').replace(tzinfo=UTC) for v in meta.get('valid_times', [])})
         vts = [v for v in vts if 0 <= (v - run).total_seconds() / 3600 <= hz]
-        if s.sink_only and run.hour not in (0, 12): return False         # r115: مالتی‌مدل فقط ران ۰۰/۱۲
+        # r120: مالتی‌مدل هم ران‌های ۰۶ و ۱۸ را می‌پذیرد (قید ۰۰/۱۲ برداشته شد)
         st = s.state.get(mkey)
         if not st or st.run != run:
             srcs = {'main': S}
