@@ -1,4 +1,6 @@
 name: metstat-nwp
+# r115: کار بین چند job موازی تقسیم شده است (هر job یک runner جدا با ۴ هسته).
+# قبلاً هر ۸ مدل + مالتی‌مدل در یک runner و یک پروسس پایتون می‌ساختند؛ هر نقشه ≈ ۷ ثانیه و ران‌ها هیچ‌وقت کامل نمی‌شدند.
 on:
   schedule:
     - cron: "5 */6 * * *"
@@ -6,20 +8,61 @@ on:
 concurrency:
   group: nwp
   cancel-in-progress: false
+env:
+  NWP_UP_WORKERS: "1"      # هر job یک رشتهٔ آپلود؛ با ۱۵ job همزمان، فشار روی هاست از ۱۵ اتصال بیشتر نمی‌شود
+  NWP_UP_GAP: "0.4"
 jobs:
   maps:
+    name: ${{ matrix.m }} ${{ matrix.s }}
     runs-on: ubuntu-latest
     timeout-minutes: 358
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { m: ecmwf,  s: "0/3" }
+          - { m: ecmwf,  s: "1/3" }
+          - { m: ecmwf,  s: "2/3" }
+          - { m: ecmwf9, s: "0/1" }
+          - { m: gfs,    s: "0/2" }
+          - { m: gfs,    s: "1/2" }
+          - { m: gfs25,  s: "0/2" }
+          - { m: gfs25,  s: "1/2" }
+          - { m: icon,   s: "0/2" }
+          - { m: icon,   s: "1/2" }
+          - { m: ukmo,   s: "0/1" }
+          - { m: gem,    s: "0/1" }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip
       - name: install
         run: pip install -r requirements.txt
       - name: probe
         continue-on-error: true
-        run: python nwp_maps.py --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}" --probe
+        run: python nwp_maps.py --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}" --probe --models ${{ matrix.m }}
       - name: maps
-        # r112: حلقه ۳۲۰ دقیقه + ۱۲ دقیقه فرصت پایانی آپلود = حداکثر ≈ ۳۳۵ دقیقه، پیش از سقف ۳۵۸ دقیقهٔ job (قبلاً ۳۴۰ + آپلودِ گیرکرده → «operation was canceled»)
-        run: python nwp_maps.py --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}" --loop --max-minutes 320 --mm mmcache
+        # حلقه ۳۲۰ دقیقه + ۱۲ دقیقه فرصت پایانی آپلود، پیش از سقف ۳۵۸ دقیقهٔ job
+        run: python nwp_maps.py --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}" --loop --max-minutes 320 --models ${{ matrix.m }} --shard ${{ matrix.s }} --mm-ext
+
+  mm:
+    # مالتی‌مدل: فقط میدان‌ها را از همهٔ مدل‌ها می‌خواند (بدون ساخت نقشهٔ تک‌مدل) و نقشهٔ ترکیبی می‌سازد؛ سه سهم موازی
+    name: multimodel ${{ matrix.s }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 358
+    strategy:
+      fail-fast: false
+      matrix:
+        s: ["0/3", "1/3", "2/3"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: install
+        run: pip install -r requirements.txt
+      - name: multimodel
+        run: python nwp_maps.py --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}" --loop --max-minutes 320 --models ecmwf9,ecmwf,gfs,gfs25,icon,gem,ukmo --regions iran,fars,me --mm mmcache --mm-only --shard ${{ matrix.s }}
