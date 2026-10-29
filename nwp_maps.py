@@ -842,7 +842,7 @@ class Uploader:
                 time.sleep(float(os.environ.get('NWP_UP_GAP', '0.4')))
                 with s.lock: s.reqs += 1
                 r = s._sess().post(u, json=js, files=files, data=data, headers={'X-Upload-Key': s.key}, timeout=(20, 150))
-                if r.status_code >= 500: raise RuntimeError(f'HTTP {r.status_code} [{a}] {r.text[:200]!r}')           # r119: بدنهٔ پاسخ (error/msg از nwp_upload.php) در لاگ دیده شود
+                if r.status_code >= 500 or r.status_code == 429: raise RuntimeError(f'HTTP {r.status_code} [{a}] {r.text[:200]!r}')           # r119: بدنهٔ پاسخ (error/msg از nwp_upload.php) در لاگ دیده شود
                 s.fails = 0; s.down_since = None
                 if r.status_code == 403: sys.exit('✗ کلید آپلود اشتباه است (upload_key در mx_config.json روی هاست)')
                 try: j = r.json()
@@ -980,6 +980,7 @@ class Engine:
                                        'params': {k: dict(fa=v['fa'], unit=v['unit'], cat=v['cat'], o=v['ord'], sc=(v.get('me') or {}).get('sc', v['sc']),
                                                           mu=(v.get('me') or {}).get('unit', v['unit']), alt=v.get('alt', ''), me=int(bool(v.get('me_only'))), ln=int(bool(v.get('cont') or v.get('barbs') or v.get('ln'))))
                                                   for k, v in PARAMS.items() if mkey in v['models']}})
+            if not s.sink_only and s.up.host and 'have' not in r: log(f'  ✗ begin {mkey} {rid} ناموفق: {str(r)[:160]} — آپلودهای این ران ممکن است رد شوند')   # r119b
             st.have = set(r.get('have', []))
             if FORCE and (mkey, rid) not in FORCED:                    # r58: بازسازی اجباری فقط یک‌بار برای هر (مدل، ران)؛ بدون آن نقشه‌های موجود روی هاست دوباره ساخته نمی‌شوند
                 FORCED.add((mkey, rid)); log(f'  ⟳ بازسازی اجباری: {len(st.have)} نقشهٔ موجود دوباره ساخته و جایگزین می‌شود'); st.have = set()
