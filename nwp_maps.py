@@ -13,7 +13,7 @@ Lifted، Soaring، بازتاب، هوای مهم، انومالی دما…) م
     python nwp_maps.py --host https://wtafkik.ir/online --key کلید_آپلود --loop --max-minutes 340
 آزمون بدون اینترنت (دادهٔ ساختگی، خروجی در پوشهٔ out):  python nwp_maps.py --mock --out out --models ecmwf --max-steps 6
 """
-import argparse, functools, io, json, math, os, sys, time, threading, traceback
+import argparse, functools, io, json, math, os, sys, time, threading, traceback, zlib
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 import numpy as np
@@ -797,6 +797,15 @@ def needed_vars(mkey, pids, kind):
         v |= SEC_SFC                                           # ورودی هشدارها (اگر مدل نداشته باشد خوانده نمی‌شود)
     return v
 
+SHARD = [0, 1]       # r115: [k, n]
+def in_shard(pid, P=None):
+    """سهم این پردازش از پارامترها. پارامترهای ثانویهٔ هم‌پنجره (win) با هم می‌مانند تا «هشدار ترکیبی» همهٔ خطرهای همان ساعت را داشته باشد."""
+    k, n = SHARD
+    if n <= 1: return True
+    P = P or PARAMS.get(pid) or {}
+    key = ('w:' + str(P.get('win'))) if P.get('kind') == 'sec' else pid
+    return zlib.crc32(key.encode()) % n == k
+
 FORCE = bool(os.environ.get('NWP_FORCE', '').strip() not in ('', '0')) or os.path.exists('FORCE_REGEN') or '--force' in sys.argv     # r58
 FORCED = set()
 class Uploader:
@@ -909,7 +918,7 @@ def leads(vts, run): return [int(round((v - run).total_seconds() / 3600)) for v 
 
 class Engine:
     def __init__(s, a):
-        s.a = a; s.state = {}; s.fs = None; s.mm = None
+        s.a = a; s.state = {}; s.fs = None; s.mm = None; s.sink_only = False
         s.regions = {k: Region(k) for k in a.regions if k not in ('me', 'eu')}
         if 'me' in a.regions:
             base = s.regions.get('iran') or Region('iran'); s.regions['me'] = MERegion(base)
@@ -946,13 +955,14 @@ class Engine:
         hz = min(hz, s.a.horizon or hz)
         vts = sorted({datetime.strptime(v[:16], '%Y-%m-%dT%H:%M').replace(tzinfo=UTC) for v in meta.get('valid_times', [])})
         vts = [v for v in vts if 0 <= (v - run).total_seconds() / 3600 <= hz]
+        if s.sink_only and run.hour not in (0, 12): return False         # r115: مالتی‌مدل فقط ران ۰۰/۱۲
         st = s.state.get(mkey)
         if not st or st.run != run:
             srcs = {'main': S}
             if M.get('hires'): srcs['hires'] = s.src(M['hires'])
             if M.get('upper'): srcs['upper'] = s.src(M['upper'])
             st = s.state[mkey] = RunState(mkey, run, srcs)
-            r = s.up.call('begin', js={'model': mkey, 'run': rid, 'name': M['name'], 'label': M['label'],
+            r = {} if s.sink_only else s.up.call('begin', js={'model': mkey, 'run': rid, 'name': M['name'], 'label': M['label'],
                                        'info': dict(tclass='daily', res=M.get('res', ''), cyc=M.get('cyc', ''), prov=M['prov']),
                                        'cats': [dict(id=i, fa=fa, o=o) for i, fa, o in CATS], 'scales': scales_payload(),
                                        'params': {k: dict(fa=v['fa'], unit=v['unit'], cat=v['cat'], o=v['ord'], sc=(v.get('me') or {}).get('sc', v['sc']),
@@ -990,10 +1000,10 @@ class Engine:
             st.done_i = i; st.prev_vt = vt
             if s.mm: s.mm.progress(mkey, run, vt)
         s.up.wait()
-        if made: s.up.call('sync', js={'model': mkey, 'run': rid})
+        if made and not s.sink_only: s.up.call('sync', js={'model': mkey, 'run': rid})
         if made: log(f'■ {M["name"]} {rid}: +{made} نقشه ({time.time() - t0:.0f} ثانیه)')
         complete = st.done_i >= len(vts) - 1 and meta.get('completed', True)
-        if complete and not getattr(st, 'ended', False):
+        if complete and not getattr(st, 'ended', False) and not s.sink_only:
             s.up.call('end', js={'model': mkey, 'run': rid}); st.ended = True
         return made > 0
 
@@ -1004,8 +1014,9 @@ class Engine:
         want_all = (lead % 3 == 0 and lead <= 120) or lead % 6 == 0
         mine = [p for p, P in PARAMS.items() if mkey in P['models']]
         D = {}
+        sh_mine = [p for p in mine if in_shard(p)]
         for name, src in st.srcs.items():
-            vars_ = needed_vars(mkey, mine, 'all' if want_all else 'acc')
+            vars_ = needed_vars(mkey, sh_mine or mine, 'all' if want_all else 'acc')
             if name == 'upper':
                 if not want_all: continue
                 vars_ = set(SEC_UPPER)                      # اولویت با 0.13°؛ هر چه آنجا نبود از 0.25°
@@ -1038,9 +1049,11 @@ class Engine:
                 st.tser[name][vt] = (d['temperature_2m'], d.get('temperature_2m_max', d['temperature_2m']), d.get('temperature_2m_min', d['temperature_2m']), dt_h)
         made = 0
         for rk, R in s.regions.items():
-            for pid in mine:
+            if s.sink_only and rk == 'eu': continue
+            for pid in sh_mine:
                 P = PARAMS[pid]
-                if P['kind'] == 'sec': continue                     # نقشه‌های ثانویه پایین‌تر (sec_step) ساخته می‌شوند
+                if P['kind'] == 'sec': continue
+                if s.sink_only and not (s.mm and pid in s.mm.pmm): continue                     # نقشه‌های ثانویه پایین‌تر (sec_step) ساخته می‌شوند
                 if P.get('me_only') and rk not in ('me', 'eu'): continue
                 if rk == 'eu' and pid not in EU_PIDS: continue
                 job = s.plan(P, st, vt, lead, dt_h, want_all)
@@ -1054,6 +1067,7 @@ class Engine:
                 if out is None: continue
                 field, extra = out
                 if s.mm and rk in ('iran', 'fars', 'me'): s.mm.sink(mkey, rk, pid, run, vt, field, extra)
+                if s.sink_only: continue                         # r115: فقط برای مالتی‌مدل؛ نقشهٔ تک‌مدل را job مدل می‌سازد
                 if P.get('skip_empty') and not (np.nanmax(field) >= 0.1): continue
                 if rk in ('me', 'eu'):
                     mo = P.get('me') or {}; sck = mo.get('sc', P['sc'])
@@ -1087,10 +1101,10 @@ class Engine:
                 png = render(R, field, P['sc'], title, vt, run, M, P['unit'], mk, **{k_: v_ for k_, v_ in extra.items() if k_ != 'hl'})
                 meta = dict(r=rk, m=mkey, p=pid, s=lead, v=f'{vt:%Y%m%d%H}')
                 s.up.put(mkey, f'{run:%Y%m%d%H}', fname, png, meta); st.have.add(fname); made += 1
-        if want_all and s.regions.get('me') is not None:                     # r57: کاشی باد ترازهای ۱۰۰۰/۹۲۵/۸۵۰/۷۰۰ هکتوپاسکال برای ذرات باد (بدون نقشهٔ رنگی)
+        if want_all and s.regions.get('me') is not None and not s.sink_only and in_shard('__wind__'):                     # r57: کاشی باد ترازهای ۱۰۰۰/۹۲۵/۸۵۰/۷۰۰ هکتوپاسکال برای ذرات باد (بدون نقشهٔ رنگی)
             try: s.wind_levels(st, D, s.regions['me'], vt, lead)
             except Exception as e: log(f'  ! کاشی باد ترازها {M["name"]} {vt:%Y%m%d%H}: {type(e).__name__}: {e}')
-        sec_p = [p for p in mine if PARAMS[p]['kind'] == 'sec']
+        sec_p = [p for p in sh_mine if PARAMS[p]['kind'] == 'sec']
         if sec_p and want_all and lead > 0:
             try: made += s.sec_step(st, D, vt, lead, dt_h, sec_p)
             except Exception as e: traceback.print_exc(); log(f'  ! نقشه‌های ثانویه {M["name"]} {vt:%Y%m%d%H}: {e}')
@@ -1199,6 +1213,11 @@ class Engine:
         mkey = st.model; M = MODELS[mkey]; run = st.run; rid = f'{run:%Y%m%d%H}'
         fname = f'{rk}/{pid}_{vt:%Y%m%d%H}.' + ('webp' if rk == 'me' else 'png')
         meta = dict(r=rk, m=mkey, p=pid, s=lead, v=f'{vt:%Y%m%d%H}')
+        if s.sink_only:
+            if s.mm and rk in ('iran', 'fars', 'me'):
+                try: s.mm.sink(mkey, rk, pid, run, vt, field, {})
+                except Exception as e_: log(f'  ! مالتی‌مدل sink {pid}: {e_}')
+            return
         if rk == 'me':
             png, lines = render_me(R, field, P['sc'])
             s.up.put(mkey, rid, fname, png, meta)
@@ -1418,19 +1437,27 @@ def main():
     ap.add_argument('--models', default=','.join(MODELS)); ap.add_argument('--regions', default='iran,fars,me,eu')
     ap.add_argument('--force', action='store_true', help='r58: نقشه‌های موجود روی هاست را هم دوباره بساز (یک‌بار برای هر ران). معادل: فایل FORCE_REGEN در ریشهٔ مخزن یا NWP_FORCE=1')
     ap.add_argument('--params', default='', help='فقط این پارامترها (با کاما)'); ap.add_argument('--mm', default='', help='پوشهٔ میدان‌های مدل‌ها؛ مالتی‌مدل MetStat را روشن می‌کند'); ap.add_argument('--mock', action='store_true'); ap.add_argument('--probe', action='store_true'); ap.add_argument('--max-steps', type=int, default=0); ap.add_argument('--horizon', type=int, default=0); ap.add_argument('--hourly-upto', type=int, default=0, help='سازگاری با workflow قدیمی (بدون اثر)')
+    ap.add_argument('--shard', default='0/1', help='r115: k/n؛ این پردازش فقط پارامترهای سهم k از n را می‌سازد (چند job موازی برای یک مدل)')
+    ap.add_argument('--mm-ext', action='store_true', help='r115: پارامترهای مالتی‌مدل برای همهٔ مدل‌ها فعال شود (بدون ساخت ترکیب)')
+    ap.add_argument('--mm-only', action='store_true', help='r115: فقط میدان‌ها خوانده و برای مالتی‌مدل ذخیره شود؛ نقشهٔ تک‌مدل ساخته/آپلود نمی‌شود')
     a = ap.parse_args(); a.regions = a.regions.split(','); t_end = time.time() + a.max_minutes * 60 if a.max_minutes else None
     if not a.host and not a.out: sys.exit('--host یا --out لازم است')
     if a.params:
         keep = set(a.params.split(','))
         for k in list(PARAMS):
             if k not in keep: PARAMS.pop(k)
+    try: k_, n_ = (int(x) for x in a.shard.split('/')); assert 0 <= k_ < n_
+    except Exception: sys.exit('--shard باید k/n باشد (مثلاً 1/3)')
+    SHARD[:] = [k_, n_]
+    if a.mm_only and not a.mm: sys.exit('--mm-only همراه --mm لازم است')
     eng = Engine(a)
     eng.t_end = t_end
     if t_end: eng.up.deadline = t_end + float(os.environ.get('NWP_UP_GRACE_MIN', '12')) * 60                         # r112: ۱۲ دقیقه پس از پایان حلقه، آپلودها قطعاً متوقف می‌شوند
     if 'me' in a.regions: id_init(a.host)
-    if a.mm:                                      # مالتی‌مدل MetStat: میدان هر مدل در a.mm ذخیره و ترکیب می‌شود
+    if a.mm or a.mm_ext:                          # مالتی‌مدل MetStat: میدان هر مدل در a.mm ذخیره و ترکیب می‌شود
         import mm_maps; MM_ON = True; mm_maps.mm_extend_params(PARAMS)
-        eng.mm = mm_maps.MMCombiner(sys.modules[__name__], eng, a.mm)
+        if a.mm: eng.mm = mm_maps.MMCombiner(sys.modules[__name__], eng, a.mm)
+        eng.sink_only = bool(a.mm_only)
     # اقلیم ایستگاهی (برای انومالی) فقط از هاست و با کلید خوانده می‌شود؛ در مخزن عمومی نیست
     try:
         if a.host:

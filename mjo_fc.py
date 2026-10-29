@@ -14,7 +14,8 @@ URL = 'https://psl.noaa.gov/mjo/mjoindex/omi.1x.txt'
 # PSL رسماً می‌گوید OMI فقط تا ۲۴ ژوئن ۲۰۲۶ به‌روز شده (ورودی OLR). جایگزین‌های بلادرنگ (فرمت ستون‌ها هنوز با دادهٔ واقعی تأیید نشده؛ لاگ شروع فایل را چاپ می‌کند):
 ALT = [('RMM-r (Stony Brook)', 'https://mjo.somas.stonybrook.edu/MJO/RMM-r/rmm1+2.txt', 0, False),
        ('ROMI (PSL، فقط OLR)', 'https://psl.noaa.gov/mjo/mjoindex/romi.cpcolr.1x.txt', 1, True),   # ستون چهارم = ساعت؛ هم‌ترازی علامت/جابه‌جایی محورها با OMI در بازهٔ مشترک
-       ('BoM RMM', 'https://www.bom.gov.au/climate/mjo/graphics/rmm.74toRealtime.txt', 0, False)]      # BoM از ۲۰۲۴ به‌روز نمی‌شود
+       ('BoM RMM', 'https://www.bom.gov.au/clim_data/IDCKGEM000/rmm.74toRealtime.txt', 0, False),      # r115: نشانی «دانلود دادهٔ RMM» در صفحهٔ رسمی BoM (clim_data/IDCKGEM000)؛ نشانی قدیمی graphics/ دیگر به‌روز نمی‌شد
+       ('BoM RMM (نشانی قدیمی)', 'https://www.bom.gov.au/climate/mjo/graphics/rmm.74toRealtime.txt', 0, False)]
 PROBE = []
 UA = {'User-Agent': 'MetStat/1.0 (wtafkik.ir)'}
 LEADS = 30; K = 30; SRC = ['NOAA PSL OMI']
