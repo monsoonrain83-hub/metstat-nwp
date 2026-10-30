@@ -13,7 +13,7 @@ Lifted، Soaring، بازتاب، هوای مهم، انومالی دما…) م
     python nwp_maps.py --host https://wtafkik.ir/online --key کلید_آپلود --loop --max-minutes 340
 آزمون بدون اینترنت (دادهٔ ساختگی، خروجی در پوشهٔ out):  python nwp_maps.py --mock --out out --models ecmwf --max-steps 6
 """
-import argparse, functools, io, json, math, os, sys, time, threading, traceback, zlib
+import argparse, functools, io, json, math, os, re, sys, time, threading, traceback, zlib
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 import numpy as np
@@ -408,6 +408,305 @@ class S3Source:
         except Exception as e:
             log(f'  ارتفاع مدل {s.dom} خوانده نشد ({e}); اصلاح ارتفاعی دما انجام نمی‌شود'); s._hsurf = False
         return s._hsurf if s._hsurf is not False else None
+
+
+# ================================================================ r127: منابع رسمی (DWD برای ICON، MSC برای GEM) با پشتیبان Open-Meteo
+OFFICIAL = os.environ.get('NWP_OFFICIAL', '1').strip() not in ('0', 'no', 'off')     # NWP_OFFICIAL=0 → فقط Open-Meteo
+_HTTP = [None]; _OFF_FAIL = [0]; _OFF_SEEN = set()
+def http():
+    if _HTTP[0] is None:
+        import requests; _HTTP[0] = requests.Session(); _HTTP[0].headers['User-Agent'] = 'metstat-nwp/1.0 (+https://wtafkik.ir)'
+    return _HTTP[0]
+def http_bytes(url, tries=3):
+    """بایت‌های فایل یا None (۴۰۴/خطا)؛ هر نشانی ناموفق فقط یک بار لاگ می‌شود."""
+    for k in range(tries):
+        try:
+            r = http().get(url, timeout=120)
+            if r.status_code == 200: return r.content
+            if r.status_code in (403, 404): break
+        except Exception as e:
+            if k == tries - 1 and url not in _OFF_SEEN: _OFF_SEEN.add(url); log(f'  منبع رسمی: {url.rsplit("/", 1)[-1]} → {type(e).__name__}')
+        time.sleep(1 + k)
+    if url not in _OFF_SEEN: _OFF_SEEN.add(url); log(f'  منبع رسمی: دریافت نشد {url}')
+    return None
+def http_list(url):
+    try:
+        r = http().get(url, timeout=60)
+        if r.status_code != 200: return []
+        return re.findall(r'href="([^"?/][^"]*/?)"', r.text)
+    except Exception: return []
+def http_head(url):
+    try: return http().head(url, timeout=40, allow_redirects=True).status_code == 200
+    except Exception: return False
+def _ec():
+    import eccodes as ec; return ec
+def decode_flat(raw):
+    """مقادیر یک پیام GRIB2 به‌صورت آرایهٔ ۱‌بعدی (برای شبکهٔ مثلثی ICON)."""
+    ec = _ec(); g = ec.codes_new_from_message(raw)
+    try: return np.asarray(ec.codes_get_values(g), np.float32)
+    finally: ec.codes_release(g)
+def decode_regular(raw):
+    """پیام GRIB2 شبکهٔ طول-عرض منظم → (آرایه با عرض صعودی از جنوب و طول -180..180، واحد)."""
+    ec = _ec(); g = ec.codes_new_from_message(raw)
+    try:
+        ni, nj = int(ec.codes_get(g, 'Ni')), int(ec.codes_get(g, 'Nj')); v = np.asarray(ec.codes_get_values(g), np.float32).reshape(nj, ni)
+        la1 = ec.codes_get(g, 'latitudeOfFirstGridPointInDegrees'); la2 = ec.codes_get(g, 'latitudeOfLastGridPointInDegrees')
+        lo1 = ec.codes_get(g, 'longitudeOfFirstGridPointInDegrees'); di = ec.codes_get(g, 'iDirectionIncrementInDegrees')
+        try: un = str(ec.codes_get(g, 'units'))
+        except Exception: un = ''
+    finally: ec.codes_release(g)
+    if la1 > la2: v = v[::-1]
+    lon = ((lo1 + np.arange(ni) * di + 180.0) % 360.0) - 180.0
+    return v[:, np.argsort(lon, kind='stable')], un
+
+def _k2c(a): return a - 273.15 if np.nanmean(a) > 150 else a
+
+class OfficialBase(S3Source):
+    """هستهٔ مشترک منابع رسمی: همان شبکه/پنجرهٔ Open-Meteo را می‌دهد تا بقیهٔ کد بدون تغییر کار کند؛ متغیری که منبع رسمی ندارد از Open-Meteo گرفته می‌شود."""
+    official = True
+    def __init__(s, dom, fs):
+        super().__init__(dom, fs); s.fb = S3Source(dom, fs) if fs is not None else None; s.bad = False; s._steps = {}; s._pos = set(); s._cum = {}
+    def _fallback(s, run, vt, names, out):
+        miss = [n for n in names if n not in out]
+        if not miss or s.fb is None: return out
+        try:
+            if s.fb.exists(run, vt):
+                o2 = s.fb.read(run, vt, miss)
+                for k, v in o2.items(): out.setdefault(k, v)
+        except Exception: pass
+        return out
+    def _note_fail(s, got):
+        if got: _OFF_FAIL[0] = 0; return
+        _OFF_FAIL[0] += 1
+        if _OFF_FAIL[0] >= 8 and OFFICIAL_ON[0]: OFFICIAL_ON[0] = False; log('⚠ منبع رسمی ۸ بار پشت‌سرهم داده نداد؛ برای ادامهٔ همین اجرا به Open-Meteo برمی‌گردیم')
+    def _interval(s, run, step, prev, getcum):
+        a = getcum(step)
+        if a is None: return None
+        if prev is None or prev >= step: return np.zeros_like(a)
+        b = getcum(prev)
+        return None if b is None else np.maximum(a - b, 0).astype(np.float32)
+    def _prev_step(s, step):
+        ks = sorted(k for k in s._steps if k < step)
+        if ks: return ks[-1]
+        return None if step == 0 else max(0, step - (1 if step <= 78 else 3))
+OFFICIAL_ON = [True]
+
+class DwdIconSource(OfficialBase):
+    """ICON جهانی (۱۳ کیلومتر) مستقیم از opendata.dwd.de؛ شبکهٔ مثلثی با درون‌یابی IDW سه‌همسایه به شبکهٔ منظم ۰٫۱۲۵° (هم‌شبکه با Open-Meteo)."""
+    BASE = 'https://opendata.dwd.de/weather/nwp/icon/grib/'
+    SINGLE = {'temperature_2m': ('t_2m', 'T_2M'), 'relative_humidity_2m': ('relhum_2m', 'RELHUM_2M'), 'pressure_msl': ('pmsl', 'PMSL'), 'wind_u_component_10m': ('u_10m', 'U_10M'),
+              'wind_v_component_10m': ('v_10m', 'V_10M'), 'wind_gusts_10m': ('vmax_10m', 'VMAX_10M'), 'cape': ('cape_ml', 'CAPE_ML'), 'total_column_integrated_water_vapour': ('tqv', 'TQV')}
+    LEVELS = (1000, 925, 850, 700, 500, 300, 250, 200)
+    _tree = {}; _lock = threading.Lock()
+    def hh_dir(s, hh): return f'{s.BASE}{hh:02d}/'
+    def runs(s):
+        if not OFFICIAL_ON[0]: return []
+        best = None
+        for hh in (0, 6, 12, 18):
+            names = http_list(s.hh_dir(hh) + 'tot_prec/')
+            ids = {}
+            for n in names:
+                m = re.search(r'_(\d{10})_(\d{3})_TOT_PREC\.grib2\.bz2$', n)
+                if m: ids.setdefault(m.group(1), set()).add(int(m.group(2)))
+            if not ids: continue
+            rid = max(ids); st = ids[rid]
+            if best is None or rid > best[0]: best = (rid, st)
+        if not best: return []
+        rid, st = best; run = datetime.strptime(rid, '%Y%m%d%H').replace(tzinfo=UTC)
+        s._steps = {k: 1 for k in st}; s._run = run
+        hz = 180 if run.hour in (0, 12) else 120
+        return [dict(reference_time=run.strftime('%Y-%m-%dT%H:%M:%SZ'), valid_times=[(run + timedelta(hours=k)).strftime('%Y-%m-%dT%H:%M') for k in sorted(st)], completed=max(st) >= hz)]
+    def exists(s, run, vt):
+        k = int(round((vt - run).total_seconds() / 3600))
+        if (run, k) in s._pos: return True
+        ok = http_head(s._url(run, k, 'tot_prec', 'TOT_PREC'))
+        if ok: s._pos.add((run, k))
+        return ok
+    def _url(s, run, step, d, V, lvl=None):
+        if lvl is None: return f'{s.BASE}{run.hour:02d}/{d}/icon_global_icosahedral_single-level_{run:%Y%m%d%H}_{step:03d}_{V}.grib2.bz2'
+        return f'{s.BASE}{run.hour:02d}/{d}/icon_global_icosahedral_pressure-level_{run:%Y%m%d%H}_{step:03d}_{lvl}_{V}.grib2.bz2'
+    def _weights(s, run):
+        with DwdIconSource._lock: return s._weights_(run)
+    def _weights_(s, run):
+        key = (s.j0, s.j1, s.i0, s.i1)
+        if key in DwdIconSource._tree: return DwdIconSource._tree[key]
+        import bz2
+        from scipy.spatial import cKDTree
+        got = []
+        for d, V in (('clat', 'CLAT'), ('clon', 'CLON')):
+            raw = http_bytes(f'{s.BASE}{run.hour:02d}/{d}/icon_global_icosahedral_time-invariant_{run:%Y%m%d%H}_{V}.grib2.bz2')
+            if raw is None: return None
+            got.append(decode_flat(bz2.decompress(raw)))
+        la, lo = got; la = np.degrees(la) if np.abs(la).max() < 4 else la; lo = np.degrees(lo) if np.abs(lo).max() < 8 else lo
+        lo = ((lo + 180) % 360) - 180
+        lat_t = s.la0 + np.arange(s.j0, s.j1) * s.dy; lon_t = s.lo0 + np.arange(s.i0, s.i1) * s.dx
+        m = (la > lat_t.min() - 2) & (la < lat_t.max() + 2) & (lo > lon_t.min() - 2) & (lo < lon_t.max() + 2)
+        xyz = lambda a, b: np.stack([np.cos(np.radians(a)) * np.cos(np.radians(b)), np.cos(np.radians(a)) * np.sin(np.radians(b)), np.sin(np.radians(a))], -1)
+        tree = cKDTree(xyz(la[m], lo[m])); LON, LAT = np.meshgrid(lon_t, lat_t)
+        d, i = tree.query(xyz(LAT, LON), k=3); w = 1.0 / np.maximum(d, 1e-9); w /= w.sum(-1, keepdims=True)
+        DwdIconSource._tree[key] = (np.where(m)[0], i.astype(np.int32), w.astype(np.float32)); log(f'  ICON رسمی: وزن‌های درون‌یابی شبکهٔ مثلثی ساخته شد ({int(m.sum())} سلول)')
+        return DwdIconSource._tree[key]
+    def _field(s, run, step, d, V, lvl=None):
+        """میدان درون‌یابی‌شده روی پنجرهٔ j0:j1,i0:i1 یا None."""
+        import bz2
+        W = s._weights(run)
+        if W is None: return None
+        raw = http_bytes(s._url(run, step, d, V, lvl))
+        if raw is None: return None
+        try: v = decode_flat(bz2.decompress(raw))
+        except Exception as e: log(f'  ICON رسمی: خواندن {V} گام {step} ناموفق ({type(e).__name__}: {e})'); return None
+        sel, i, w = W; return (v[sel][i] * w).sum(-1).astype(np.float32)
+    def _cumf(s, run, d, Vs):
+        def get(step):
+            k = (run, d, step)
+            if k in s._cum: return s._cum[k]
+            a = None
+            for V, dd in Vs:
+                f = s._field(run, step, dd, V)
+                if f is not None: a = f if a is None else a + f
+            if a is not None: s._cum[k] = a
+            return a
+        return get
+    def read(s, run, vt, names):
+        from concurrent.futures import ThreadPoolExecutor
+        step = int(round((vt - run).total_seconds() / 3600)); out = {}; jobs = {}
+        for n in names:
+            if n in s.SINGLE: jobs[n] = ('single', s.SINGLE[n])
+            m = re.match(r'(temperature|relative_humidity|geopotential_height|wind_u_component|wind_v_component)_(\d+)hPa$', n)
+            if m and int(m.group(2)) in s.LEVELS: jobs[n] = ('lvl', (m.group(1), int(m.group(2))))
+        PV = {'temperature': ('t', 'T'), 'relative_humidity': ('relhum', 'RELHUM'), 'geopotential_height': ('fi', 'FI'), 'wind_u_component': ('u', 'U'), 'wind_v_component': ('v', 'V')}
+        def run1(n):
+            kind, a = jobs[n]
+            if kind == 'single': return n, s._field(run, step, a[0], a[1])
+            q, p = a; d, V = PV[q]; return n, s._field(run, step, d, V, p)
+        try:
+            with ThreadPoolExecutor(6) as ex:
+                futs = [ex.submit(run1, n) for n in jobs]
+                prec = None
+                if 'precipitation' in names: prec = ex.submit(lambda: s._interval(run, step, s._prev_step(step), s._cumf(run, 'tp', [('TOT_PREC', 'tot_prec')])))
+                snow = None
+                if 'snowfall_water_equivalent' in names: snow = ex.submit(lambda: s._interval(run, step, s._prev_step(step), s._cumf(run, 'sn', [('SNOW_GSP', 'snow_gsp'), ('SNOW_CON', 'snow_con')])))
+                for f in futs:
+                    n, a = f.result()
+                    if a is None: continue
+                    if n.startswith('temperature_'): a = _k2c(a)
+                    elif n == 'pressure_msl': a = a / 100.0 if np.nanmean(a) > 2000 else a
+                    elif n.startswith('geopotential_height_'): a = a / 9.80665 if np.nanmean(a) > 12000 else a
+                    out[n] = a
+                if prec is not None and prec.result() is not None: out['precipitation'] = prec.result()
+                if snow is not None and snow.result() is not None: out['snowfall_water_equivalent'] = snow.result()
+        except Exception as e: log(f'  ICON رسمی: خطا در خواندن گام {step} ({type(e).__name__}: {e})')
+        if 'wind_u_component_10m' in out and 'wind_v_component_10m' in out:
+            u, v = out['wind_u_component_10m'], out['wind_v_component_10m']
+            out.setdefault('wind_speed_10m', np.hypot(u, v).astype(np.float32)); out.setdefault('wind_direction_10m', ((270 - np.degrees(np.arctan2(v, u))) % 360).astype(np.float32))
+        s._note_fail(bool(out)); return s._fallback(run, vt, names, out)
+
+class MscGemSource(OfficialBase):
+    """GEM GDPS (MSC Datamart: dd.weather.gc.ca/{تاریخ}/WXO-DD/model_gdps/15km/{HH}/{hhh}/…) شبکهٔ منظم ۰٫۱۵°."""
+    ROOT = 'https://dd.weather.gc.ca/'
+    PAT = {'temperature_2m': r'^AirTemp_AGL-2m$', 'relative_humidity_2m': r'^RelativeHumidity_AGL-2m$', 'pressure_msl': r'^(Pressure_MSL|PressureMSL|MeanSeaLevelPressure|Pressure_MeanSeaLevel)$',
+           'wind_u_component_10m': r'^WindU_AGL-10m$', 'wind_v_component_10m': r'^WindV_AGL-10m$', 'wind_gusts_10m': r'^WindGust.*AGL-10m$', 'cape': r'^CAPE_Sfc$',
+           'precipitation': r'^(Precip[^_]*Accum[^_]*|Precipitation[^_]*Accum[^_]*|PrecipAccum[^_]*|Precip-Accum[^_]*)_Sfc$', 'total_column_integrated_water_vapour': r'^PrecipitableWater_(Sfc|EAtm)$'}
+    LEVELS = (1000, 925, 850, 700, 500, 300, 250, 200)
+    def __init__(s, dom, fs):
+        super().__init__(dom, fs); s._dir = None; s._names = {}; s._map = None
+    def _cands(s):
+        now = datetime.now(UTC); days = [(now - timedelta(days=k)).strftime('%Y%m%d') for k in (0, 1)]
+        res = []
+        for d in days:
+            for c in http_list(f'{s.ROOT}{d}/WXO-DD/model_gdps/15km/'):
+                if re.match(r'\d\d/$', c): res.append((d, int(c[:2])))
+        return res
+    def runs(s):
+        if not OFFICIAL_ON[0]: return []
+        best = None
+        for d, hh in s._cands():
+            base = f'{s.ROOT}{d}/WXO-DD/model_gdps/15km/{hh:02d}/'
+            steps = sorted(int(x[:3]) for x in http_list(base) if re.match(r'\d{3}/$', x))
+            if not steps: continue
+            run = None
+            for rd in (d, (datetime.strptime(d, '%Y%m%d') - timedelta(days=1)).strftime('%Y%m%d')):      # پوشهٔ تاریخ = تاریخ انتشار؛ تاریخ ران از نام فایل
+                if http_head(f'{base}000/{rd}T{hh:02d}Z_MSC_GDPS_AirTemp_AGL-2m_LatLon0.15_PT000H.grib2'): run = datetime.strptime(rd + f'{hh:02d}', '%Y%m%d%H').replace(tzinfo=UTC); break
+            if run is None: continue
+            if best is None or run > best[0]: best = (run, d, steps)
+        if not best: return []
+        run, d, steps = best; s._dir = f'{s.ROOT}{d}/WXO-DD/model_gdps/15km/{run.hour:02d}/'; s._run = run
+        from concurrent.futures import ThreadPoolExecutor
+        key = lambda k: f'{s._dir}{k:03d}/{run:%Y%m%d}T{run.hour:02d}Z_MSC_GDPS_AirTemp_AGL-2m_LatLon0.15_PT{k:03d}H.grib2'
+        todo = [k for k in steps if (run, k) not in s._pos]
+        with ThreadPoolExecutor(8) as ex:
+            for k, ok in zip(todo, ex.map(lambda k: http_head(key(k)), todo)):
+                if ok: s._pos.add((run, k))
+        st = sorted(k for (r, k) in s._pos if r == run); s._steps = {k: 1 for k in st}
+        return [dict(reference_time=run.strftime('%Y-%m-%dT%H:%M:%SZ'), valid_times=[(run + timedelta(hours=k)).strftime('%Y-%m-%dT%H:%M') for k in st], completed=bool(st) and max(st) >= 240)]
+    def exists(s, run, vt):
+        k = int(round((vt - run).total_seconds() / 3600))
+        if (run, k) in s._pos: return True
+        if s._dir is None: return False
+        ok = http_head(f'{s._dir}{k:03d}/{run:%Y%m%d}T{run.hour:02d}Z_MSC_GDPS_AirTemp_AGL-2m_LatLon0.15_PT{k:03d}H.grib2')
+        if ok: s._pos.add((run, k))
+        return ok
+    def _discover(s, run):
+        """نام واقعی متغیرها از فهرست پوشهٔ گام ۰۰۰ (یک‌بار) — اگر الگوی ما نخورد، نام‌های نزدیک در لاگ می‌آید."""
+        if s._map is not None: return s._map
+        raw = http_list(f'{s._dir}000/'); nm = {}
+        for f in raw:
+            m = re.match(r'\d{8}T\d\dZ_MSC_GDPS_(.+)_LatLon0\.15_PT\d{3}H\.grib2$', f)
+            if m: nm[m.group(1)] = f
+        mp = {}
+        for var, pat in s.PAT.items():
+            hit = [n for n in nm if re.match(pat, n)]
+            if hit: mp[var] = hit[0]
+        for p in s.LEVELS:
+            for var, base in (('temperature', 'AirTemp'), ('relative_humidity', 'RelativeHumidity'), ('geopotential_height', 'GeopotentialHeight'), ('wind_u_component', 'WindU'), ('wind_v_component', 'WindV')):
+                n = f'{base}_IsbL-{p:04d}'
+                if n in nm: mp[f'{var}_{p}hPa'] = n
+        miss = [v for v in list(s.PAT) + ['geopotential_height_500hPa', 'temperature_850hPa'] if v not in mp]
+        log(f'  GEM رسمی: {len(nm)} متغیر در پوشه؛ شناخته‌شده: {len(mp)}؛ پیدا‌نشده: {miss}')
+        if miss: log('  GEM رسمی: نام‌های مشابه: ' + ', '.join(sorted(n for n in nm if re.search(r'Precip|Pres|Wind|Geopot|Height|Humid|CAPE|Gust', n))[:40]))
+        s._map = mp; return mp
+    def _field(s, run, step, name):
+        raw = http_bytes(f'{s._dir}{step:03d}/{run:%Y%m%d}T{run.hour:02d}Z_MSC_GDPS_{name}_LatLon0.15_PT{step:03d}H.grib2')
+        if raw is None: return None
+        try: v, un = decode_regular(raw)
+        except Exception as e: log(f'  GEM رسمی: خواندن {name} گام {step} ناموفق ({type(e).__name__}: {e})'); return None
+        if v.shape != (s.ny, s.nx):
+            if not s.bad: s.bad = True; log(f'  ⚠ GEM رسمی: ابعاد {v.shape} با {(s.ny, s.nx)} فرق دارد؛ منبع رسمی کنار گذاشته شد')
+            return None
+        a = v[s.j0:s.j1, s.i0:s.i1].astype(np.float32)
+        if un.strip() in ('m', 'm of water equivalent'): a = a * 1000.0
+        return a
+    def read(s, run, vt, names):
+        from concurrent.futures import ThreadPoolExecutor
+        step = int(round((vt - run).total_seconds() / 3600)); out = {}
+        if s._dir is None: return s._fallback(run, vt, names, out)
+        mp = s._discover(run)
+        def cum(step_):
+            k = (run, 'tp', step_)
+            if k in s._cum: return s._cum[k]
+            a = s._field(run, step_, mp['precipitation']); 
+            if a is not None: s._cum[k] = a
+            return a
+        try:
+            with ThreadPoolExecutor(6) as ex:
+                futs = {n: ex.submit(s._field, run, step, mp[n]) for n in names if n in mp and n != 'precipitation'}
+                pf = ex.submit(lambda: s._interval(run, step, s._prev_step(step), cum)) if ('precipitation' in names and 'precipitation' in mp) else None
+                for n, f in futs.items():
+                    a = f.result()
+                    if a is None: continue
+                    if n.startswith('temperature_'): a = _k2c(a)
+                    elif n == 'pressure_msl': a = a / 100.0 if np.nanmean(a) > 2000 else a
+                    elif n.startswith('geopotential_height_'):
+                        p = int(n.split('_')[-1][:-3]); lo, hi = {1000: (-500, 500), 925: (400, 1100), 850: (1000, 1800), 700: (2500, 3300), 500: (4800, 6000), 300: (8500, 9800), 250: (9500, 11000), 200: (11000, 12500)}[p]
+                        mval = float(np.nanmean(a)); a = a * 10.0 if (lo <= mval * 10 <= hi and not lo <= mval <= hi) else a
+                    out[n] = a
+                if pf is not None and pf.result() is not None: out['precipitation'] = pf.result()
+        except Exception as e: log(f'  GEM رسمی: خطا در خواندن گام {step} ({type(e).__name__}: {e})')
+        if 'wind_u_component_10m' in out and 'wind_v_component_10m' in out:
+            u, v = out['wind_u_component_10m'], out['wind_v_component_10m']
+            out.setdefault('wind_speed_10m', np.hypot(u, v).astype(np.float32)); out.setdefault('wind_direction_10m', ((270 - np.degrees(np.arctan2(v, u))) % 360).astype(np.float32))
+        s._note_fail(bool(out)); return s._fallback(run, vt, names, out)
+OFFICIAL_SRC = {'dwd_icon': DwdIconSource, 'cmc_gem_gdps_15km': MscGemSource}
 
 class MockSource(S3Source):
     """دادهٔ ساختگی برای آزمون محلی (بدون اینترنت)."""
@@ -982,6 +1281,13 @@ class Engine:
     def pick_dom(s, mkey):
         for d in MODELS[mkey]['dom']:
             S = s.src(d); r = S.runs()
+            if OFFICIAL and OFFICIAL_ON[0] and not s.a.mock and d in OFFICIAL_SRC:      # r127: اول منبع رسمی؛ اگر Open-Meteo ران تازه‌تری دارد یا منبع رسمی خطا دهد، همان Open-Meteo
+                try:
+                    O = OFFICIAL_SRC[d](d, s.fs); ro = O.runs()
+                    if ro and not O.bad and (not r or max(j['reference_time'][:13] for j in ro) >= max(j['reference_time'][:13] for j in r)):
+                        if (mkey, 'off') not in _OFF_SEEN: _OFF_SEEN.add((mkey, 'off')); log(f'{MODELS[mkey]["name"]}: منبع رسمی ({type(O).__name__}) فعال شد')
+                        return O, ro
+                except Exception as e: log(f'  منبع رسمی {d}: {type(e).__name__}: {e}')
             if r: return S, r
         return None, []
     def tick(s, mkey):
