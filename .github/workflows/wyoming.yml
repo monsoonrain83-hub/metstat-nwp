@@ -1,0 +1,20 @@
+name: wyoming-soundings
+on:
+  schedule:
+    - cron: "40 1,13 * * *"     # ~۱:۴۰ و ۱۳:۴۰ UTC؛ سونداژهای ۰۰ و ۱۲ تا آن‌موقع روی وایومینگ هستند
+  workflow_dispatch: {}
+concurrency:
+  group: wyoming
+  cancel-in-progress: false
+jobs:
+  snd:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests
+      - name: Wyoming radiosonde soundings → host
+        run: python wyoming_fetch.py --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}"

@@ -1,0 +1,24 @@
+name: quality-nwp
+# بررسی خودکار مخزن NWP: خطاهای واقعی پایتون (نام تعریف‌نشده/نحو)، و اجرای آزمایشی بدون اینترنت
+on:
+  push: { branches: [main] }
+  pull_request: {}
+  workflow_dispatch: {}
+jobs:
+  py:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install ruff bandit numpy scipy pillow requests matplotlib
+      - name: "Ruff — فقط خطاهای واقعی (F: نام تعریف‌نشده، E9: نحو)"
+        run: ruff check --select F821,F811,F823,E9 .
+      - name: "Bandit — فقط شدت بالا"
+        run: bandit -q -r . -lll -x ./tests || true
+      - name: "اجرای آزمایشی نقشه‌ساز (دادهٔ ساختگی)"
+        run: python nwp_maps.py --mock --out out --models icon --max-steps 4 --regions iran
+      - name: "نشت کلید"
+        run: |
+          if grep -rInE "(upload_key|relay_secret|api[_-]?key)[\"' ]*[:=][\"' ]*[A-Za-z0-9_\-]{16,}" --include=*.py --include=*.yml --include=*.php .; then echo "کلید در سورس دیده شد"; exit 1; fi
