@@ -42,8 +42,57 @@ def dp(pts, eps):
 
 def rnd(pts): return [[round(x, 3), round(y, 3)] for x, y in pts]
 
+# ---------- r131: پاکسازی نام و مختصات مکان‌ها (هم‌ارز geoCleanPlaces/geoFixDedup سایت) ----------
+CNT_EXTRA = "ممسنی بوانات بختگان رستم کوار خفر پاسارگاد زرین‌دشت سروستان قیر کارزین سپیدان مهر گراش لامرد فراشبند خرم‌بید ارسنجان اقلید بیضا سرچهان دشتستان تنگستان دیر کنگان جم گناوه دشتی بهمئی کهگیلویه بویراحمد گچساران باشت چرام لنده دنا بن کیار سامان بروجن لردگان اردل کوهرنگ فارسان خانمیرزا مبارکه نجف‌آباد لنجان فلاورجان شاهین‌شهر میمه خمینی‌شهر تیران کرون نطنز کاشان آران بیدگل اردستان خوانسار گلپایگان خور بیابانک سمیرم دهاقان شهرضا برخوار چادگان فریدن فریدونشهر عسلویه خنج لارستان لار داراب فسا جهرم نی‌ریز استهبان مرودشت کازرون آباده شیراز".split()
+GEN = {'بالا', 'پایین', 'علیا', 'سفلی', 'میانی', 'وسطی', 'سفلا', 'علیای', 'جدید', 'قدیم', 'نو', 'کهنه'}
+FIX = [(re.compile(r'^سد ?درودزن$'), 30.19, 52.44)]   # نقاط شناخته‌شدهٔ جابه‌جا در GeoNames
+def _nrm(t): return re.sub(r'[\s\u200c]+', '', str(t or '')).replace('ي', 'ی').replace('ك', 'ک')
+def county_set():
+    S = {_nrm(x) for x in CNT_EXTRA}
+    try:
+        for q in json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'id_seats.json'), encoding='utf8')): S.add(_nrm(q[0]))
+    except Exception as e: log('  id_seats.json خوانده نشد (فقط فهرست تکمیلی شهرستان‌ها):', e)
+    return S
+def clean_name(n, lv, S):
+    if lv < 3: return n
+    tk = n.strip().split()
+    if len(tk) < 2 or _nrm(tk[-1]) not in S: return n
+    base = ' '.join(tk[:-1])
+    if len(_nrm(base)) < 2 or (len(tk) == 2 and _nrm(tk[0]) in {_nrm(g) for g in GEN}): return n
+    return base
+def clean_places(res, ref=()):
+    """ref: [(نام، lat، lon)] مراکز/ایستگاه‌های مرجع؛ خروجی: لیست پاک‌شده + گزارش (hم‌نام‌های حذف‌شده و اصلاح‌ها)."""
+    S = county_set(); rep = []; out = []
+    for p in res:
+        p = list(p); q = clean_name(p[0], p[3], S)
+        if q != p[0]: rep.append(f'نام: {p[0]} → {q}'); p[0] = q
+        for rx, la, lo in FIX:
+            if rx.match(re.sub(r'\s+', ' ', p[0]).strip()): rep.append(f'مختصات {p[0]}: {p[1]},{p[2]} → {la},{lo}'); p[1], p[2] = la, lo
+        out.append(p)
+    refd = {}
+    for n, la, lo in ref: refd.setdefault(_nrm(n), []).append((la, lo))
+    def near(p):
+        b = 9.0
+        for la, lo in refd.get(_nrm(p[0]), []): b = min(b, math.hypot(p[1] - la, (p[2] - lo) * .87))
+        return b
+    by = {}
+    for p in out: by.setdefault(_nrm(p[0]), []).append(p)
+    keep_ids = set()
+    for k, a in by.items():
+        keep = []
+        for p in sorted(a, key=lambda x: (near(x), -x[4])):
+            if any(math.hypot(p[1] - q[1], (p[2] - q[2]) * .87) < 0.3 for q in keep): rep.append(f'هم‌نام نزدیک حذف شد: {p[0]} {p[1]},{p[2]}'); continue
+            keep.append(p)
+        keep_ids.update(id(x) for x in keep)
+    res2 = [p for p in out if id(p) in keep_ids]
+    log(f'  پاکسازی نام/هم‌نام: {len(rep)} مورد؛ {len(out) - len(res2)} نقطهٔ تکراری حذف شد')
+    return res2, rep
+
 # ---------- مکان‌ها (GeoNames) ----------
 KIND = {'PPLC': 'cap', 'PPLA': 'prov', 'PPLA2': 'cty', 'PPLA3': 'cty', 'PPLA4': 'sub'}
+SEAT_REF = []
+try: SEAT_REF = [(q[0], q[1], q[2]) for q in json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'id_seats.json'), encoding='utf8'))]
+except Exception: pass
 def places(maxn):
     zi = zipfile.ZipFile(io.BytesIO(get('https://download.geonames.org/export/dump/IR.zip')))
     rows = []
@@ -78,6 +127,9 @@ def places(maxn):
     for p in out:
         if cnt[p[3]] >= lim[p[3]]: continue
         cnt[p[3]] += 1; res.append(p)
+    res, rep = clean_places(res, SEAT_REF)
+    try: open('geo_clean_report.txt', 'w', encoding='utf8').write('\n'.join(rep))
+    except Exception: pass
     log('  مکان‌ها بر حسب سطح:', cnt); return res
 
 # ---------- OSM (Overpass) ----------

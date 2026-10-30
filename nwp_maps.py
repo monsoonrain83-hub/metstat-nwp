@@ -584,6 +584,8 @@ class DwdIconSource(OfficialBase):
                 futs = [ex.submit(run1, n) for n in jobs]
                 prec = None
                 if 'precipitation' in names: prec = ex.submit(lambda: s._interval(run, step, s._prev_step(step), s._cumf(run, 'tp', [('TOT_PREC', 'tot_prec')])))
+                cprec = ex.submit(lambda: s._cumf(run, 'tp', [('TOT_PREC', 'tot_prec')])(step)) if 'precipitation' in names else None
+                csnow = ex.submit(lambda: s._cumf(run, 'sn', [('SNOW_GSP', 'snow_gsp'), ('SNOW_CON', 'snow_con')])(step)) if 'snowfall_water_equivalent' in names else None
                 snow = None
                 if 'snowfall_water_equivalent' in names: snow = ex.submit(lambda: s._interval(run, step, s._prev_step(step), s._cumf(run, 'sn', [('SNOW_GSP', 'snow_gsp'), ('SNOW_CON', 'snow_con')])))
                 for f in futs:
@@ -595,6 +597,8 @@ class DwdIconSource(OfficialBase):
                     out[n] = a
                 if prec is not None and prec.result() is not None: out['precipitation'] = prec.result()
                 if snow is not None and snow.result() is not None: out['snowfall_water_equivalent'] = snow.result()
+                if cprec is not None and cprec.result() is not None and 'precipitation' in out: out['_cum_precip'] = np.maximum(cprec.result(), 0).astype(np.float32)   # r132: تجمعی رسمی (TOT_PREC) مستقیم؛ بدون جمع‌زدن بازه‌ها
+                if csnow is not None and csnow.result() is not None and 'snowfall_water_equivalent' in out: out['_cum_snow'] = np.maximum(csnow.result(), 0).astype(np.float32)
         except Exception as e: log(f'  ICON رسمی: خطا در خواندن گام {step} ({type(e).__name__}: {e})')
         if 'wind_u_component_10m' in out and 'wind_v_component_10m' in out:
             u, v = out['wind_u_component_10m'], out['wind_v_component_10m']
@@ -1393,13 +1397,20 @@ class Engine:
         # جمع‌های تجمعی روی شبکهٔ اصلی هر منبع
         for name, d in D.items():
             if name == 'upper': continue
+            cp_off = d.pop('_cum_precip', None); cs_off = d.pop('_cum_snow', None)      # r132: تجمعی مستقیم منبع رسمی
             p = d.get('precipitation'); sn = d.get('snowfall_water_equivalent')
             if p is None: continue
             if sn is None: sn = p * snow_frac_t(d['temperature_2m']) if 'temperature_2m' in d else np.zeros_like(p)
             c = st.cum[name]
             if i == 0 or c['precip'] is None: c['precip'] = np.zeros_like(p); c['snow'] = np.zeros_like(p)
             if i > 0: c['precip'] = c['precip'] + np.nan_to_num(np.maximum(p, 0)); c['snow'] = c['snow'] + np.nan_to_num(np.maximum(sn, 0))
+            if i > 0 and cp_off is not None and cp_off.shape == c['precip'].shape:
+                sm = float(np.nanmean(c['precip'])); ref = float(np.nanmean(cp_off))
+                if lead % 24 == 0 or abs(sm - ref) > 0.15 * max(ref, 1.0) + 0.3: log(f'  [{mkey}/{name}] تجمعی +{lead}h: رسمی(TOT_PREC) میانگین {ref:.2f} · بیشینه {np.nanmax(cp_off):.1f} mm | مجموع بازه‌ها میانگین {sm:.2f} · بیشینه {np.nanmax(c["precip"]):.1f} mm' + ('  ⚠ مغایرت؛ مقدار رسمی استفاده شد' if abs(sm - ref) > 0.15 * max(ref, 1.0) + 0.3 else ''))
+                c['precip'] = np.nan_to_num(cp_off).astype(np.float32)
+                if cs_off is not None and cs_off.shape == c['snow'].shape: c['snow'] = np.nan_to_num(np.minimum(cs_off, cp_off)).astype(np.float32)
             st.hist[name][vt] = (c['precip'].copy(), c['snow'].copy())
+            if i > 0 and lead % 24 == 0 and cp_off is None: log(f'  [{mkey}/{name}] تجمعی بارش +{lead}h: میانگین {np.nanmean(c["precip"]):.2f} · بیشینه {np.nanmax(c["precip"]):.1f} mm   (برای بررسی با منبع بیرونی)')
             if 'temperature_2m' in d and (mkey == 'ecmwf' or MM_ON):
                 st.tser[name][vt] = (d['temperature_2m'], d.get('temperature_2m_max', d['temperature_2m']), d.get('temperature_2m_min', d['temperature_2m']), dt_h)
         made = 0
