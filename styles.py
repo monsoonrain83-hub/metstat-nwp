@@ -78,6 +78,17 @@ SC.update({
     'thk':  dict(colors=_P['wu_temp'][::2][:20] if len(_P['wu_temp'][::2]) >= 20 else _KI, edges=[-INF] + _sq(504, 594) + [INF]),
     'ccc':  dict(colors=['#ffffff', '#eef2f7', '#d9e2ec', '#bcccdc', '#9fb3c8', '#829ab1', '#627d98', '#486581', '#334e68', '#243b53'], edges=[-INF, 1, 10, 20, 30, 40, 50, 60, 70, 75, INF]),
 })
+# r126: انومالی ترازهای ۸۵۰/۷۰۰ و MSLP + ضخامت لایه‌ها (دسته‌های گسسته، بدون رنگ واسطه)
+def _za(step): return [-INF] + [round((-49 + i) * step, 3) for i in range(98)] + [INF]
+SC.update({
+    'z850a': dict(colors=_P['wx_z500a'], edges=_za(0.5)),
+    'z700a': dict(colors=_P['wx_z500a'], edges=_za(0.5)),
+    'mslpa': dict(colors=_P['wx_z500a'], edges=_za(0.5)),
+    'thk1000': dict(colors=_P['wu_temp'][::2][:20] if len(_P['wu_temp'][::2]) >= 20 else _KI, edges=[-INF] + _sq(504, 594) + [INF]),
+    'thk8550': dict(colors=_KI, edges=[-INF] + _sq(372, 444) + [INF]),
+    'thk7050': dict(colors=_KI, edges=[-INF] + _sq(234, 270) + [INF]),
+    'thk8570': dict(colors=_KI, edges=[-INF] + _sq(126, 162) + [INF]),
+})
 for k, v in PRECIP.items(): SC['pr_' + k] = v
 for k, v in SC.items():
     assert len(v['edges']) == len(v['colors']) + 1, (k, len(v['edges']), len(v['colors']))

@@ -47,9 +47,9 @@ MEW, MEH = int((ME_EXT[1] - ME_EXT[0]) * PXD), int((ME_EXT[3] - ME_EXT[2]) * PXD
 # r65: کادر «اروپا» (فقط ترازهای بالا و فشار سطح دریا): اروپا، غرب روسیه، شمال کاسپین، مصر/لیبی و بخشی از دریای عرب
 EU_EXT = (-12.0, 68.0, 12.0, 62.0); EU_PXD = 16
 EUW, EUH = int((EU_EXT[1] - EU_EXT[0]) * EU_PXD), int((EU_EXT[3] - EU_EXT[2]) * EU_PXD)
-EU_PIDS = ('z850', 'z700', 'z500', 'z500a', 'w500', 'w300', 'w250', 'w200', 'sfc', 'w10')
+EU_PIDS = ('z850', 'z700', 'z500', 'z500a', 'z850a', 'z700a', 'w500', 'w300', 'w250', 'w200', 'sfc', 'w10')
 MODELS = {
-    'ecmwf':  dict(name='ECMWF 28km', label='ECMWF IFS 28km (0.25°)', dom=['ecmwf_ifs025'], prov='ECMWF', hz={'00': 360, '12': 360, '06': 144, '18': 144}, res='0.25°', cyc='00/06/12/18'),   # r120: ران‌های ۰۶ و ۱۸ (افق ۱۴۴ ساعت) دوباره فعال شد
+    'ecmwf':  dict(name='ECMWF 28km', label='ECMWF IFS 28km (0.25°)', dom=['ecmwf_ifs025'], prov='ECMWF', hz={'00': 360, '12': 360, '06': 144, '18': 144}, res='0.25°', cyc='00/06/12/18'),
     'ecmwf9': dict(name='ECMWF 9km', label='ECMWF IFS 9km (HRES)', dom=['ecmwf_ifs'], prov='ECMWF', hz={'00': 240, '12': 240, '06': 144, '18': 144}, res='0.1° (9 km)', cyc='00/06/12/18'),   # فقط پارامترهای سطحی؛ ترازهای فشاری در HRES نیست
     'gfs':    dict(name='GFS 13km', label='GFS 13km (0.11°)', dom=['ncep_gfs013'], upper='ncep_gfs025', prov='NOAA NCEP', hz=384, res='0.11° (13 km)', cyc='00/06/12/18'),
     'gfs25':  dict(name='GFS 28km', label='GFS 28km (0.25°)', dom=['ncep_gfs025'], prov='NOAA NCEP', hz=384, res='0.25° (28 km)', cyc='00/06/12/18'),
@@ -157,6 +157,13 @@ PARAMS.update({
     'w250':  dict(kind='inst', sc='windup', models=I_EC, unit='kt', me_only=True, ln=True, en='250mb Wind Speed/Streamlines (kt) & MSLP Extrema (mb)', fa='سرعت باد و خطوط جریان ۲۵۰ هکتوپاسکال (گره)'),
     'w200':  dict(kind='inst', sc='windup', models=I_EC, unit='kt', me_only=True, ln=True, en='200mb Wind Speed/Streamlines (kt)', fa='سرعت باد و خطوط جریان ۲۰۰ هکتوپاسکال (گره)'),
     'z500a': dict(kind='inst', sc='z500a', models=I_EC, unit='dm', me_only=True, ln=True, en='500hPa Geopotential Height (dm) & Anomaly', fa='ارتفاع ژئوپتانسیل ۵۰۰ هکتوپاسکال و انومالی (دکامتر)'),
+    'z850a': dict(kind='inst', sc='z850a', models=I_EC, unit='dm', me_only=True, ln=True, en='850hPa Geopotential Height (dm) & Anomaly', fa='ارتفاع ژئوپتانسیل ۸۵۰ هکتوپاسکال و انومالی (دکامتر)'),
+    'z700a': dict(kind='inst', sc='z700a', models=I_EC, unit='dm', me_only=True, ln=True, en='700hPa Geopotential Height (dm) & Anomaly', fa='ارتفاع ژئوپتانسیل ۷۰۰ هکتوپاسکال و انومالی (دکامتر)'),
+    'mslpa': dict(kind='inst', sc='mslpa', models=I_ECG, unit='hPa', me_only=True, ln=True, en='MSLP (hPa) & Anomaly', fa='فشار سطح دریا و انومالی (هکتوپاسکال)'),
+    'thk1000': dict(kind='inst', sc='thk1000', models=I_ECG, unit='dam', me_only=True, ln=True, en='1000–500 hPa Thickness (dam) & MSLP', fa='ضخامت لایهٔ ۱۰۰۰–۵۰۰ هکتوپاسکال و فشار سطح دریا (دکامتر)'),
+    'thk8550': dict(kind='inst', sc='thk8550', models=I_EC, unit='dam', me_only=True, ln=True, en='850–500 hPa Thickness (dam)', fa='ضخامت لایهٔ ۸۵۰–۵۰۰ هکتوپاسکال (دکامتر)'),
+    'thk7050': dict(kind='inst', sc='thk7050', models=I_EC, unit='dam', me_only=True, ln=True, en='700–500 hPa Thickness (dam)', fa='ضخامت لایهٔ ۷۰۰–۵۰۰ هکتوپاسکال (دکامتر)'),
+    'thk8570': dict(kind='inst', sc='thk8570', models=I_EC, unit='dam', me_only=True, ln=True, en='850–700 hPa Thickness (dam)', fa='ضخامت لایهٔ ۸۵۰–۷۰۰ هکتوپاسکال (دکامتر)'),
     't2mr':  dict(kind='inst', sc='temp', models=I_ECA, unit='°C', me_only=True, raw=True, en='Temperature 2m (°C), uncorrected', fa='دمای ۲ متری (بدون اصلاح ارتفاعی)'),
     'tmaxr': dict(kind='day', sc='temp', models=I_ECA, unit='°C', me_only=True, raw=True, en='Max. temperature 2m, 24h (°C), uncorrected', fa='دمای بیشینه ۲۴ ساعته (بدون اصلاح ارتفاعی)'),
     'tminr': dict(kind='day', sc='temp', models=I_ECA, unit='°C', me_only=True, raw=True, en='Min. temperature 2m, 24h (°C), uncorrected', fa='دمای کمینه ۲۴ ساعته (بدون اصلاح ارتفاعی)'),
@@ -171,7 +178,7 @@ for _a in [x[0] for x in PR_WIN] + [x[0] for x in SN_WIN] + ['rh']:
 CATS = [('pr', 'بارش', 1), ('sn', 'برف', 2), ('tp', 'دما', 3), ('hm', 'رطوبت و آب قابل بارش', 4), ('sf', 'فشار و باد سطحی', 5),
         ('ul', 'ارتفاع ژئوپتانسیل و رطوبت ترازهای بالا', 6), ('uw', 'باد در ترازهای بالا', 7), ('dy', 'دینامیک، جبهه و ابر همرفتی', 7.5), ('cv', 'همرفت و ناپایداری', 8), ('rd', 'بازتاب و هوای مهم', 9), ('sc', 'نقشه‌های ثانویه (همرفت، تگرگ، آذرخش، سیل، هشدار)', 10)]
 _CAT = {'t2m': 'tp', 'tsoil': 'tp', 'tmax': 'tp', 'tmin': 'tp', 'tanom': 'tp', 't2mr': 'tp', 'tmaxr': 'tp', 'tminr': 'tp', 'rh': 'hm', 'rhr': 'hm', 'pw': 'hm', 'gust': 'sf', 'sfc': 'sf', 'w10': 'sf',
-        'z850': 'ul', 'z700': 'ul', 'z500': 'ul', 'z500a': 'ul', 'w500': 'uw', 'w300': 'uw', 'w250': 'uw', 'w200': 'uw',
+        'z850': 'ul', 'z700': 'ul', 'z500': 'ul', 'z500a': 'ul', 'z850a': 'ul', 'z700a': 'ul', 'mslpa': 'sf', 'thk1000': 'ul', 'thk8550': 'ul', 'thk7050': 'ul', 'thk8570': 'ul', 'w500': 'uw', 'w300': 'uw', 'w250': 'uw', 'w200': 'uw',
         'tt': 'cv', 'ko': 'cv', 'shw': 'cv', 'lr75': 'cv', 'lr85': 'cv', 'sh06': 'cv', 'sh85': 'cv', 'swt': 'cv', 'fzl': 'cv', 'hgz': 'cv',
         'ki': 'cv', 'cape': 'cv', 'cin': 'cv', 'si': 'cv', 'gdi': 'cv', 'li': 'cv', 'refl': 'rd', 'sigwx': 'rd',
         'mfc850': 'dy', 'dte': 'cv', 'thk': 'dy', 'ccc': 'dy'}
@@ -727,38 +734,68 @@ ZCLIM = None
 ZCLIM_URLS = ['https://downloads.psl.noaa.gov/Datasets/ncep.reanalysis.derived/pressure/hgt.mon.ltm.1991-2020.nc',
               'https://psl.noaa.gov/psd/thredds/fileServer/Datasets/ncep.reanalysis.derived/pressure/hgt.mon.ltm.1991-2020.nc',
               'https://downloads.psl.noaa.gov/Datasets/ncep.reanalysis.derived/pressure/hgt.mon.ltm.nc']
+SCLIM_URLS = ['https://downloads.psl.noaa.gov/Datasets/ncep.reanalysis.derived/surface/slp.mon.ltm.1991-2020.nc',
+              'https://psl.noaa.gov/psd/thredds/fileServer/Datasets/ncep.reanalysis.derived/surface/slp.mon.ltm.1991-2020.nc',
+              'https://downloads.psl.noaa.gov/Datasets/ncep.reanalysis.derived/surface/slp.mon.ltm.nc']
+def _dl_nc(name, urls, tag):
+    import requests, tempfile
+    path = os.path.join(tempfile.gettempdir(), name)
+    if not os.path.exists(path):
+        for u in urls:
+            try:
+                r = requests.get(u, timeout=180)
+                if r.ok and r.content[:3] in (b'CDF', b'\x89HD'): open(path, 'wb').write(r.content); break
+                else: log(f'  اقلیم {tag}: HTTP {r.status_code} از {u}')
+            except Exception as e: log(f'  اقلیم {tag}: {u} → {e}')
+    return path if os.path.exists(path) else None
 def load_zclim():
-    """اقلیم ماهانهٔ ارتفاع ژئوپتانسیل ۵۰۰ هکتوپاسکال (NCEP/NCAR، ۱۹۹۱–۲۰۲۰) برای انومالی؛ در صورت دانلود‌نشدن، نقشهٔ انومالی ساخته نمی‌شود."""
+    """اقلیم ماهانهٔ ارتفاع ژئوپتانسیل ۸۵۰/۷۰۰/۵۰۰ هکتوپاسکال (NCEP/NCAR، ۱۹۹۱–۲۰۲۰) برای انومالی؛ در صورت دانلود‌نشدن، نقشهٔ انومالی ساخته نمی‌شود."""
     global ZCLIM
     if ZCLIM is not None: return ZCLIM or None
     ZCLIM = False
     try:
-        import requests, tempfile
-        path = os.path.join(tempfile.gettempdir(), 'hgt_ltm.nc')
-        if not os.path.exists(path):
-            for u in ZCLIM_URLS:
-                try:
-                    r = requests.get(u, timeout=180)
-                    if r.ok and r.content[:3] in (b'CDF', b'\x89HD'): open(path, 'wb').write(r.content); break
-                    else: log(f'  اقلیم Z500: HTTP {r.status_code} از {u}')
-                except Exception as e: log(f'  اقلیم Z500: {u} → {e}')
-        if os.path.exists(path):
+        path = _dl_nc('hgt_ltm.nc', ZCLIM_URLS, 'Z')
+        if path:
             import netCDF4
-            ds = netCDF4.Dataset(path); lev = np.array(ds['level'][:]); k = int(np.argmin(np.abs(lev - 500)))
-            z = np.array(ds['hgt'][:, k]).astype(np.float32)           # (۱۲ ماه، lat، lon) ← lat نزولی در NCEP
-            lat = np.array(ds['lat'][:]); lon = np.array(ds['lon'][:])
-            if lat[0] > lat[-1]: lat = lat[::-1]; z = z[:, ::-1]
-            ZCLIM = dict(z=z, lat=lat, lon=lon); log('اقلیم ارتفاع ۵۰۰ هکتوپاسکال بارگذاری شد')
-        else: log('اقلیم ارتفاع ۵۰۰ هکتوپاسکال دانلود نشد؛ نقشهٔ انومالی ژئوپتانسیل ساخته نمی‌شود')
+            ds = netCDF4.Dataset(path); lev = np.array(ds['level'][:])
+            lat = np.array(ds['lat'][:]); lon = np.array(ds['lon'][:]); zs = {}
+            for L in (850, 700, 500):
+                k = int(np.argmin(np.abs(lev - L))); z = np.array(ds['hgt'][:, k]).astype(np.float32)      # (۱۲ ماه، lat، lon) ← lat نزولی در NCEP
+                zs[L] = z[:, ::-1] if lat[0] > lat[-1] else z
+            if lat[0] > lat[-1]: lat = lat[::-1]
+            ZCLIM = dict(zs=zs, z=zs[500], lat=lat, lon=lon); log('اقلیم ارتفاع ۸۵۰/۷۰۰/۵۰۰ هکتوپاسکال بارگذاری شد')
+        else: log('اقلیم ارتفاع ژئوپتانسیل دانلود نشد؛ نقشهٔ انومالی ژئوپتانسیل ساخته نمی‌شود')
     except Exception as e: log(f'اقلیم ژئوپتانسیل خوانده نشد ({e})')
     return ZCLIM or None
-def z500_clim_at(R, d):
-    C = load_zclim()
-    if C is None: return None
+SLPCLIM = None
+def load_slpclim():
+    """اقلیم ماهانهٔ فشار سطح دریا (NCEP/NCAR، ۱۹۹۱–۲۰۲۰) بر حسب hPa برای انومالی MSLP."""
+    global SLPCLIM
+    if SLPCLIM is not None: return SLPCLIM or None
+    SLPCLIM = False
+    try:
+        path = _dl_nc('slp_ltm.nc', SCLIM_URLS, 'SLP')
+        if path:
+            import netCDF4
+            ds = netCDF4.Dataset(path); z = np.array(ds['slp'][:]).astype(np.float32); lat = np.array(ds['lat'][:]); lon = np.array(ds['lon'][:])
+            if np.nanmean(z) > 5000: z = z / 100.0                    # Pa → hPa
+            if lat[0] > lat[-1]: lat = lat[::-1]; z = z[:, ::-1]
+            SLPCLIM = dict(z=z, lat=lat, lon=lon); log('اقلیم فشار سطح دریا بارگذاری شد')
+        else: log('اقلیم فشار سطح دریا دانلود نشد؛ نقشهٔ انومالی MSLP ساخته نمی‌شود')
+    except Exception as e: log(f'اقلیم MSLP خوانده نشد ({e})')
+    return SLPCLIM or None
+def _clim_interp(Z3, C, R, d):
     m = (d.month - 1) + (d.day - 15) / 30.4; a = int(math.floor(m)) % 12; b = (a + 1) % 12; u = m - math.floor(m)
-    z = C['z'][a] * (1 - u) + C['z'][b] * u
+    z = Z3[a] * (1 - u) + Z3[b] * u
     fi = (np.where(R.lon < 0, R.lon + 360, R.lon) - C['lon'][0]) / (C['lon'][1] - C['lon'][0]); fj = (R.lat - C['lat'][0]) / (C['lat'][1] - C['lat'][0])
     return map_coordinates(z, np.array([fj, fi]), order=1, mode='nearest', prefilter=False).astype(np.float32)
+def z_clim_at(R, d, lvl=500):
+    C = load_zclim()
+    return None if C is None else _clim_interp(C['zs'][lvl], C, R, d)
+def z500_clim_at(R, d): return z_clim_at(R, d, 500)
+def slp_clim_at(R, d):
+    C = load_slpclim()
+    return None if C is None else _clim_interp(C['z'], C, R, d)
 
 # ---------------------------------------------------------------- پردازش یک اجرای یک مدل
 SFC_VARS = {'precipitation', 'snowfall_water_equivalent', 'temperature_2m', 'temperature_2m_max', 'temperature_2m_min', 'relative_humidity_2m'}
@@ -842,7 +879,7 @@ class Uploader:
                 time.sleep(float(os.environ.get('NWP_UP_GAP', '0.4')))
                 with s.lock: s.reqs += 1
                 r = s._sess().post(u, json=js, files=files, data=data, headers={'X-Upload-Key': s.key}, timeout=(20, 150))
-                if r.status_code >= 500 or r.status_code == 429: raise RuntimeError(f'HTTP {r.status_code} [{a}] {r.text[:200]!r}')           # r119: بدنهٔ پاسخ (error/msg از nwp_upload.php) در لاگ دیده شود
+                if r.status_code >= 500: raise RuntimeError(f'HTTP {r.status_code} [{a}] {r.text[:200]!r}')           # r119: بدنهٔ پاسخ (error/msg از nwp_upload.php) در لاگ دیده شود
                 s.fails = 0; s.down_since = None
                 if r.status_code == 403: sys.exit('✗ کلید آپلود اشتباه است (upload_key در mx_config.json روی هاست)')
                 try: j = r.json()
@@ -967,7 +1004,7 @@ class Engine:
         hz = min(hz, s.a.horizon or hz)
         vts = sorted({datetime.strptime(v[:16], '%Y-%m-%dT%H:%M').replace(tzinfo=UTC) for v in meta.get('valid_times', [])})
         vts = [v for v in vts if 0 <= (v - run).total_seconds() / 3600 <= hz]
-        # r120: مالتی‌مدل هم ران‌های ۰۶ و ۱۸ را می‌پذیرد (قید ۰۰/۱۲ برداشته شد)
+        if s.sink_only and run.hour not in (0, 12): return False         # r115: مالتی‌مدل فقط ران ۰۰/۱۲
         st = s.state.get(mkey)
         if not st or st.run != run:
             srcs = {'main': S}
@@ -980,7 +1017,6 @@ class Engine:
                                        'params': {k: dict(fa=v['fa'], unit=v['unit'], cat=v['cat'], o=v['ord'], sc=(v.get('me') or {}).get('sc', v['sc']),
                                                           mu=(v.get('me') or {}).get('unit', v['unit']), alt=v.get('alt', ''), me=int(bool(v.get('me_only'))), ln=int(bool(v.get('cont') or v.get('barbs') or v.get('ln'))))
                                                   for k, v in PARAMS.items() if mkey in v['models']}})
-            if not s.sink_only and s.up.host and 'have' not in r: log(f'  ✗ begin {mkey} {rid} ناموفق: {str(r)[:160]} — آپلودهای این ران ممکن است رد شوند')   # r119b
             st.have = set(r.get('have', []))
             if FORCE and (mkey, rid) not in FORCED:                    # r58: بازسازی اجباری فقط یک‌بار برای هر (مدل، ران)؛ بدون آن نقشه‌های موجود روی هاست دوباره ساخته نمی‌شوند
                 FORCED.add((mkey, rid)); log(f'  ⟳ بازسازی اجباری: {len(st.have)} نقشهٔ موجود دوباره ساخته و جایگزین می‌شود'); st.have = set()
@@ -1372,6 +1408,37 @@ class Engine:
             g = d.get('geopotential_height_500hPa'); C = z500_clim_at(R, vt)
             if g is None or C is None: return None
             Z = I(g); return ((Z - C) / 10, dict(cont=Z / 10, cont_lvls=np.arange(480, 620, 1), bold=580, cont_fine=True))
+        if pid in ('z850a', 'z700a'):
+            L = int(pid[1:4]); g = d.get(f'geopotential_height_{L}hPa'); C = z_clim_at(R, vt, L)
+            if g is None or C is None: return None
+            Z = I(g); A = (Z - C) / 10; Zc = Z / 10
+            try:                                                      # ترازِ زیر سطح زمین (فلات ایران/تبت) ماسک شود
+                hs = src.hsurf()
+                if hs is not None: bg = I(hs) >= Z; A = np.where(bg, np.nan, A).astype(np.float32); Zc = np.where(bg, np.nan, Zc).astype(np.float32)
+            except Exception: pass
+            return (A, dict(cont=Zc, cont_lvls=(np.arange(100, 180, 1) if L == 850 else np.arange(250, 340, 1)), cont_fine=True))
+        if pid == 'mslpa':
+            if 'pressure_msl' not in d: return None
+            C = slp_clim_at(R, vt)
+            if C is None: return None
+            M_ = I(d['pressure_msl']); return (M_ - C, dict(cont=M_, cont_lvls=np.arange(900, 1100, 4), hl=('msl', M_, None)))
+        if pid == 'thk1000':
+            g = d.get('geopotential_height_500hPa')
+            if g is None or 'pressure_msl' not in d: return None
+            M_ = I(d['pressure_msl']); T_ = (I(g) - (M_ - 1000.0) * 8.0) / 10.0            # تقریب هیپسومتریک؛ ۱۰۰۰ هکتوپاسکال از MSLP
+            return (T_, dict(cont=T_, cont_lvls=np.arange(468, 612, 6), bold=540, note='1000 hPa height approximated from MSLP (8 m/hPa)'))
+        if pid in ('thk8550', 'thk7050', 'thk8570'):
+            hi, lo = {'thk8550': (850, 500), 'thk7050': (700, 500), 'thk8570': (850, 700)}[pid]
+            a, b = d.get(f'geopotential_height_{hi}hPa'), d.get(f'geopotential_height_{lo}hPa')
+            if a is None or b is None: return None
+            A_, B_ = I(a), I(b); T_ = (B_ - A_) / 10.0
+            if hi == 850:
+                try:
+                    hs = src.hsurf()
+                    if hs is not None: T_ = np.where(I(hs) >= A_, np.nan, T_).astype(np.float32)
+                except Exception: pass
+            st_ = {'thk8550': 4, 'thk7050': 2, 'thk8570': 2}[pid]
+            return (T_, dict(cont=T_, cont_lvls=np.arange(100, 460, st_)))
         if pid == 'tsoil':
             v = d.get('soil_temperature_0_to_7cm', d.get('soil_temperature_0_to_10cm'))
             return (I(v), {}) if v is not None else None
