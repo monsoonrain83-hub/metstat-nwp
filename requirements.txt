@@ -6,4 +6,4 @@ scipy
 pillow
 matplotlib
 netCDF4
-
+eccodes
