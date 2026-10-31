@@ -26,13 +26,15 @@
   "soil_ok": 0,
   "soil_fail": 43,
   "kntu_ok": 0,
-  "kntu_fail": 43
+  "kntu_fail": 43,
+  "soil_isric_ok": 43,
+  "soil_isric_fail": 0
  },
  "cn_source": {
   "kntu_basins": 0,
   "modis_only_basins": 1343,
-  "soil_basins": 0,
-  "hsg_default_C_basins": 1343
+  "soil_basins": 1343,
+  "hsg_default_C_basins": 0
  },
  "susceptibility": {
   "formula": "index = 100 * sum_i w_i * percentile_rank_i  (ranks over all Iranian sub-basins; larger factor => larger susceptibility)",
@@ -47,10 +49,10 @@
    "form_factor": 0.05
   },
   "level_breaks_q20_40_60_80": [
-   43.09,
-   48.03,
-   51.85,
-   56.82
+   42.41,
+   48.01,
+   52.45,
+   57.5
   ],
   "levels": {
    "1": "Very Low",
@@ -69,9 +71,9 @@
   "sensitivity": {
    "samples": 400,
    "dirichlet_concentration": 40,
-   "median_level_stability": 0.568,
-   "share_basins_stability_ge_0.8": 0.257,
-   "median_rank_std_percentile": 0.1105
+   "median_level_stability": 0.583,
+   "share_basins_stability_ge_0.8": 0.291,
+   "median_rank_std_percentile": 0.093
   },
   "caution": "RELATIVE susceptibility ranking, not a probability and not a forecast. Weights are expert-chosen (AHP-like) and NOT calibrated to observed floods."
  },
@@ -279,8 +281,8 @@
   ]
  },
  "output": {
-  "geojson_bytes": 1813500,
+  "geojson_bytes": 1834208,
   "features": 1343
  },
- "runtime_s": 1365
+ "runtime_s": 1077
 }
