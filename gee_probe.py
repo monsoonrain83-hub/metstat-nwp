@@ -18,7 +18,7 @@ if not key or not proj:
 try:
     info = json.loads(key)
 except Exception as e:
-    fatal("key is not valid JSON (paste the whole file): %s" % type(e).__name__)
+    fatal("key is not valid JSON: %s | length=%d | first char=%r | last char=%r | has private_key text=%s | has client_email text=%s" % (type(e).__name__, len(key), key[:1], key[-1:], "private_key" in key, "client_email" in key))
 email = info.get("client_email", "")
 try:
     note("notice","key client_email: %s | key project_id: %s | GEE_PROJECT: %s" % (email, info.get("project_id"), proj))
