@@ -16,9 +16,10 @@ acct = os.environ.get("GEE_SERVICE_ACCOUNT", "").strip()
 if not key or not proj:
     fatal("secret GEE_SERVICE_ACCOUNT_KEY or GEE_PROJECT is empty")
 try:
-    info = json.loads(key)
+    info = json.loads(key, strict=False)  # tolerate raw newlines inside private_key
+    key = json.dumps(info)
 except Exception as e:
-    fatal("key is not valid JSON: %s | length=%d | first char=%r | last char=%r | has private_key text=%s | has client_email text=%s" % (type(e).__name__, len(key), key[:1], key[-1:], "private_key" in key, "client_email" in key))
+    fatal("key is not valid JSON: %s at pos %s | length=%d | first char=%r | last char=%r | has private_key text=%s | has client_email text=%s" % (type(e).__name__, getattr(e,"pos",None), len(key), key[:1], key[-1:], "private_key" in key, "client_email" in key))
 email = info.get("client_email", "")
 try:
     note("notice","key client_email: %s | key project_id: %s | GEE_PROJECT: %s" % (email, info.get("project_id"), proj))
