@@ -1,0 +1,38 @@
+name: landcover-modis
+# MODIS MCD12Q1 V061 (۵۰۰ m) → برش ایران → data/static/ (ورودی ایستای ماژول سیل MetStat؛ فقط یک‌بار و سالی یک‌بار لازم است)
+# پیش‌نیاز: حساب رایگان NASA Earthdata و دو Secret در گیت‌هاب:  EARTHDATA_USERNAME  و  EARTHDATA_PASSWORD
+on:
+  workflow_dispatch:
+    inputs:
+      year:
+        description: "سال (۰ = جدیدترین سال موجود)"
+        default: "0"
+permissions:
+  contents: write
+jobs:
+  lc:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install (earthaccess, numpy, pyhdf for HDF4)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libhdf4-dev libjpeg-dev zlib1g-dev
+          pip install numpy earthaccess pyhdf
+      - name: Run unit test (no network)
+        run: python test_landcover_modis.py
+      - name: Download MCD12Q1 and crop Iran
+        env:
+          EARTHDATA_USERNAME: ${{ secrets.EARTHDATA_USERNAME }}
+          EARTHDATA_PASSWORD: ${{ secrets.EARTHDATA_PASSWORD }}
+        run: python landcover_modis.py --year "${{ github.event.inputs.year || 0 }}" --out data/static
+      - name: Commit result
+        run: |
+          git config user.name "metstat-bot"; git config user.email "metstat-bot@users.noreply.github.com"
+          git add data/static/landcover_modis_iran_*.npz data/static/landcover_modis_iran_*.json
+          git commit -m "landcover: MODIS MCD12Q1 V061 Iran crop" || echo "nothing to commit"
+          git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}"
