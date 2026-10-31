@@ -1,0 +1,49 @@
+name: flood-static
+# Static flash-flood layers: DEM -> sub-basins -> terrain/CN features -> susceptibility.
+# Heavy: run here, never on the web host.  limit_rows>0 = quick debug on the northern N rows only.
+on:
+  workflow_dispatch:
+    inputs:
+      limit_rows:
+        description: "debug: only the first N grid rows (0 = whole Iran)"
+        default: "1600"
+      a_target:
+        description: "target sub-basin area km2"
+        default: "250"
+      gee:
+        description: "use Earth Engine for soil + KNTU (1/0)"
+        default: "1"
+      res:
+        description: "grid step in degrees"
+        default: "0.0025"
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - name: install
+        run: pip install numpy scipy numba pyflwdir rasterio shapely earthengine-api requests
+      - name: unit tests
+        run: python test_flood_core.py && python test_landcover_modis.py
+      - name: run
+        env:
+          GEE_SERVICE_ACCOUNT_KEY: ${{ secrets.GEE_SERVICE_ACCOUNT_KEY }}
+          GEE_PROJECT: ${{ secrets.GEE_PROJECT }}
+        run: |
+          OUT=data/static
+          if [ "${{ inputs.limit_rows }}" != "0" ]; then OUT=data/static/debug; fi
+          python flood_static.py --out $OUT --limit-rows ${{ inputs.limit_rows }} --a-target ${{ inputs.a_target }} --gee ${{ inputs.gee }} --res ${{ inputs.res }}
+      - name: commit results
+        if: always()
+        run: |
+          git config user.name "metstat-bot"; git config user.email "metstat-bot@users.noreply.github.com"
+          git add data/static/flood_* data/static/debug 2>/dev/null || true
+          git diff --cached --quiet && echo "nothing to commit" && exit 0
+          git commit -m "flood-static output (limit_rows=${{ inputs.limit_rows }})"
+          git pull --rebase origin ${GITHUB_REF_NAME} || true
+          git push origin HEAD:${GITHUB_REF_NAME}
