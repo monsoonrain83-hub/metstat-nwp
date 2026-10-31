@@ -22,15 +22,32 @@ def table_text(page: str):
     if 'PRES' not in t or len(re.findall(r'^\s*\d{3,4}\.\d', t, re.M)) < 8: return None
     return t
 
+URL_NEW = 'https://weather.uwyo.edu/wsgi/sounding'
+DIAG = {}   # r138: دلیل شکست هر ایستگاه (برای لاگ)
+
+def _get(s, url, params):
+    try:
+        r = s.get(url, params=params, timeout=40)
+        return r.status_code, r.text
+    except requests.RequestException as e:
+        return -1, str(e)
+
 def fetch_one(s, stn, when):
-    q = dict(region='mideast', TYPE='TEXT:LIST', YEAR=when.year, MONTH=when.month, FROM=f'{when.day:02d}{when.hour:02d}', TO=f'{when.day:02d}{when.hour:02d}', STNM=stn)
-    for k in range(3):
-        try:
-            r = s.get(URL, params=q, timeout=40)
-            if r.status_code == 200: return table_text(r.text)
-            if r.status_code in (400, 404): return None
-        except requests.RequestException: pass
-        time.sleep(3 * (k + 1))
+    """r138: نشانی جدید دانشگاه وایومینگ (wsgi) با چند منبع، سپس نشانی قدیمی (cgi-bin). دلیل شکست در DIAG ثبت می‌شود."""
+    tries = []
+    for src in ('UNKNOWN', 'BUFR', 'TEMP'):
+        tries.append((URL_NEW, dict(datetime=when.strftime('%Y-%m-%d %H:00:00'), id=stn, src=src, type='TEXT:LIST')))
+    for reg in ('naconf', 'mideast'):
+        tries.append((URL, dict(region=reg, TYPE='TEXT:LIST', YEAR=when.year, MONTH=when.month, FROM=f'{when.day:02d}{when.hour:02d}', TO=f'{when.day:02d}{when.hour:02d}', STNM=stn)))
+    for url, q in tries:
+        code, txt = _get(s, url, q)
+        if code == 200:
+            tx = table_text(txt)
+            if tx: return tx
+            DIAG.setdefault(stn, f'{url.split("/")[-1]} {q.get("src") or q.get("region")}: 200 بدون جدول — «{re.sub(chr(10)," ",re.sub("<[^>]+>"," ",txt))[:90].strip()}»')
+        else:
+            DIAG.setdefault(stn, f'{url.split("/")[-1]} {q.get("src") or q.get("region")}: HTTP {code}')
+        time.sleep(1.0)
     return None
 
 def run(days=2, only=None):
@@ -50,7 +67,7 @@ def run(days=2, only=None):
             tx = fetch_one(s, stn, t)
             if tx: runs.append({'t': t.strftime('%Y-%m-%d %HZ'), 'f': f'{stn}_{t:%Y%m%d%H}.txt', 'txt': tx})
             time.sleep(1.0)
-        print(f'{stn} {en}: {len(runs)} sounding(s)')
+        print(f'{stn} {en}: {len(runs)} sounding(s)' + ('' if runs else '  ← ' + DIAG.get(stn, '')))
         if runs: out.append({'id': stn, 'fa': fa, 'en': en, 'runs': runs})
     return {'v': 1, 'generated': now.strftime('%Y-%m-%d %H:%MZ'), 'stations': out}
 
