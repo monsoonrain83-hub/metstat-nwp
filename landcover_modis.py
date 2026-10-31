@@ -78,7 +78,16 @@ def tile_of(path):
 
 def download(year, outdir):
     import earthaccess
-    earthaccess.login(strategy='environment')
+    have = {k: bool(os.environ.get(k, '').strip()) for k in ('EARTHDATA_TOKEN', 'EARTHDATA_USERNAME', 'EARTHDATA_PASSWORD')}
+    print('متغیرهای ورود (فقط وجود، نه مقدار):', have, flush=True)
+    for k in have:                                    # فاصله/خط‌جدید اضافهٔ انتهای Secret رایج‌ترین علت «Invalid credentials» است
+        if os.environ.get(k): os.environ[k] = os.environ[k].strip()
+    if not any(have.values()):
+        sys.exit('هیچ Secret ی خوانده نشد: نام‌ها باید دقیقاً EARTHDATA_USERNAME و EARTHDATA_PASSWORD (یا EARTHDATA_TOKEN) باشند.')
+    try:
+        earthaccess.login(strategy='environment')
+    except Exception as e:
+        sys.exit('ورود Earthdata ناموفق: %s\n۱) username نه ایمیل؛ ۲) رمز را همان‌جا در urs.earthdata.nasa.gov امتحان کنید؛ ۳) راه مطمئن‌تر: Generate Token در urs.earthdata.nasa.gov و Secret با نام EARTHDATA_TOKEN.' % e)
     res = earthaccess.search_data(short_name='MCD12Q1', version='061', bounding_box=BBOX,
                                   temporal=('%d-01-01' % year, '%d-12-31' % year))
     if not res: return []

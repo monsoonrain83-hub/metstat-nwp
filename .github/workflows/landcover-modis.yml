@@ -1,6 +1,6 @@
 name: landcover-modis
 # MODIS MCD12Q1 V061 (۵۰۰ m) → برش ایران → data/static/ (ورودی ایستای ماژول سیل MetStat؛ فقط یک‌بار و سالی یک‌بار لازم است)
-# پیش‌نیاز: حساب رایگان NASA Earthdata و دو Secret در گیت‌هاب:  EARTHDATA_USERNAME  و  EARTHDATA_PASSWORD
+# پیش‌نیاز: حساب رایگان NASA Earthdata و (راه ۱) Secret به نام EARTHDATA_TOKEN [پیشنهادی] یا (راه ۲) دو Secret  EARTHDATA_USERNAME  و  EARTHDATA_PASSWORD
 on:
   workflow_dispatch:
     inputs:
@@ -29,6 +29,7 @@ jobs:
         env:
           EARTHDATA_USERNAME: ${{ secrets.EARTHDATA_USERNAME }}
           EARTHDATA_PASSWORD: ${{ secrets.EARTHDATA_PASSWORD }}
+          EARTHDATA_TOKEN: ${{ secrets.EARTHDATA_TOKEN }}
         run: python landcover_modis.py --year "${{ github.event.inputs.year || 0 }}" --out data/static
       - name: Commit result
         run: |
