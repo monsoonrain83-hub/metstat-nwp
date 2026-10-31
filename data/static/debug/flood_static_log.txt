@@ -1,0 +1,15 @@
+[     8s] AWS GLO-90 tiles ok=105 missing=0 of 105
+[     8s] DEM valid cells: 13.1 M of 13.1 M; elev min/max -43 / 5073
+[    17s] flow directions ready; pits: 1809
+[    18s] topological order cells: 13120000 of valid 13120000
+[    19s] sub-basins before Iran filter: 4416
+[    19s] sub-basins kept (>=50% inside Iran): 1343
+[    21s] terrain features done
+[    21s] land-cover/soil tiles to process: 47
+[    22s] Earth Engine ready
+[    22s] GEE tiles (touching Iran): 43
+[   875s]   GEE tiles done 25/43 {'soil_ok': 0, 'soil_fail': 28, 'kntu_ok': 0, 'kntu_fail': 25}
+[  1364s] GEE stats: {'soil_ok': 0, 'soil_fail': 43, 'kntu_ok': 0, 'kntu_fail': 43} first error: EE tile failed: Permission 'earthengine.thumbnails.create' denied on resource 'projects/metstat-flood-prediction' (or it may not exist).
+[  1364s] land cover / CN done
+[  1365s] polygonised: 1343
+[  1365s] OK  basins=1343  geojson=1.8 MB
