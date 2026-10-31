@@ -59,6 +59,8 @@ def fetch_tile(ee, image, bbox_wsen, res, retries=5, pause=4.0):
             return out
         except Exception as ex:  # noqa: BLE001 - retry on any transport / EE error
             err = ex
+            if "denied" in str(ex).lower() or "permission" in str(ex).lower():
+                break  # IAM problem: retrying cannot help
             time.sleep(pause * (k + 1))
     raise RuntimeError("EE tile failed: %s" % str(err)[:300])
 
@@ -88,3 +90,36 @@ def dem_image(ee):
     col = ee.ImageCollection("COPERNICUS/DEM/GLO30").select("DEM")
     proj = col.first().projection()
     return col.mosaic().setDefaultProjection(proj).reduceResolution(reducer=ee.Reducer.mean(), maxPixels=1024)
+
+
+# ---- SoilGrids straight from ISRIC (no Earth Engine needed) -----------------------------
+SG_BASE = "https://files.isric.org/soilgrids/latest/data/%s/%s_%s_mean.vrt"
+
+
+def soilgrids_tile(bbox_wsen, res):
+    """sand, clay in % (0-30 cm depth-weighted) on the regular grid -> (2,H,W) float32."""
+    import rasterio
+    from rasterio.vrt import WarpedVRT
+    from rasterio.enums import Resampling
+    from rasterio.transform import from_origin
+    w, s, e, n = bbox_wsen
+    ncol = int(round((e - w) / res))
+    nrow = int(round((n - s) / res))
+    tr = from_origin(w, n, res, res)
+    out = []
+    env = dict(GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR", CPL_VSIL_CURL_ALLOWED_EXTENSIONS=".vrt,.tif",
+               GDAL_HTTP_MAX_RETRY="4", GDAL_HTTP_RETRY_DELAY="3", VSI_CACHE="TRUE")
+    with rasterio.Env(**env):
+        for name in ("sand", "clay"):
+            acc = np.zeros((nrow, ncol), np.float32)
+            wsum = np.zeros((nrow, ncol), np.float32)
+            for depth, wt in (("0-5cm", 5), ("5-15cm", 10), ("15-30cm", 15)):
+                with rasterio.open(SG_BASE % (name, name, depth)) as src:
+                    with WarpedVRT(src, crs="EPSG:4326", transform=tr, width=ncol, height=nrow,
+                                   resampling=Resampling.average, src_nodata=src.nodata, nodata=-32768) as v:
+                        a = v.read(1).astype(np.float32)
+                ok = a > -30000
+                acc += np.where(ok, a, 0) * wt
+                wsum += np.where(ok, wt, 0)
+            out.append(np.where(wsum > 0, acc / np.maximum(wsum, 1e-6) / 10.0, 0).astype(np.float32))
+    return np.stack(out)

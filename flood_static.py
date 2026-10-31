@@ -370,17 +370,32 @@ def main():
             ee = None
     gee_stat = {"soil_ok": 0, "soil_fail": 0, "kntu_ok": 0, "kntu_fail": 0}
 
+    dead = {"gee": 0 if ee is not None else 3}
+    gee_stat["soil_isric_ok"] = 0
+    gee_stat["soil_isric_fail"] = 0
+
     def get_gee(job):
         r0, r1, c0, c1 = job
         bbox = (W + c0 * res, N - r1 * res, W + c1 * res, N - r0 * res)
         out = [None, None, None]
         for k, img in ((0, soil_img), (1, kntu_img)):
             try:
+                if dead["gee"] >= 3:
+                    raise RuntimeError("EE skipped after repeated permission errors")
                 out[k] = gee_grid.fetch_tile(ee, img, bbox, res)
                 gee_stat[("soil_ok", "kntu_ok")[k]] += 1
             except Exception as ex:  # noqa: BLE001
                 gee_stat[("soil_fail", "kntu_fail")[k]] += 1
-                out[2] = str(ex)[:150]
+                if "denied" in str(ex).lower() or "permission" in str(ex).lower():
+                    dead["gee"] += 1
+                out[2] = out[2] or str(ex)[:200]
+        if out[0] is None:  # soil fallback: ISRIC SoilGrids straight from files.isric.org
+            try:
+                out[0] = gee_grid.soilgrids_tile(bbox, res)
+                gee_stat["soil_isric_ok"] += 1
+            except Exception as ex:  # noqa: BLE001
+                gee_stat["soil_isric_fail"] += 1
+                out[2] = out[2] or ("ISRIC: " + str(ex)[:200])
         return job, out
 
     def process(job, soil, kn):
@@ -432,7 +447,7 @@ def main():
                 cn_sum_k[:] += np.bincount(lbk, weights=cnk[okk], minlength=m + 1)
                 n_k[:] += np.bincount(lbk, minlength=m + 1)
 
-    if ee is not None:
+    if a.gee:
         from concurrent.futures import ThreadPoolExecutor
         jobs = [t for t in tiles if ins2[t[0]:t[1], t[2]:t[3]].any()]
         log("GEE tiles (touching Iran):", len(jobs))
