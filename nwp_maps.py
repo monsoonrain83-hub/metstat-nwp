@@ -1681,6 +1681,17 @@ class Engine:
             f = s.blend(st, R, lambda nm: s.acc(st, nm, P['var'], vt, P['h']) if nm in st.hist else None)
             if f is None: return None
             f = np.maximum(f, 0)
+            if P['var'] == 'precip' and P['h'] in (24, 48) and R.key == 'iran' and not getattr(st, '_kdiag', {}).get((pid, lead)):   # r133: تشخیص — مقدار نقطه‌ای کرمان در هر مرحله
+                try:
+                    st._kdiag = getattr(st, '_kdiag', {}); st._kdiag[(pid, lead)] = 1
+                    _d = (R.lat - 30.28) ** 2 + (R.lon - 57.07) ** 2; _j = np.unravel_index(int(np.nanargmin(_d)), _d.shape)
+                    _pf = s.precip_factor(st, R)
+                    _srcv = {}
+                    for _nm in st.srcs:
+                        if _nm in st.hist and s.acc(st, _nm, P['var'], vt, P['h']) is not None:
+                            _a = R.interp(st.srcs[_nm], s.acc(st, _nm, P['var'], vt, P['h'])); _srcv[_nm] = float(_a[_j])
+                    log(f'  [کرمان] {mkey} +{lead}h پنجره {P["h"]}h: منابع {_srcv} | پس از ترکیب {float(f[_j]):.1f} mm | ضریب ارتفاعی {float(_pf[_j]):.2f} | نهایی {float(f[_j] * _pf[_j]):.1f} mm | بیشینهٔ کادر {float(np.nanmax(f)):.1f}')
+                except Exception as e: log(f'  [کرمان] تشخیص ناموفق: {type(e).__name__}: {e}')
             if not P.get('raw'): f = f * s.precip_factor(st, R)          # بارش/برف: ضریب ارتفاعی غیرخطی (خام: pid با پسوند r)
             return (f, dict(note='Elevation-adjusted: P×(1+χΔz)/(1−χΔz), χ=0.27/km, effective height capped at 2500 m, cell total conserved') if not P.get('raw') else {})
         if P['kind'] == 'day':
