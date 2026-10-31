@@ -76,13 +76,45 @@ def tile_of(path):
     m = re.search(r'\.h(\d\d)v(\d\d)\.', os.path.basename(path)); return int(m.group(1)), int(m.group(2))
 
 
+def cmr_links(year):
+    """جست‌وجوی granule ها در CMR — عمومی است و توکن نمی‌خواهد (توکن نادرست جست‌وجو را هم خراب می‌کرد: 401 Token does not exist)."""
+    import requests
+    out, page = [], 1
+    while True:
+        r = requests.get('https://cmr.earthdata.nasa.gov/search/granules.json', timeout=120, params={
+            'short_name': 'MCD12Q1', 'version': '061', 'bounding_box': ','.join(str(x) for x in BBOX),
+            'temporal': '%d-01-01T00:00:00Z,%d-12-31T23:59:59Z' % (year, year), 'page_size': 200, 'page_num': page})
+        r.raise_for_status(); ent = r.json()['feed']['entry']
+        if not ent: break
+        for e in ent:
+            for l in e.get('links', []):
+                h = l.get('href', '')
+                if l.get('rel', '').endswith('/data#') and h.startswith('https://') and h.endswith('.hdf'): out.append(h)
+        page += 1
+    return sorted(set(out))
+
+
 def download(year, outdir):
     import earthaccess
-    earthaccess.login(strategy='environment')
-    res = earthaccess.search_data(short_name='MCD12Q1', version='061', bounding_box=BBOX,
-                                  temporal=('%d-01-01' % year, '%d-12-31' % year))
-    if not res: return []
-    return earthaccess.download(res, outdir)
+    links = cmr_links(year)
+    print('سال', year, '→', len(links), 'فایل', flush=True)
+    if not links: return []
+    have = {k: bool(os.environ.get(k, '').strip()) for k in ('EARTHDATA_TOKEN', 'EARTHDATA_USERNAME', 'EARTHDATA_PASSWORD')}
+    print('متغیرهای ورود (فقط وجود، نه مقدار):', have, flush=True)
+    tok = os.environ.get('EARTHDATA_TOKEN', '').strip().strip('"\'')
+    if tok.lower().startswith('bearer '): tok = tok[7:].strip()
+    if tok: os.environ['EARTHDATA_TOKEN'] = tok
+    else: os.environ.pop('EARTHDATA_TOKEN', None)
+    for k in ('EARTHDATA_USERNAME', 'EARTHDATA_PASSWORD'):
+        if os.environ.get(k): os.environ[k] = os.environ[k].strip()
+    if not any(have.values()):
+        sys.exit('هیچ Secret ی خوانده نشد: نام‌ها باید دقیقاً EARTHDATA_TOKEN (یا EARTHDATA_USERNAME و EARTHDATA_PASSWORD) باشند.')
+    try:
+        earthaccess.login(strategy='environment')
+        got = earthaccess.download(links, outdir)
+    except Exception as e:
+        sys.exit('دانلود/ورود Earthdata ناموفق: %s\nتوکن را در urs.earthdata.nasa.gov › Generate Token بسازید و کامل (بدون Bearer و فاصله) در Secret بگذارید؛ همان‌جا حتماً «Approved Applications» شامل «LP DAAC Data Pool / NASA GESDISC» را هم تأیید کنید.' % e)
+    return got
 
 
 def main():
