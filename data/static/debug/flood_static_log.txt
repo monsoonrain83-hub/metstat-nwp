@@ -1,15 +1,15 @@
 [     8s] AWS GLO-90 tiles ok=105 missing=0 of 105
 [     8s] DEM valid cells: 13.1 M of 13.1 M; elev min/max -43 / 5073
-[    19s] flow directions ready; pits: 1809
-[    19s] topological order cells: 13120000 of valid 13120000
-[    20s] sub-basins before Iran filter: 4416
-[    21s] sub-basins kept (>=50% inside Iran): 1343
-[    22s] terrain features done
-[    22s] land-cover/soil tiles to process: 47
-[    23s] Earth Engine ready
-[    23s] GEE tiles (touching Iran): 43
-[  1460s]   GEE tiles done 25/43 {'soil_ok': 0, 'soil_fail': 28, 'kntu_ok': 0, 'kntu_fail': 28, 'soil_isric_ok': 25, 'soil_isric_fail': 0}
-[  2289s] GEE stats: {'soil_ok': 0, 'soil_fail': 43, 'kntu_ok': 0, 'kntu_fail': 43, 'soil_isric_ok': 43, 'soil_isric_fail': 0} first error: EE tile failed: 400 Client Error: Bad Request for url: https://earthengine.googleapis.com/v1/projects/metstat-flood-prediction/thumbnails/45c9634c93b167ab243cf9163c820eae-fc8903672de8eb372d173c90b7981
-[  2289s] land cover / CN done
-[  2290s] polygonised: 1343
-[  2290s] OK  basins=1343  geojson=1.8 MB
+[    21s] flow directions ready; pits: 1809
+[    21s] topological order cells: 13120000 of valid 13120000
+[    23s] sub-basins before Iran filter: 4416
+[    23s] sub-basins kept (>=50% inside Iran): 1343
+[    25s] terrain features done
+[    25s] land-cover/soil tiles to process: 47
+[    26s] Earth Engine ready
+[    26s] GEE tiles (touching Iran): 43
+[  1573s]   GEE tiles done 25/43 {'soil_ok': 28, 'soil_fail': 0, 'kntu_ok': 25, 'kntu_fail': 0, 'soil_isric_ok': 0, 'soil_isric_fail': 0}
+[  3081s] GEE stats: {'soil_ok': 43, 'soil_fail': 0, 'kntu_ok': 43, 'kntu_fail': 0, 'soil_isric_ok': 0, 'soil_isric_fail': 0} first error: None
+[  3081s] land cover / CN done
+[  3082s] polygonised: 1343
+[  3082s] OK  basins=1343  geojson=2.0 MB
