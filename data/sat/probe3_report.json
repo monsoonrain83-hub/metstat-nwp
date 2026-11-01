@@ -1,0 +1,4513 @@
+{
+ "utc": "2026-11-01T11:20:46.338298Z",
+ "eumetview_layers": {
+  "osmgray:dark": {
+   "title": "Dark gray base map",
+   "abs": "",
+   "time": "",
+   "bbox": [
+    "-180.00",
+    "180.000",
+    "-85.06",
+    "85.06"
+   ]
+  },
+  "osmgray:dark_labels": {
+   "title": "Light gray map labels overlay",
+   "abs": "",
+   "time": "",
+   "bbox": [
+    "-180.00",
+    "180.000",
+    "-85.06",
+    "85.06"
+   ]
+  },
+  "osmgray:light": {
+   "title": "Light gray base map",
+   "abs": "",
+   "time": "",
+   "bbox": [
+    "-180.00",
+    "180.000",
+    "-85.06",
+    "85.06"
+   ]
+  },
+  "osmgray:light_labels": {
+   "title": "Dark gray map labels overlay",
+   "abs": "",
+   "time": "",
+   "bbox": [
+    "-180.00",
+    "180.000",
+    "-85.06",
+    "85.06"
+   ]
+  },
+  "osmgray:builtup_area": {
+   "title": "builtup_area",
+   "abs": "",
+   "time": "",
+   "bbox": [
+    "-180.00",
+    "180.000",
+    "-85.059",
+    "85.0599"
+   ]
+  },
+  "msg_fes:clm": {
+   "title": "Cloud Mask - MSG - 0 degree",
+   "abs": "The Cloud Mask product describes the scene type (either 'clear' or 'cloudy') on a pixel level. Each pixel is classified as one of the following four types: clear sky over water, clear sky over land, cloud, or not processed (off Earth disc). Applications & Uses",
+   "time": "T00:00:00.000Z/2026-11-01T11:00:00.000Z/PT15M",
+   "bbox": [
+    "-77.0",
+    "77.0",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_iodc:clm": {
+   "title": "Cloud Mask - MSG - Indian Ocean",
+   "abs": "The Cloud Mask product describes the scene type (either 'clear' or 'cloudy') on a pixel level. Each pixel is classified as one of the following four types: clear sky over water, clear sky over land, cloud, or not processed (off Earth disc). Applications &amp; ",
+   "time": "T00:00:00.000Z/2026-11-01T11:00:00.000Z/PT15M",
+   "bbox": [
+    "-35.5",
+    "118.5",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_fes:cth": {
+   "title": "Cloud Top Height - MSG - 0 degree",
+   "abs": "The product indicates the height of highest cloud. Based on a subset of the information derived during Scenes and Cloud Analysis, but also makes use of other external meteorological data. Applications and Users: Aviation meteorology.",
+   "time": "T00:00:00.000Z/2026-11-01T11:00:00.000Z/PT15M",
+   "bbox": [
+    "-77.0",
+    "77.0",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_iodc:cth": {
+   "title": "Cloud Top Height - MSG - Indian Ocean",
+   "abs": "The product indicates the height of highest cloud. Based on a subset of the information derived during Scenes and Cloud Analysis, but also makes use of other external meteorological data. Applications and Users: Aviation meteorology.&#13;&#10;&#13;&#10;From 1 ",
+   "time": "T00:00:00.000Z/2026-11-01T11:00:00.000Z/PT15M",
+   "bbox": [
+    "-35.5",
+    "118.5",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "copernicus:daily_sentinel3ab_olci_l1_rgb_fulres": {
+   "title": "OLCI Level 1B RGB Daily Accumulated - Sentinel-3",
+   "abs": "This product is an RGB (Red, Green, Blue) composite based upon data from S3A OLCI L1 NRT products Top-Of-Atmosphere (TOA) radiometric measurements, radiometrically corrected, calibrated and spectrally characterised. The product is composed from data from a com",
+   "time": "4:03:00.000Z/2026-11-01T07:34:00.000Z/PT1H41M",
+   "bbox": [
+    "-180.0",
+    "180.006",
+    "-84.352",
+    "68.8684"
+   ]
+  },
+  "copernicus:daily_sentinel3ab_olci_l2_chl_fullres": {
+   "title": "OLCI Level 2 CHL Concentration Daily Accumulated - Sentinel-3",
+   "abs": "This Ocean Colour product represents the algal pigment (Chlorophyll a) concentration in clear open waters, and it is defined by the \"OC4Me\" Maximum Band Ratio (MBR) semi-analytical algorithm. The product is derived from S3A and S3B OLCI L2 NRT water-leaving re",
+   "time": "3:01:00.000Z/2026-11-01T08:13:00.000Z/PT1H41M",
+   "bbox": [
+    "-180.0",
+    "180.010",
+    "-84.367",
+    "69.7921"
+   ]
+  },
+  "copernicus:daily_sentinel3ab_slstr_l2p_sst_fullres": {
+   "title": "SLSTR Level 2 SST Daily Accumulated - Sentinel-3",
+   "abs": "Sea Surface Temperature (SST) is the kinetic temperature of a water body at a defined depth. Although SLSTR measures an infrared radiometric temperature, it is provided as a kinetic temperature by considering the emissivity of the water body as part of the SST",
+   "time": "7:33:00.000Z/2026-06-11T06:07:00.000Z/PT1H41M",
+   "bbox": [
+    "-180.0",
+    "180.010",
+    "-85.230",
+    "90.0"
+   ]
+  },
+  "msg_fes:fire": {
+   "title": "Active Fire Monitoring (GRIB) - MSG - 0 degree",
+   "abs": "The active fire monitoring product is a fire detection product indicating the presence of fire within a pixel. The underlying concept of the algorithm takes advantage of the fact that SEVIRI channel IR3.9 is very sensitive to hot spots which are caused by fire",
+   "time": "T00:00:00.000Z/2026-11-01T11:00:00.000Z/PT15M",
+   "bbox": [
+    "-77.0",
+    "77.0",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_iodc:fire": {
+   "title": "Active Fire Monitoring (GRIB) - MSG - Indian Ocean",
+   "abs": "The active fire monitoring product is a fire detection product indicating the presence of fire within a pixel. The underlying concept of the algorithm takes advantage of the fact that SEVIRI channel IR3.9 is very sensitive to hot spots which are caused by fire",
+   "time": "T00:00:00.000Z/2026-11-01T11:00:00.000Z/PT15M",
+   "bbox": [
+    "-35.5",
+    "118.5",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "mtg_fd:frp": {
+   "title": "Fire Radiative Power (FRP)",
+   "abs": "The Fire Radiative Power product (FRP, in megawatts) provides information on the measured radiant heat output of detected fires. It has been demonstrated in small-scale experimental fires that the amount of radiant heat energy liberated per unit time (the Fire",
+   "time": "T00:00:00.000Z/2026-11-01T10:50:00.000Z/PT10M",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-90.0",
+    "90.0"
+   ]
+  },
+  "msg_fes:gii_kindex": {
+   "title": "GII K-Index – MSG – 0 degree",
+   "abs": "",
+   "time": "T12:45:00.000Z/2026-11-01T11:00:00.000Z/PT15M",
+   "bbox": [
+    "-77.0",
+    "77.0",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_iodc:gii_kindex": {
+   "title": "Global Instability K-Index - MSG - Indian Ocean",
+   "abs": "The GII product consists of a set of indices which describe atmospheric air mass instability in cloud free areas. These indices are highly empirical in nature and might even be only relevant in certain geographic regions or under certain circumstances.&#13;&#1",
+   "time": "T12:45:00.000Z/2026-11-01T11:00:00.000Z/PT15M",
+   "bbox": [
+    "-35.5",
+    "118.5",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_fes:gii_liftedindex": {
+   "title": "GII Lifted-Index – MSG – 0 degree",
+   "abs": "",
+   "time": "T12:45:00.000Z/2026-11-01T11:00:00.000Z/PT15M",
+   "bbox": [
+    "-77.0",
+    "77.0",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_iodc:gii_liftedindex": {
+   "title": "Global Instability Lifted-Index – MSG – Indian Ocean",
+   "abs": "The GII product consists of a set of indices which describe atmospheric air mass instability in cloud free areas. These indices are highly empirical in nature and might even be only relevant in certain geographic regions or under certain circumstances.&#13;&#1",
+   "time": "T12:45:00.000Z/2026-11-01T11:00:00.000Z/PT15M",
+   "bbox": [
+    "-35.5",
+    "118.5",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "backgrounds:graticules-dark": {
+   "title": "graticules-dark",
+   "abs": "",
+   "time": "",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-90.0",
+    "90.0"
+   ]
+  },
+  "backgrounds:graticules-light": {
+   "title": "graticules-light",
+   "abs": "",
+   "time": "",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-90.0",
+    "90.0"
+   ]
+  },
+  "mtg_fd:h40b": {
+   "title": "Blended FCI / LEO MW precipitation - MTG - 0 degree",
+   "abs": "An instantaneous precipitation map is generated by IR images from the MTG FCI “calibrated” by precipitation estimates from MW radiometers on board LEO satellites, processed soon after each acquisition of a new image from MTG-FCI. The calibration procedure will",
+   "time": "T00:00:00.000Z/2026-11-01T10:50:00.000Z/PT10M",
+   "bbox": [
+    "-70.0",
+    "70.0",
+    "-70.0",
+    "70.0"
+   ]
+  },
+  "msg_fes:h60b": {
+   "title": "Blended SEVIRI / LEO MW precipitation and morphologic information - MSG - 0 degree",
+   "abs": "Instantaneous precipitation maps generated combining geostationary (GEO) IR images from operational geostationary satellites 'calibrated' by precipitation measurements from MW images on Low Earth Orbit (LEO) satellites, processed soon after each acquisition of",
+   "time": "T00:45:00.000Z/2026-11-01T10:45:00.000Z/PT15M",
+   "bbox": [
+    "-77.0",
+    "77.0",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_iodc:h63": {
+   "title": "Precipitation rate at ground by GEO/IR supported by LEO/MW - MSG - Indian Ocean",
+   "abs": "Instantaneous precipitation maps over IODC area generated combining geostationary (GEO) IR images from operational geostationary satellites 'calibrated' by precipitation measurements from MW images on Low Earth Orbit (LEO) satellites, processed soon after each",
+   "time": "T08:00:00.000Z/2026-11-01T10:45:00.000Z/PT15M",
+   "bbox": [
+    "-35.0",
+    "125.0",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_fes:ir039": {
+   "title": "High Rate SEVIRI IR3.9 μm Image - MSG - 0 degree",
+   "abs": "Rectified (level 1.5) Meteosat SEVIRI image data. The data is transmitted as High Rate transmissions in 12 spectral channels. Level 1.5 image data corresponds to the geolocated and radiometrically pre-processed image data, ready for further processing, e.g. th",
+   "time": "T00:00:00.000Z/2026-11-01T11:00:00.000Z/PT15M",
+   "bbox": [
+    "-77.0",
+    "77.0",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_iodc:ir039": {
+   "title": "High Rate SEVIRI IR3.9 μm Image - MSG - Indian Ocean",
+   "abs": "Rectified (level 1.5) Meteosat SEVIRI image data. The data is transmitted as High Rate transmissions in 12 spectral channels. Level 1.5 image data corresponds to the geolocated and radiometrically pre-processed image data, ready for further processing, e.g. th",
+   "time": "T00:00:00.000Z/2026-11-01T11:00:00.000Z/PT15M",
+   "bbox": [
+    "-35.5",
+    "118.5",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_rss:ir039_nrt": {
+   "title": "Rapid Scan High Rate SEVIRI IR 3.9 - MSG",
+   "abs": "Rectified (level 1.5) Meteosat SEVIRI Rapid Scan image data. The baseline scan region is a reduced area of the top 1/3 of a nominal repeat cycle, covering a latitude range from approximately 15 degrees to 70 degrees. The service generates repeat cycles at 5-mi",
+   "time": "2T14:40:00.000Z/2026-11-01T11:05:00.000Z/PT5M",
+   "bbox": [
+    "-64.285",
+    "84.2857",
+    "13.0",
+    "78.0"
+   ]
+  },
+  "mtg_fd:ir105_hrfi": {
+   "title": "FCI HRFI IR10.5 μm Image - MTG-I - 0 degree",
+   "abs": "Rectified (level 1c) Meteosat FCI full disk image data in high spatial resolution (1km). Level 1c image data corresponds to the geolocated and radiometrically pre-processed image data, ready for further processing, e.g. the extraction of meteorological product",
+   "time": "T00:00:00.000Z/2026-11-01T11:00:00.000Z/PT10M",
+   "bbox": [
+    "-70.0",
+    "70.0",
+    "-70.0",
+    "70.0"
+   ]
+  },
+  "msg_fes:ir108": {
+   "title": "High Rate SEVIRI IR10.8 μm Image - MSG - 0 degree",
+   "abs": "Rectified (level 1.5) Meteosat SEVIRI image data. The data is transmitted as High Rate transmissions in 12 spectral channels. Level 1.5 image data corresponds to the geolocated and radiometrically pre-processed image data, ready for further processing, e.g. th",
+   "time": "T00:00:00.000Z/2026-11-01T11:00:00.000Z/PT15M",
+   "bbox": [
+    "-77.0",
+    "77.0",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_iodc:ir108": {
+   "title": "High Rate SEVIRI IR10.8 μm Image - MSG - Indian Ocean",
+   "abs": "Rectified (level 1.5) Meteosat SEVIRI image data. The data is transmitted as High Rate transmissions in 12 spectral channels. Level 1.5 image data corresponds to the geolocated and radiometrically pre-processed image data, ready for further processing, e.g. th",
+   "time": "T00:00:00.000Z/2026-11-01T11:00:00.000Z/PT15M",
+   "bbox": [
+    "-35.5",
+    "118.5",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "osmgray:land_polygons": {
+   "title": "land_polygons",
+   "abs": "",
+   "time": "",
+   "bbox": [
+    "-180.00",
+    "180.000",
+    "-85.059",
+    "85.0599"
+   ]
+  },
+  "mtg_fd:li_afa": {
+   "title": "LI Accumulated Flash Area - MTG-I - 0 degree",
+   "abs": "LI Level 2 Accumulated Flash Area (AFA) provides the user with data about flash mapping by using the area covered by the optical emission of each flash in LI Level 2 Lightning Flashes (LFL). It is important to keep in mind that each flash is treated as a flat ",
+   "time": "0T15:00:00.000Z/2026-11-01T11:05:00.000Z/PT5M",
+   "bbox": [
+    "-70.0",
+    "70.0",
+    "-70.0",
+    "70.0"
+   ]
+  },
+  "eps:m01_ascat_wind": {
+   "title": "ASCAT Coastal Winds at 12.5 km Swath Grid - Metop B",
+   "abs": "Equivalent neutral 10m winds over the global oceans, with specific sampling to provide as many observations as possible near the coasts. Better than using this archived NRT product, please use the reprocessed ASCAT winds data records (EO:EUM:DAT:METOP:OSI-150-",
+   "time": "2:24:00.000Z/2026-11-01T05:45:00.000Z/PT1H40M",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-90.0",
+    "90.0"
+   ]
+  },
+  "eps:m01_ir108": {
+   "title": "AVHRR IR10.8 6 orbits accumulated - Metop B",
+   "abs": "This is an image of Advanced Very High Resolution Radiometer (AVHRR) channel IR 10.8 Level 1b Brightness Temperatures, accumulated over the last 6 orbits. The indicated time represents the end of the last orbit (when the satellite crosses the equator in the as",
+   "time": "0:34:00.000Z/2026-11-01T06:19:00.000Z/PT1H40M",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-90.0",
+    "90.0"
+   ]
+  },
+  "eps:m01_orbital_tracks": {
+   "title": "METOP B ORBITAL TRACK",
+   "abs": "Orbital Track - Metop B",
+   "time": "6T09:55:03.000Z/2026-11-01T06:19:00.000Z/PT1S",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-90.0",
+    "90.0"
+   ]
+  },
+  "eps:m01_rgb_124": {
+   "title": "AVHRR RGB Cloud Daily Accumulated - Metop B",
+   "abs": "This AVHRR Cloud RGB product is an RGB (Red, Green, Blue) composite image based upon data from solar and infrared channels from Advanced Very High Resolution Radiometer/3 (AVHRR/3): channel 1 at 0.63 µm, channel 2 at 0.865 µm and channel 4 at 10.8 µm. Due to u",
+   "time": "2:16:00.000Z/2026-11-01T06:19:00.000Z/PT1H40M",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-90.0",
+    "90.0"
+   ]
+  },
+  "eps:m01_rgb_natural_fog": {
+   "title": "AVHRR RGB Natural Colour + Fog 6 orbits accumulated - Metop B",
+   "abs": "This is an RGB (Red, Green, Blue) composite image based upon data from solar and infrared channels from Advanced Very High Resolution Radiometer/3 (AVHRR/3). The images are a combination of two AVHRR RGB composite products: the Natural Colour (daytime product ",
+   "time": "0:34:00.000Z/2026-11-01T06:19:00.000Z/PT1H40M",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-90.0",
+    "90.0"
+   ]
+  },
+  "eps:m02_ascat_wind": {
+   "title": "ASCAT Coastal Winds at 12.5 km Swath Grid - Metop A",
+   "abs": "Equivalent neutral 10m winds over the global oceans, with specific sampling to provide as many observations as possible near the coasts. Better than using this archived NRT product, please use the reprocessed ASCAT winds data records (EO:EUM:DAT:METOP:OSI-150-",
+   "time": "1:00:00.000Z/2021-11-15T08:54:00.000Z/PT1H40M",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-90.0",
+    "90.0"
+   ]
+  },
+  "eps:m02_ir108": {
+   "title": "AVHRR IR10.8 6 orbits accumulated - Metop A",
+   "abs": "This is an image of Advanced Very High Resolution Radiometer (AVHRR) channel IR 10.8 Level 1b Brightness Temperatures, accumulated over the last 6 orbits. The indicated time represents the end of the last orbit (when the satellite crosses the equator in the as",
+   "time": "6:43:00.000Z/2021-11-15T07:46:00.000Z/PT1H40M",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-90.0",
+    "90.0"
+   ]
+  },
+  "eps:m02_orbital_tracks": {
+   "title": "METOP A ORBITAL TRACK",
+   "abs": "Orbital Track - Metop A",
+   "time": "6T08:40:03.000Z/2021-11-15T07:46:03.000Z/PT1S",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-90.0",
+    "90.0"
+   ]
+  },
+  "eps:m02_rgb_124": {
+   "title": "AVHRR RGB Cloud Daily Accumulated - Metop A",
+   "abs": "This AVHRR Cloud RGB product is an RGB (Red, Green, Blue) composite image based upon data from solar and infrared channels from Advanced Very High Resolution Radiometer/3 (AVHRR/3): channel 1 at 0.63 µm, channel 2 at 0.865 µm and channel 4 at 10.8 µm. Due to u",
+   "time": "6:43:00.000Z/2021-11-15T07:46:00.000Z/PT1H40M",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-90.0",
+    "90.0"
+   ]
+  },
+  "eps:m02_rgb_natural_fog": {
+   "title": "AVHRR RGB Natural Colour + Fog 6 orbits accumulated - Metop A",
+   "abs": "This is an RGB (Red, Green, Blue) composite image based upon data from solar and infrared channels from Advanced Very High Resolution Radiometer/3 (AVHRR/3). The images are a combination of two AVHRR RGB composite products: the Natural Colour (daytime product ",
+   "time": "6:43:00.000Z/2021-11-15T07:46:00.000Z/PT1H40M",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-90.0",
+    "90.0"
+   ]
+  },
+  "eps:m03_ascat_wind": {
+   "title": "ASCAT Coastal Winds at 12.5 km Swath Grid - Metop C",
+   "abs": "Equivalent neutral 10m winds over the global oceans, with specific sampling to provide as many observations as possible near the coasts. Better than using this archived NRT product, please use the reprocessed ASCAT winds data records (EO:EUM:DAT:METOP:OSI-150-",
+   "time": "3:18:00.000Z/2026-11-01T06:09:00.000Z/PT1H40M",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-90.0",
+    "90.0"
+   ]
+  },
+  "eps:m03_ir108": {
+   "title": "AVHRR IR10.8 6 orbits accumulated - Metop C",
+   "abs": "This is an image of Advanced Very High Resolution Radiometer (AVHRR) channel IR 10.8 Level 1b Brightness Temperatures, accumulated over the last 6 orbits. The indicated time represents the end of the last orbit (when the satellite crosses the equator in the as",
+   "time": "1:28:00.000Z/2026-11-01T04:58:00.000Z/PT1H40M",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-90.0",
+    "90.0"
+   ]
+  },
+  "eps:m03_orbital_tracks": {
+   "title": "METOP C ORBITAL TRACK",
+   "abs": "Orbital Track - Metop C",
+   "time": "6T09:07:03.000Z/2026-11-01T04:58:00.000Z/PT1S",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-90.0",
+    "90.0"
+   ]
+  },
+  "eps:m03_rgb_124": {
+   "title": "AVHRR RGB Cloud Daily Accumulated - Metop C",
+   "abs": "This AVHRR Cloud RGB product is an RGB (Red, Green, Blue) composite image based upon data from solar and infrared channels from Advanced Very High Resolution Radiometer/3 (AVHRR/3): channel 1 at 0.63 µm, channel 2 at 0.865 µm and channel 4 at 10.8 µm. Due to u",
+   "time": "1:28:00.000Z/2026-11-01T04:58:00.000Z/PT1H40M",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-90.0",
+    "90.0"
+   ]
+  },
+  "eps:m03_rgb_natural_fog": {
+   "title": "AVHRR RGB Natural Colour + Fog 6 orbits accumulated - Metop C",
+   "abs": "This is an RGB (Red, Green, Blue) composite image based upon data from solar and infrared channels from Advanced Very High Resolution Radiometer/3 (AVHRR/3). The images are a combination of two AVHRR RGB composite products: the Natural Colour (daytime product ",
+   "time": "1:28:00.000Z/2026-11-01T04:58:00.000Z/PT1H40M",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-90.0",
+    "90.0"
+   ]
+  },
+  "osmgray:ne_10m_admin_0_boundary_lines_land": {
+   "title": "ne_10m_admin_0_boundary_lines_land",
+   "abs": "",
+   "time": "",
+   "bbox": [
+    "-141.00",
+    "140.977",
+    "-55.120",
+    "70.0753"
+   ]
+  },
+  "osmgray:ne_10m_admin_0_countries_points": {
+   "title": "ne_10m_admin_0_countries_points",
+   "abs": "",
+   "time": "",
+   "bbox": [
+    "-177.19",
+    "178.690",
+    "-79.928",
+    "78.8376"
+   ]
+  },
+  "osmgray:ne_10m_admin_1_states_provinces_lines": {
+   "title": "ne_10m_admin_1_states_provinces_lines",
+   "abs": "",
+   "time": "",
+   "bbox": [
+    "-178.13",
+    "178.448",
+    "-49.250",
+    "81.1285"
+   ]
+  },
+  "osmgray:ne_10m_bathymetry": {
+   "title": "ne_10m_bathymetry",
+   "abs": "",
+   "time": "",
+   "bbox": [
+    "-179.99",
+    "180.000",
+    "-85.221",
+    "90.0000"
+   ]
+  },
+  "backgrounds:ne_10m_coastline": {
+   "title": "NaturalEarth Coastline",
+   "abs": "",
+   "time": "",
+   "bbox": [
+    "-180.0",
+    "179.999",
+    "-89.900",
+    "83.6649"
+   ]
+  },
+  "backgrounds:ne_background": {
+   "title": "NaturalEarth Background",
+   "abs": "",
+   "time": "",
+   "bbox": [
+    "-180.0",
+    "179.999",
+    "-89.999",
+    "90.0"
+   ]
+  },
+  "backgrounds:ne_boundary_lines_land": {
+   "title": "Boundary Lines Land",
+   "abs": "ne_10m_admin_0_boundary_lines_land",
+   "time": "",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-90.0",
+    "90.0"
+   ]
+  },
+  "backgrounds:ne_gray": {
+   "title": "NaturalEarth Background Gray",
+   "abs": "",
+   "time": "",
+   "bbox": [
+    "-180.0",
+    "180.000",
+    "-90.000",
+    "90.0000"
+   ]
+  },
+  "mumi:osi_sic_cdr_v3_nh": {
+   "title": "OSI SAF Blended Global Sea Ice Concentration Climate and Interim Climate Data Records for Northern Hemisphere - DMSP",
+   "abs": "This layer is the blended version of the Global Sea Ice Concentration Climate Data Record (OSI-450-a) and Global Sea Ice Concentration Interim Climate Data Record (OSI-430-a) for the Northern Hemisphere. \r\n\r\nOSI-450-a is the third major version of the OSI SAF ",
+   "time": "25T12:00:00.000Z/2026-10-30T12:00:00.000Z/P1D",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "16.4247",
+    "90.0"
+   ]
+  },
+  "mumi:osi_sic_cdr_v3_sh": {
+   "title": "OSI SAF Blended Global Sea Ice Concentration Climate and Interim Climate Data Records for Southern Hemisphere - DMSP",
+   "abs": "This layer is the blended version of the Global Sea Ice Concentration Climate Data Record (OSI-450-a) and Global Sea Ice Concentration Interim Climate Data Record (OSI-430-a) for the Southern Hemisphere. \r\n\r\nOSI-450-a is the third major version of the OSI SAF ",
+   "time": "25T12:00:00.000Z/2026-10-30T12:00:00.000Z/P1D",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-90.0",
+    "-16.331"
+   ]
+  },
+  "eps:osisaf_avhrr_l3_sst": {
+   "title": "Global L3C AVHRR Sea Surface Temperature (GHRSST) - Metop",
+   "abs": "Global Metop/AVHRR sub-skin Sea Surface Temperature (GBL SST) is a 12 hourly synthesis on a 0.05° global grid. The product format is compliant with the Data Specification (GDS) version 2 from the Group for High Resolution Sea Surface Temperatures (GHRSST).",
+   "time": "T12:00:00.000Z/2026-11-01T00:00:00.000Z/PT12H",
+   "bbox": [
+    "-179.99",
+    "179.999",
+    "-89.999",
+    "89.9996"
+   ]
+  },
+  "osmgray:osm_places": {
+   "title": "osm_places",
+   "abs": "",
+   "time": "",
+   "bbox": [
+    "-180.00",
+    "180.000",
+    "-85.059",
+    "85.0599"
+   ]
+  },
+  "msg_fes:rdt": {
+   "title": "Rapidly Developing Thunderstorms - MSG - 0 degree",
+   "abs": "Rapidly Developing Thunderstorms - Convection Warning product is a geostationary meteorological product for nowcasting applications. It is produced with the NWC-SAF Geo 2018 software package.",
+   "time": "T11:15:00.000Z/2026-11-01T10:45:00.000Z/PT15M",
+   "bbox": [
+    "-90.0",
+    "90.0",
+    "-90.0",
+    "90.0"
+   ]
+  },
+  "msg_fes:rgb_airmass": {
+   "title": "Airmass RGB - MSG - 0 degree",
+   "abs": "The Airmass product is an RGB (Red, Green, Blue) composite based upon data from infrared and water vapour channels from the SEVIRI instrument. It is designed and tuned to monitor the distribution of different air masses and evolution of cyclones, in particular",
+   "time": "T00:00:00.000Z/2026-11-01T11:00:00.000Z/PT15M",
+   "bbox": [
+    "-77.0",
+    "77.0",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_iodc:rgb_airmass": {
+   "title": "Airmass RGB - MSG - Indian Ocean",
+   "abs": "The Airmass product is an RGB (Red, Green, Blue) composite based upon data from infrared and water vapour channels from the SEVIRI instrument. It is designed and tuned to monitor the distribution of different air masses and evolution of cyclones, in particular",
+   "time": "T00:00:00.000Z/2026-11-01T10:45:00.000Z/PT15M",
+   "bbox": [
+    "-35.5",
+    "118.5",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_fes:rgb_ash": {
+   "title": "Volcanic Ash RGB - MSG - 0 degree",
+   "abs": "The Ash product is an RGB (Red, Green, Blue) composite based upon infrared channel data from the Meteosat Second Generation satellite. It is designed to detect ash and sulphur dioxide (SO2) from volcanic eruptions which can be used for the provision of warning",
+   "time": "T00:00:00.000Z/2026-11-01T11:00:00.000Z/PT15M",
+   "bbox": [
+    "-77.0",
+    "77.0",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_iodc:rgb_ash": {
+   "title": "Volcanic Ash RGB - MSG - Indian Ocean",
+   "abs": "The Ash product is an RGB (Red, Green, Blue) composite based upon infrared channel data from the Meteosat Second Generation satellite. It is designed to detect ash and sulphur dioxide (SO2) from volcanic eruptions which can be used for the provision of warning",
+   "time": "T00:00:00.000Z/2026-11-01T10:45:00.000Z/PT15M",
+   "bbox": [
+    "-35.5",
+    "118.5",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "mtg_fd:rgb_cloudphase": {
+   "title": "Cloud Phase RGB - MTG-I - 0 degree",
+   "abs": "The Cloud Phase RGB is used for the separation of water from ice clouds and for gathering information on the microphysical properties of cloud-tops. It is used during the daytime due to the FCI channels used in the RGB but the combination of VIS0.6 and NIR2.2 ",
+   "time": "T02:00:00.000Z/2026-11-01T11:00:00.000Z/PT10M",
+   "bbox": [
+    "-70.0",
+    "70.0",
+    "-70.0",
+    "70.0"
+   ]
+  },
+  "mtg_fd:rgb_cloudtype": {
+   "title": "Cloud Type RGB - MTG-I - 0 degree",
+   "abs": "The Cloud Type RGB combines information on cloud optical thickness, cloud height, and cloud phase into one product. Because of the colour assignment chosen and colour enhancements performed, the cloud types appear clearly separated from each other. There is li",
+   "time": "T17:20:00.000Z/2026-11-01T11:00:00.000Z/PT10M",
+   "bbox": [
+    "-81.277",
+    "81.2807",
+    "-77.350",
+    "77.3563"
+   ]
+  },
+  "msg_fes:rgb_convection": {
+   "title": "Convection RGB - MSG - 0 degree",
+   "abs": "The Convection RGB combines the brightness temperature difference (BTD) between the WV6.2 and WV7.3 channels (on red), the BTD between the IR3.9 and IR10.8 channels (on green) and the reflectance difference between the NIR1.6 and the VIS0.6 channels (on blue).",
+   "time": "T00:00:00.000Z/2026-11-01T11:00:00.000Z/PT15M",
+   "bbox": [
+    "-77.0",
+    "77.0",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_iodc:rgb_convection": {
+   "title": "Convection RGB - MSG - Indian Ocean",
+   "abs": "The Convection RGB combines the brightness temperature difference (BTD) between the WV6.2 and WV7.3 channels (on red), the BTD between the IR3.9 and IR10.8 channels (on green) and the reflectance difference between the NIR1.6 and the VIS0.6 channels (on blue).",
+   "time": "T00:00:00.000Z/2026-11-01T10:45:00.000Z/PT15M",
+   "bbox": [
+    "-35.5",
+    "118.5",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "mtg_fd:rgb_dust": {
+   "title": "Dust RGB - MTG-I - 0 degree",
+   "abs": "The Dust product is an RGB (Red, Green, Blue) composite based on infrared channels. It is designed to monitor the evolution of dust storms during both day and night. However equally useful for the discrimination of cloud types (e.g. cloud phase or thin Cirrus ",
+   "time": "T00:40:00.000Z/2026-11-01T11:00:00.000Z/PT10M",
+   "bbox": [
+    "-70.0",
+    "70.0",
+    "-70.0",
+    "70.0"
+   ]
+  },
+  "msg_fes:rgb_dust": {
+   "title": "Dust RGB - MSG - 0 degree",
+   "abs": "The Dust product is an RGB (Red, Green, Blue) composite based upon infrared channel data from the Meteosat Second Generation satellite. It is designed to monitor the evolution of dust storms during both day and night. But it is also useful for discrimination o",
+   "time": "T00:00:00.000Z/2026-11-01T11:00:00.000Z/PT15M",
+   "bbox": [
+    "-77.0",
+    "77.0",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_iodc:rgb_dust": {
+   "title": "Dust RGB - MSG - Indian Ocean",
+   "abs": "The Dust product is an RGB (Red, Green, Blue) composite based upon infrared channel data from the Meteosat Second Generation satellite. It is designed to monitor the evolution of dust storms during both day and night. But it is also useful for discrimination o",
+   "time": "T00:00:00.000Z/2026-11-01T10:45:00.000Z/PT15M",
+   "bbox": [
+    "-35.5",
+    "118.5",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_fes:rgb_eview": {
+   "title": "European HRV RGB",
+   "abs": "The E-View product is an RGB (Red, Green, Blue) composite based upon data from the SEVIRI instrument. It is dedicated to detailed cloud monitoring of the European region. It is based on data from the SEVIRI High Resolution Visible channel combined with data fr",
+   "time": "T00:00:00.000Z/2026-11-01T10:45:00.000Z/PT15M",
+   "bbox": [
+    "-77.0",
+    "77.0",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_iodc:rgb_eview": {
+   "title": "European HRV RGB - MSG - Indian Ocean",
+   "abs": "The E-View product is an RGB (Red, Green, Blue) composite based upon data from the SEVIRI instrument. It is dedicated to detailed cloud monitoring of the European region. It is based on data from the SEVIRI High Resolution Visible channel combined with data fr",
+   "time": "T00:00:00.000Z/2026-11-01T10:45:00.000Z/PT15M",
+   "bbox": [
+    "-35.5",
+    "118.5",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "mtg_fd:rgb_firetemperature": {
+   "title": "Fire Temperature RGB - MTG-I - 0 degree",
+   "abs": "Fire Temperature RGB allows users to identify where the most intense fires are occurring and differentiate them from cooler fires. The RGB takes advantage of the fact that from 3.8 micrometres to shorter wavelengths, background solar radiation and surface refl",
+   "time": "T00:00:00.000Z/2026-11-01T10:50:00.000Z/PT10M",
+   "bbox": [
+    "-81.277",
+    "81.2807",
+    "-77.357",
+    "77.3564"
+   ]
+  },
+  "mtg_fd:rgb_fog": {
+   "title": "Fog / Low Clouds RGB - MTG-I - 0 degree",
+   "abs": "Interpreting low clouds and fog in satellite imagery can be a challenge when using individual IR channels, due to the slight temperature difference between the cloud tops and adjacent cloud-free land. The Night Microphysics RGB solves this problem by using thr",
+   "time": "T18:40:00.000Z/2026-11-01T09:50:00.000Z/PT10M",
+   "bbox": [
+    "-81.277",
+    "81.2807",
+    "-77.350",
+    "77.3563"
+   ]
+  },
+  "msg_fes:rgb_fog": {
+   "title": "Fog / Low Clouds RGB - MSG - 0 degree",
+   "abs": "The Fog / Low Clouds product is an RGB (Red, Green, Blue) composite based upon infrared channel data from the Meteosat Second Generation satellite. It is designed and tuned to monitor the evolution of night-time fog / low stratus. Other (secondary) application",
+   "time": "T00:00:00.000Z/2026-11-01T11:00:00.000Z/PT15M",
+   "bbox": [
+    "-77.0",
+    "77.0",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_iodc:rgb_fog": {
+   "title": "Fog / Low Clouds RGB - MSG - Indian Ocean",
+   "abs": "The Fog / Low Clouds product is an RGB (Red, Green, Blue) composite based upon infrared channel data from the Meteosat Second Generation satellite. It is designed and tuned to monitor the evolution of night-time fog / low stratus. Other (secondary) application",
+   "time": "T00:00:00.000Z/2026-11-01T10:45:00.000Z/PT15M",
+   "bbox": [
+    "-35.5",
+    "118.5",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "mtg_fd:rgb_geocolour": {
+   "title": "Geo Colour RGB - MTG-I - 0 degree",
+   "abs": "Geo Colour RGB - MTG - 0 degree",
+   "time": "T00:00:00.000Z/2026-11-01T10:50:00.000Z/PT10M",
+   "bbox": [
+    "-81.277",
+    "81.2807",
+    "-77.350",
+    "77.3563"
+   ]
+  },
+  "msg_fes:rgb_microphysics": {
+   "title": "Day Microphysics RGB - MSG - 0 degree",
+   "abs": "The Day Microphysics RGB (Red, Green, Blue) was inherited from Rosenfeld and Lensky (1998): the VIS0.8 reflectance in red approximates the cloud optical depth and amount of cloud water and ice; the IR3.9 solar reflectance in green is a qualitative measure for ",
+   "time": "T00:00:00.000Z/2026-11-01T11:00:00.000Z/PT15M",
+   "bbox": [
+    "-77.0",
+    "77.0",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_iodc:rgb_microphysics": {
+   "title": "Day Microphysics RGB - MSG - Indian Ocean",
+   "abs": "The Day Microphysics RGB (Red, Green, Blue) was inherited from Rosenfeld and Lensky (1998): the VIS0.8 reflectance in red approximates the cloud optical depth and amount of cloud water and ice; the IR3.9 solar reflectance in green is a qualitative measure for ",
+   "time": "T00:00:00.000Z/2026-11-01T10:45:00.000Z/PT15M",
+   "bbox": [
+    "-35.5",
+    "118.5",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_rss:rgb_microphysics_nrt": {
+   "title": "Rapid Scan High Rate SEVIRI RGB Day Microphysics - MSG",
+   "abs": "Rectified (level 1.5) Meteosat SEVIRI Rapid Scan image data. The baseline scan region is a reduced area of the top 1/3 of a nominal repeat cycle, covering a latitude range from approximately 15 degrees to 70 degrees. The service generates repeat cycles at 5-mi",
+   "time": "1T00:00:00.000Z/2026-11-01T11:05:00.000Z/PT5M",
+   "bbox": [
+    "-64.285",
+    "84.2857",
+    "13.0",
+    "78.0"
+   ]
+  },
+  "msg_fes:rgb_natural": {
+   "title": "Natural Colour RGB - MSG - 0 degree",
+   "abs": "The Natural Colour RGB (Red, Green, Blue) makes use of three solar channels: NIR1.6, VIS0.8 and VIS0.6. In this colour scheme vegetation appears greenish because of its large reflectance in the VIS0.8 channel (the green beam) compared to the NIR1.6 (red beam) ",
+   "time": "T00:00:00.000Z/2026-11-01T10:45:00.000Z/PT15M",
+   "bbox": [
+    "-77.0",
+    "77.0",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_iodc:rgb_natural": {
+   "title": "Natural Colour RGB - MSG - Indian Ocean",
+   "abs": "The Natural Colour RGB (Red, Green, Blue) makes use of three solar channels: NIR1.6, VIS0.8 and VIS0.6. In this colour scheme vegetation appears greenish because of its large reflectance in the VIS0.8 channel (the green beam) compared to the NIR1.6 (red beam) ",
+   "time": "T00:00:00.000Z/2026-11-01T10:45:00.000Z/PT15M",
+   "bbox": [
+    "-35.5",
+    "118.5",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_rss:rgb_natural_nrt": {
+   "title": "Rapid Scan High Rate SEVIRI RGB Natural Colour - MSG",
+   "abs": "Rectified (level 1.5) Meteosat SEVIRI Rapid Scan image data. The baseline scan region is a reduced area of the top 1/3 of a nominal repeat cycle, covering a latitude range from approximately 15 degrees to 70 degrees. The service generates repeat cycles at 5-mi",
+   "time": "1T00:00:00.000Z/2026-11-01T11:05:00.000Z/PT5M",
+   "bbox": [
+    "-64.285",
+    "84.2857",
+    "13.0",
+    "78.0"
+   ]
+  },
+  "msg_fes:rgb_naturalenhncd": {
+   "title": "Natural Colour Enhanced RGB - MSG - 0 degree",
+   "abs": "The Natural Colour Enhanced product is an RGB which utilises three SEVIRI solar channels: NIR1.6, VIS0.8 and VIS0.6. It is similar to a Natural Colour RGB product, with the difference that the ice-clouds and snow covered surfaces and clouds are not shown in ty",
+   "time": "T00:00:00.000Z/2026-11-01T10:45:00.000Z/PT15M",
+   "bbox": [
+    "-77.0",
+    "77.0",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_iodc:rgb_naturalenhncd": {
+   "title": "Natural Colour Enhanced RGB - MSG - Indian Ocean",
+   "abs": "The Natural Colour Enhanced product is an RGB which utilises three SEVIRI solar channels: NIR1.6, VIS0.8 and VIS0.6. It is similar to a Natural Colour RGB product, with the difference that the ice-clouds and snow covered surfaces and clouds are not shown in ty",
+   "time": "T00:00:00.000Z/2026-11-01T10:45:00.000Z/PT15M",
+   "bbox": [
+    "-35.5",
+    "118.5",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_rss:rgb_naturalenhncd_nrt": {
+   "title": "Rapid Scan High Rate SEVIRI RGB Natural Colour Enhncd. - MSG",
+   "abs": "Rectified (level 1.5) Meteosat SEVIRI Rapid Scan image data. The baseline scan region is a reduced area of the top 1/3 of a nominal repeat cycle, covering a latitude range from approximately 15 degrees to 70 degrees. The service generates repeat cycles at 5-mi",
+   "time": "1T00:00:00.000Z/2026-11-01T11:05:00.000Z/PT5M",
+   "bbox": [
+    "-64.285",
+    "84.2857",
+    "13.0",
+    "78.0"
+   ]
+  },
+  "mtg_fd:rgb_snow": {
+   "title": "Snow RGB - MTG - 0 degree",
+   "abs": "The main application of the Day Snow Fog RGB (Red, Green, Blue) is the detection of fog / low clouds and snow during daytime. In this colour scheme, snow appears red due to the strong absorption in the NIR1.6 and IR3.8 channels, while fog / low clouds appear w",
+   "time": "T00:00:00.000Z/2026-11-01T10:50:00.000Z/PT10M",
+   "bbox": [
+    "-81.277",
+    "81.2807",
+    "-77.350",
+    "77.3563"
+   ]
+  },
+  "msg_fes:rgb_snow": {
+   "title": "rgb_snow",
+   "abs": "",
+   "time": "T14:30:00.000Z/2026-11-01T10:45:00.000Z/PT15M",
+   "bbox": [
+    "-77.0",
+    "77.0",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_iodc:rgb_snow": {
+   "title": "Snow RGB - MSG - Indian Ocean",
+   "abs": "The main application of the Snow RGB (Red, Green, Blue) is the detection of fog / low clouds and snow during day-time. In this color scheme snow appears red because of the strong absorption in the NIR1.6 and IR3.9 channels (no green and blue), while fog / low ",
+   "time": "T00:00:00.000Z/2026-11-01T10:45:00.000Z/PT15M",
+   "bbox": [
+    "-35.5",
+    "118.5",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_fes:rgb_tropicalairmass": {
+   "title": "Tropical Airmass RGB - MSG - 0 degree",
+   "abs": "The “Tropical Airmass” product is an RGB (Red, Green, Blue) composite derivate of the existing “Airmass RGB” visualisation. It is based upon data from infra-red channels (namely WV6.2, WV7.3, IR9.7 and IR10.8) of the SEVIRI instrument. The target of this produ",
+   "time": "T00:30:00.000Z/2026-11-01T10:45:00.000Z/PT15M",
+   "bbox": [
+    "-77.0",
+    "77.0",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_iodc:rgb_tropicalairmass": {
+   "title": "Tropical Airmass RGB - MSG - Indian Ocean",
+   "abs": "The “Tropical Airmass” product is an RGB (Red, Green, Blue) composite derivate of the existing “Airmass RGB” visualisation. It is based upon data from infra-red channels (namely WV6.2, WV7.3, IR9.7 and IR10.8) of the SEVIRI instrument. The target of this produ",
+   "time": "T00:00:00.000Z/2026-11-01T10:45:00.000Z/PT15M",
+   "bbox": [
+    "-35.5",
+    "118.5",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "mtg_fd:rgb_truecolour": {
+   "title": "True Colour RGB - MTG-I - 0 degree",
+   "abs": "True Colour Imagery gives an image that is approximately what human eyes see from Outer Space. True Colour Imagery cannot be made directly from FCI because it lacks a Green band. That is why a special processing step based on the NDVI values of the pixels is a",
+   "time": "T02:00:00.000Z/2026-11-01T10:50:00.000Z/PT10M",
+   "bbox": [
+    "-70.0",
+    "70.0",
+    "-70.0",
+    "70.0"
+   ]
+  },
+  "copernicus:sentinel3a_olci_l1_rgb_fullres": {
+   "title": "OLCI Level 1B RGB - Sentinel-3A",
+   "abs": "This product is an RGB (Red, Green, Blue) composite based upon data from S3A single swath OLCI L1 NRT products Top-Of-Atmosphere (TOA) radiometric measurements, radiometrically corrected, calibrated and spectrally characterised. The product is composed from da",
+   "time": "3:01:00.000Z/2026-11-01T06:32:00.000Z/PT1H41M",
+   "bbox": [
+    "-180.0",
+    "180.005",
+    "-84.303",
+    "69.7933"
+   ]
+  },
+  "copernicus:sentinel3a_olci_l2_chl_fullres": {
+   "title": "OLCI Level 2 CHL Concentration - Sentinel-3A",
+   "abs": "This Ocean Colour product represents the algal pigment (Chlorophyll a) concentration in clear open waters, and it is defined by the \"OC4Me\" Maximum Band Ratio (MBR) semi-analytical algorithm. The product is derived from S3A OLCI L2 NRT water-leaving reflectanc",
+   "time": "3:01:00.000Z/2026-11-01T08:13:00.000Z/PT1H41M",
+   "bbox": [
+    "-180.0",
+    "180.010",
+    "-84.317",
+    "69.7921"
+   ]
+  },
+  "copernicus:sentinel3a_orbital_tracks": {
+   "title": "S3A Orbital Tracks",
+   "abs": "Orbital Tracks - Sentinel-3A",
+   "time": "3T18:43:18.000Z/2026-11-01T06:00:00.000Z/PT1S",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-90.0",
+    "90.0"
+   ]
+  },
+  "copernicus:sentinel3a_slstr_l2p_sst_fullres": {
+   "title": "SLSTR Level 2 Sea Surface Temperature (SST) - Sentinel-3A",
+   "abs": "Sea Surface Temperature (SST) is the kinetic temperature of a water body at a defined depth. Although SLSTR measures an infrared radiometric temperature, it is provided as a kinetic temperature by considering the emissivity of the water body as part of the SST",
+   "time": "3:34:00.000Z/2026-06-11T06:07:00.000Z/PT1H41M",
+   "bbox": [
+    "-180.0",
+    "180.010",
+    "-85.230",
+    "90.0"
+   ]
+  },
+  "copernicus:sentinel3a_slstr_level2_frp": {
+   "title": "SLSTR Level 2 Fire Radiative Power (FRP) - Sentinel-3A",
+   "abs": "The Copernicus Sea and Land Surface Temperature Radiometer (SLSTR), onboard the Sentinel-3A and -B satellites, detects and monitors potential threats of any ‘burning', 'active fire’ event over an area size of 1km2. These are not only fires over continents, but",
+   "time": "7:41:00.000Z/2026-11-01T07:41:00.000Z/PT1H40M",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-90.0",
+    "90.0"
+   ]
+  },
+  "copernicus:sentinel3b_olci_l1_rgb_fullres": {
+   "title": "OLCI Level 1B RGB - Sentinel-3B",
+   "abs": "This product is an RGB (Red, Green, Blue) composite based upon data from S3B single swath OLCI L1 NRT products Top-Of-Atmosphere (TOA) radiometric measurements, radiometrically corrected, calibrated and spectrally characterised. The product is composed from da",
+   "time": "4:03:00.000Z/2026-11-01T07:34:00.000Z/PT1H41M",
+   "bbox": [
+    "-180.0",
+    "180.005",
+    "-84.293",
+    "69.8300"
+   ]
+  },
+  "copernicus:sentinel3b_olci_l2_chl_fullres": {
+   "title": "OLCI Level 2 CHL Concentration - Sentinel-3B",
+   "abs": "This Ocean Colour product represents the algal pigment (Chlorophyll a) concentration in clear open waters, and it is defined by the \"OC4Me\" Maximum Band Ratio (MBR) semi-analytical algorithm. The product is derived from S3B OLCI L2 NRT water-leaving reflectanc",
+   "time": "2:22:00.000Z/2026-11-01T07:34:00.000Z/PT1H41M",
+   "bbox": [
+    "-180.0",
+    "180.010",
+    "-84.303",
+    "69.7534"
+   ]
+  },
+  "copernicus:sentinel3b_orbital_tracks": {
+   "title": "S3B Orbital Tracks",
+   "abs": "Orbital Tracks - Sentinel-3B",
+   "time": "3T18:03:53.000Z/2026-11-01T07:02:00.000Z/PT1S",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-90.0",
+    "90.0"
+   ]
+  },
+  "copernicus:sentinel3b_slstr_l2p_sst_fullres": {
+   "title": "SLSTR Level 2 Sea Surface Temperature (SST) - Sentinel-3B",
+   "abs": "Sea Surface Temperature (SST) is the kinetic temperature of a water body at a defined depth. Although SLSTR measures an infrared radiometric temperature, it is provided as a kinetic temperature by considering the emissivity of the water body as part of the SST",
+   "time": "2:17:00.000Z/2026-06-11T05:29:00.000Z/PT1H41M",
+   "bbox": [
+    "-180.0",
+    "180.010",
+    "-85.230",
+    "90.0"
+   ]
+  },
+  "copernicus:sentinel3b_slstr_level2_frp": {
+   "title": "SLSTR Level 2 Fire Radiative Power (FRP) - Sentinel-3B",
+   "abs": "The Copernicus Sea and Land Surface Temperature Radiometer (SLSTR), onboard the Sentinel-3A and -B satellites, detects and monitors potential threats of any ‘burning', 'active fire’ event over an area size of 1km2. These are not only fires over continents, but",
+   "time": "8:09:00.000Z/2026-11-01T07:08:00.000Z/PT1H40M",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-90.0",
+    "90.0"
+   ]
+  },
+  "osmgray:simplified_land_polygons": {
+   "title": "simplified_land_polygons",
+   "abs": "",
+   "time": "",
+   "bbox": [
+    "-180.00",
+    "180.000",
+    "-85.051",
+    "83.6664"
+   ]
+  },
+  "msg_fes:vis006": {
+   "title": "High Rate SEVIRI VIS0.6 μm Image - MSG - 0 degree",
+   "abs": "Rectified (level 1.5) Meteosat SEVIRI image data. The data is transmitted as High Rate transmissions in 12 spectral channels. Level 1.5 image data corresponds to the geolocated and radiometrically pre-processed image data, ready for further processing, e.g. th",
+   "time": "T00:00:00.000Z/2026-11-01T11:00:00.000Z/PT15M",
+   "bbox": [
+    "-77.0",
+    "77.0",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_iodc:vis006": {
+   "title": "High Rate SEVIRI VIS0.6 μm Image - MSG - Indian Ocean",
+   "abs": "Rectified (level 1.5) Meteosat SEVIRI image data. The data is transmitted as High Rate transmissions in 12 spectral channels. Level 1.5 image data corresponds to the geolocated and radiometrically pre-processed image data, ready for further processing, e.g. th",
+   "time": "T00:00:00.000Z/2026-11-01T10:45:00.000Z/PT15M",
+   "bbox": [
+    "-35.5",
+    "118.5",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "mtg_fd:vis06_hrfi": {
+   "title": "FCI HRFI VIS0.6 μm Image - MTG-I - 0 degree",
+   "abs": "Rectified (level 1c) Meteosat FCI full disk image data in high spatial resolution (0.5km). Level 1c image data corresponds to the geolocated and radiometrically pre-processed image data, ready for further processing, e.g. the extraction of meteorological produ",
+   "time": "T02:40:00.000Z/2026-11-01T11:00:00.000Z/PT10M",
+   "bbox": [
+    "-70.0",
+    "70.0",
+    "-70.0",
+    "70.0"
+   ]
+  },
+  "osmgray:waterareas": {
+   "title": "osm_waterareas",
+   "abs": "",
+   "time": "",
+   "bbox": [
+    "-180.00",
+    "179.999",
+    "-89.755",
+    "85.0002"
+   ]
+  },
+  "osmgray:waterways": {
+   "title": "osm_waterways",
+   "abs": "",
+   "time": "",
+   "bbox": [
+    "-180.00",
+    "179.999",
+    "-78.197",
+    "82.4903"
+   ]
+  },
+  "mumi:wideareacoverage_rgb_airmass": {
+   "title": "Geo Ring Airmass RGB - Multimission",
+   "abs": "",
+   "time": "3T18:00:00.000Z/2026-11-01T09:00:00.000Z/PT3H",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-89.999",
+    "89.9999"
+   ]
+  },
+  "mumi:wideareacoverage_rgb_ash": {
+   "title": "Geo Ring Ash RGB - Multimission",
+   "abs": "",
+   "time": "3T18:00:00.000Z/2026-11-01T09:00:00.000Z/PT3H",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-89.999",
+    "89.9999"
+   ]
+  },
+  "mumi:wideareacoverage_rgb_dust": {
+   "title": "Geo Ring Dust RGB - Multimission",
+   "abs": "",
+   "time": "3T18:00:00.000Z/2026-11-01T09:00:00.000Z/PT3H",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-89.999",
+    "89.9999"
+   ]
+  },
+  "mumi:wideareacoverage_rgb_natural": {
+   "title": "Geo Ring Natural Colour RGB - Multimission",
+   "abs": "",
+   "time": "3T18:00:00.000Z/2026-11-01T09:00:00.000Z/PT3H",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-89.999",
+    "89.9999"
+   ]
+  },
+  "mumi:worldcloudmap_ir108": {
+   "title": "Geostationary Ring IR10.8 μm Image - Multimission",
+   "abs": "",
+   "time": "6T15:00:00.000Z/2026-11-01T09:00:00.000Z/PT3H",
+   "bbox": [
+    "-180.0",
+    "180.0",
+    "-89.999",
+    "89.9999"
+   ]
+  },
+  "msg_fes:wv062": {
+   "title": "High Rate SEVIRI WV6.2 μm Image - MSG - 0 degree",
+   "abs": "Rectified (level 1.5) Meteosat SEVIRI image data. The data is transmitted as High Rate transmissions in 12 spectral channels. Level 1.5 image data corresponds to the geolocated and radiometrically pre-processed image data, ready for further processing, e.g. th",
+   "time": "T00:00:00.000Z/2026-11-01T11:00:00.000Z/PT15M",
+   "bbox": [
+    "-77.0",
+    "77.0",
+    "-77.0",
+    "77.0"
+   ]
+  },
+  "msg_iodc:wv062": {
+   "title": "High Rate SEVIRI WV6.2 μm Image - MSG - Indian Ocean",
+   "abs": "Rectified (level 1.5) Meteosat SEVIRI image data. The data is transmitted as High Rate transmissions in 12 spectral channels. Level 1.5 image data corresponds to the geolocated and radiometrically pre-processed image data, ready for further processing, e.g. th",
+   "time": "T00:00:00.000Z/2026-11-01T11:00:00.000Z/PT15M",
+   "bbox": [
+    "-35.5",
+    "118.5",
+    "-77.0",
+    "77.0"
+   ]
+  }
+ },
+ "gibs_caps": {
+  "status": 200,
+  "sec": 0.16,
+  "bytes": 5847530,
+  "err": null
+ },
+ "gibs_layers": {
+  "SWDB_Aerosol_Angstrom_Exponent_Daily": {
+   "title": "Aerosol Angstrom Exponent (Daily, SeaWiFS Deep Blue)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "SWDB_Aerosol_Angstrom_Exponent_Monthly": {
+   "title": "Aerosol Angstrom Exponent (Monthly, SeaWiFS Deep Blue)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMPS_NOAA21_LimbProfiler_Aerosol_ExtinctionCoefficient_12KM": {
+   "title": "Aerosol Extinction Vertical Profile (11.5 - 12.5 km, OMPS Limb Profiler, NOAA-21",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMPS_SNPP_LimbProfiler_Aerosol_ExtinctionCoefficient_12KM": {
+   "title": "Aerosol Extinction Vertical Profile (11.5 - 12.5 km, OMPS Limb Profiler, Suomi N",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMPS_NOAA21_LimbProfiler_Aerosol_ExtinctionCoefficient_14KM": {
+   "title": "Aerosol Extinction Vertical Profile (13.5 - 14.5 km, OMPS Limb Profiler, NOAA-21",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMPS_SNPP_LimbProfiler_Aerosol_ExtinctionCoefficient_14KM": {
+   "title": "Aerosol Extinction Vertical Profile (13.5 - 14.5 km, OMPS Limb Profiler, Suomi N",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMPS_NOAA21_LimbProfiler_Aerosol_ExtinctionCoefficient_16KM": {
+   "title": "Aerosol Extinction Vertical Profile (15.5 - 16.5 km, OMPS Limb Profiler, NOAA-21",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMPS_SNPP_LimbProfiler_Aerosol_ExtinctionCoefficient_16KM": {
+   "title": "Aerosol Extinction Vertical Profile (15.5 - 16.5 km, OMPS Limb Profiler, Suomi N",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMPS_NOAA21_LimbProfiler_Aerosol_ExtinctionCoefficient_18KM": {
+   "title": "Aerosol Extinction Vertical Profile (17.5 - 18.5 km, OMPS Limb Profiler, NOAA-21",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMPS_SNPP_LimbProfiler_Aerosol_ExtinctionCoefficient_18KM": {
+   "title": "Aerosol Extinction Vertical Profile (17.5 - 18.5 km, OMPS Limb Profiler, Suomi N",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMPS_NOAA21_LimbProfiler_Aerosol_ExtinctionCoefficient_20KM": {
+   "title": "Aerosol Extinction Vertical Profile (19.5 - 20.5 km, OMPS Limb Profiler, NOAA-21",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMPS_SNPP_LimbProfiler_Aerosol_ExtinctionCoefficient_20KM": {
+   "title": "Aerosol Extinction Vertical Profile (19.5 - 20.5 km, OMPS Limb Profiler, Suomi N",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMPS_NOAA21_LimbProfiler_AerosolHeight": {
+   "title": "Aerosol Extinction Vertical Profile (Aerosol Height, OMPS Limb Profiler, NOAA-21",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMPS_SNPP_LimbProfiler_AerosolHeight": {
+   "title": "Aerosol Extinction Vertical Profile (Aerosol height, OMPS Limb Profiler, Suomi N",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMPS_NOAA20_NadirMapper_AerosolIndex_360": {
+   "title": "Aerosol Index (At 360nm, L3, Daily, OMPS Nadir Mapper, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMPS_NOAA21_NadirMapper_AerosolIndex_360": {
+   "title": "Aerosol Index (At 360nm, L3, Daily, OMPS Nadir Mapper, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMPS_NOAA20_NadirMapper_AerosolIndex_380": {
+   "title": "Aerosol Index (At 380nm, L3, Daily, OMPS Nadir Mapper, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMPS_NOAA21_NadirMapper_AerosolIndex_380": {
+   "title": "Aerosol Index (L3, At 380nm, OMPS Nadir Mapper, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMPS_NOAA21_NadirMapper_AerosolIndex_PyroCumuloNimbus_380": {
+   "title": "Aerosol Index (L3, PyroCumuloNimbus at 380nm, OMPS Nadir Mapper, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMI_Aerosol_Index": {
+   "title": "Aerosol Index (OMI, Aura)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMPS_Aerosol_Index": {
+   "title": "Aerosol Index (OMPS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMPS_NOAA20_NadirMapper_AerosolIndex_PyroCumuloNimbus_360": {
+   "title": "Aerosol Index (PyroCumuloNimbus at 360nm, L3, Daily, OMPS Nadir Mapper, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMPS_NOAA21_NadirMapper_AerosolIndex_PyroCumuloNimbus_360": {
+   "title": "Aerosol Index (PyroCumuloNimbus at 360nm, L3, Daily, OMPS Nadir Mapper, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMPS_NOAA20_NadirMapper_AerosolIndex_PyroCumuloNimbus_380": {
+   "title": "Aerosol Index (PyroCumuloNimbus at 380nm, L3, Daily, OMPS Nadir Mapper, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMPS_Aerosol_Index_PyroCumuloNimbus": {
+   "title": "Aerosol Index (PyroCumuloNimbus, OMPS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_Aerosol_Optical_Depth_3km": {
+   "title": "Aerosol Optical Depth (3km, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_Aerosol_Optical_Depth_3km": {
+   "title": "Aerosol Optical Depth (3km, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMI_Absorbing_Aerosol_Optical_Thickness_MW_388": {
+   "title": "Aerosol Optical Depth (Absorbing, Multi-Wavelength, 388.0 nm, OMI, Aura)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMI_Aerosol_Optical_Depth": {
+   "title": "Aerosol Optical Depth (OMI, Aura)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MERRA2_Aerosol_Optical_Depth_Analysis_Monthly": {
+   "title": "Aerosol Optical Depth Analysis (Monthly, MERRA2)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MISR_Aerosol_Optical_Depth_Avg_Green_Monthly": {
+   "title": "Aerosol Optical Depth Average (Green, Monthly, MISR)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMI_Absorbing_Aerosol_Optical_Depth": {
+   "title": "Aerosol Optical Depth, Absorbing (OMI, Aura)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "SWDB_Aerosol_Optical_Thickness_550nm_Daily": {
+   "title": "Aerosol Optical Thickness 550nm (Daily, SeaWiFS Deep Blue)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "SWDB_Aerosol_Optical_Thickness_550nm_Monthly": {
+   "title": "Aerosol Optical Thickness 550nm (Monthly, SeaWiFS Deep Blue)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "GOES-East_ABI_Air_Mass": {
+   "title": "Air Mass (ABI, GOES-East)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "GOES-West_ABI_Air_Mass": {
+   "title": "Air Mass (ABI, GOES-West)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "Himawari_AHI_Air_Mass": {
+   "title": "Air Mass (AHI, Himawari)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MLS_Temperature_46hPa_Night": {
+   "title": "Air Temperature (46 hPa, Night, MLS, Aura)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_Surface_Air_Temperature_Daily_Day": {
+   "title": "Air Temperature at Surface (L3, Daytime/Ascending, Daily, AIRS, Aqua) ",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_Surface_Air_Temperature_Monthly_Day": {
+   "title": "Air Temperature at Surface (L3, Daytime/Ascending, Monthly, AIRS, Aqua) ",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_Surface_Air_Temperature_Daily_Night": {
+   "title": "Air Temperature at Surface (L3, Nighttime/Descending, Daily, AIRS, Aqua) ",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_Surface_Air_Temperature_Monthly_Night": {
+   "title": "Air Temperature at Surface (L3, Nighttime/Descending, Monthly, AIRS, Aqua) ",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_SNPP_Apparent_Reflectance_VNP02MOD_M09": {
+   "title": "Apparent Reflectance (VNP02MOD, Band M09, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA20_DayNightBand_At_Sensor_Radiance": {
+   "title": "At Sensor Radiance (Day/Night Band, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_NOAA21_DayNightBand_At_Sensor_Radiance": {
+   "title": "At Sensor Radiance (Day/Night Band, VIIRS, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_SNPP_DayNightBand_At_Sensor_Radiance": {
+   "title": "At Sensor Radiance (Day/Night Band, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_SNPP_DayNightBand_At_Sensor_Radiance_LERC": {
+   "title": "At Sensor Radiance (LERC, Day/Night Band, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "UHI_Avg_Summer_Night_Min_Land_Surface_Temp_2013": {
+   "title": "Average Summer Nighttime Minimum Land Surface Temperature (Urban Heat Island, 20",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_Black_Marble": {
+   "title": "Black Marble (VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_NOAA20_DayNightBand_AtSensor_M15": {
+   "title": "Black Marble Nighttime Blue/Yellow Composite (Day/Night Band, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_NOAA21_DayNightBand_AtSensor_M15": {
+   "title": "Black Marble Nighttime Blue/Yellow Composite (Day/Night Band, VIIRS, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_SNPP_DayNightBand_AtSensor_M15": {
+   "title": "Black Marble Nighttime Blue/Yellow Composite (Day/Night Band, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "AMSRE_Brightness_Temp_89H_Night": {
+   "title": "Brightness Temperature (89H Ghz B Scan, Night, AMSR-E, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AMSRE_Brightness_Temp_89V_Night": {
+   "title": "Brightness Temperature (89V Ghz B Scan, Night, AMSR-E, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_NOAA20_Brightness_Temp_BandI5_Day": {
+   "title": "Brightness Temperature (Band I5, Day, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "VIIRS_NOAA21_Brightness_Temp_BandI5_Day": {
+   "title": "Brightness Temperature (Band I5, Day, VIIRS, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "VIIRS_SNPP_Brightness_Temp_BandI5_Day": {
+   "title": "Brightness Temperature (Band I5, Day, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "VIIRS_NOAA20_Brightness_Temp_BandI5_Night": {
+   "title": "Brightness Temperature (Band I5, Night, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "VIIRS_NOAA21_Brightness_Temp_BandI5_Night": {
+   "title": "Brightness Temperature (Band I5, Night, VIIRS, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "VIIRS_SNPP_Brightness_Temp_BandI5_Night": {
+   "title": "Brightness Temperature (Band I5, Night, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "MODIS_Aqua_Brightness_Temp_Band31_Night": {
+   "title": "Brightness Temperature (Band31, Night, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Terra_Brightness_Temp_Band31_Night": {
+   "title": "Brightness Temperature (Band31, Night, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "CALIPSO_Imaging_Infrared_Radiometer_Brightness_Temperature_Day_CH3": {
+   "title": "Brightness Temperature (L2, Day, 12.05um)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "CALIPSO_Imaging_Infrared_Radiometer_Brightness_Temperature_Night_CH3": {
+   "title": "Brightness Temperature (L2, Night, 12.05um)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "CALIPSO_Imaging_Infrared_Radiometer_Brightness_Temperature_Difference_Day_CH2_CH3": {
+   "title": "Brightness Temperature Difference (L2, Day, 10.60um-12.05um)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "CALIPSO_Imaging_Infrared_Radiometer_Brightness_Temperature_Difference_Day_CH1_CH3": {
+   "title": "Brightness Temperature Difference (L2, Day, 8.65um-12.05um)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "CALIPSO_Imaging_Infrared_Radiometer_Brightness_Temperature_Difference_Night_CH2_CH3": {
+   "title": "Brightness Temperature Difference (L2, Night, 10.60um-12.05um)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "CALIPSO_Imaging_Infrared_Radiometer_Brightness_Temperature_Difference_Night_CH1_CH3": {
+   "title": "Brightness Temperature Difference (L2, Night, 8.65um-12.05um)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MLS_CO_215hPa_Night": {
+   "title": "Carbon Monoxide (215 hPa, Night, MLS, Aura)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L2_Carbon_Monoxide_500hPa_Volume_Mixing_Ratio_Day": {
+   "title": "Carbon Monoxide (L2, 500 hPa, Day, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L2_Carbon_Monoxide_500hPa_Volume_Mixing_Ratio_Night": {
+   "title": "Carbon Monoxide (L2, 500 hPa, Night, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MOPITT_CO_Daily_Surface_Mixing_Ratio_Night": {
+   "title": "Carbon Monoxide (L3, Night, Daily, Surface Mixing Ratio, MOPITT, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MOPITT_CO_Daily_Total_Column_Night": {
+   "title": "Carbon Monoxide (L3, Night, Daily, Total Column, MOPITT, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MOPITT_CO_Monthly_Surface_Mixing_Ratio_Night": {
+   "title": "Carbon Monoxide (L3, Night, Monthly, Surface Mixing Ratio, MOPITT, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MOPITT_CO_Monthly_Total_Column_Night": {
+   "title": "Carbon Monoxide (L3, Night, Monthly, Total Column, MOPITT, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_Carbon_Monoxide_500hPa_Volume_Mixing_Ratio_Daily_Day": {
+   "title": "Carbon Monoxide Volume Mixing Ratio at 500hPa (L3, Daytime/Ascending, Daily, AIR",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_Carbon_Monoxide_500hPa_Volume_Mixing_Ratio_Monthly_Day": {
+   "title": "Carbon Monoxide Volume Mixing Ratio at 500hPa (L3, Daytime/Ascending, Monthly, A",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_Carbon_Monoxide_500hPa_Volume_Mixing_Ratio_Daily_Night": {
+   "title": "Carbon Monoxide Volume Mixing Ratio at 500hPa (L3, Nighttime/Descending, Daily, ",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_Carbon_Monoxide_500hPa_Volume_Mixing_Ratio_Monthly_Night": {
+   "title": "Carbon Monoxide Volume Mixing Ratio at 500hPa (L3, Nighttime/Descending, Monthly",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_SNPP_L2_Chlorophyll_A": {
+   "title": "Chlorophyll A (L2, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA20_Chlorophyll_a": {
+   "title": "Chlorophyll a (VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA21_Chlorophyll_a": {
+   "title": "Chlorophyll a (VIIRS, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_SNPP_Cirrus_Reflectance_SWIR_M11": {
+   "title": "Cirrus Reflectance (SWIR, Band M11, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_SNPP_Cirrus_Reflectance_VIS_NIR": {
+   "title": "Cirrus Reflectance (Visible and NIR, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "GOES-East_ABI_Band13_Clean_Infrared": {
+   "title": "Clean Infrared (10.3 µm, Band 13, ABI, GOES-East)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "GOES-West_ABI_Band13_Clean_Infrared": {
+   "title": "Clean Infrared (10.3 µm, Band 13, ABI, GOES-West)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "Himawari_AHI_Band13_Clean_Infrared": {
+   "title": "Clean Infrared (10.3 µm, Band 13, AHI, Himawari)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_NOAA20_Clear_Sky_Confidence_Day": {
+   "title": "Clear Sky Confidence (Day, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_SNPP_Clear_Sky_Confidence_Day": {
+   "title": "Clear Sky Confidence (Day, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA20_Clear_Sky_Confidence_Night": {
+   "title": "Clear Sky Confidence (Night, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_SNPP_Clear_Sky_Confidence_Night": {
+   "title": "Clear Sky Confidence (Night, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "AIRS_L3_Clear_Sky_Outgoing_Longwave_Radiation_Daily_Day": {
+   "title": "Clear Sky Outgoing Longwave Radiation (L3, Daytime/Ascending, Daily, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_Clear_Sky_Outgoing_Longwave_Radiation_Monthly_Day": {
+   "title": "Clear Sky Outgoing Longwave Radiation (L3, Daytime/Ascending, Monthly, AIRS, Aqu",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_Clear_Sky_Outgoing_Longwave_Radiation_Daily_Night": {
+   "title": "Clear Sky Outgoing Longwave Radiation (L3, Nighttime/Descending, Daily, AIRS, Aq",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_Clear_Sky_Outgoing_Longwave_Radiation_Monthly_Night": {
+   "title": "Clear Sky Outgoing Longwave Radiation (L3, Nighttime/Descending, Monthly, AIRS, ",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_Cloud_Effective_Radius_16": {
+   "title": "Cloud Effective Radius (1.6µm, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Terra_Cloud_Effective_Radius_16": {
+   "title": "Cloud Effective Radius (1.6µm, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Aqua_Cloud_Effective_Radius_16_PCL": {
+   "title": "Cloud Effective Radius (1.6µm, PCL, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Terra_Cloud_Effective_Radius_16_PCL": {
+   "title": "Cloud Effective Radius (1.6µm, PCL, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Aqua_Cloud_Effective_Radius_1621": {
+   "title": "Cloud Effective Radius (2.1µm, 1621 Algorithm, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Terra_Cloud_Effective_Radius_1621": {
+   "title": "Cloud Effective Radius (2.1µm, 1621 Algorithm, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Aqua_Cloud_Effective_Radius": {
+   "title": "Cloud Effective Radius (2.1µm, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Terra_Cloud_Effective_Radius": {
+   "title": "Cloud Effective Radius (2.1µm, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Aqua_Cloud_Effective_Radius_PCL_1621": {
+   "title": "Cloud Effective Radius (2.1µm, PCL, 1621 Algorithm, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Terra_Cloud_Effective_Radius_PCL_1621": {
+   "title": "Cloud Effective Radius (2.1µm, PCL, 1621 Algorithm, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Aqua_Cloud_Effective_Radius_PCL": {
+   "title": "Cloud Effective Radius (2.1µm, PCL, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Terra_Cloud_Effective_Radius_PCL": {
+   "title": "Cloud Effective Radius (2.1µm, PCL, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Terra_Cloud_Effective_Radius_37_PCL": {
+   "title": "Cloud Effective Radius (3.7µm,  PCL, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Aqua_Cloud_Effective_Radius_37": {
+   "title": "Cloud Effective Radius (3.7µm, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Terra_Cloud_Effective_Radius_37": {
+   "title": "Cloud Effective Radius (3.7µm, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Aqua_Cloud_Effective_Radius_37_PCL": {
+   "title": "Cloud Effective Radius (3.7µm, PCL, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA20_Cloud_Effective_Radius": {
+   "title": "Cloud Effective Radius (VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_SNPP_Cloud_Effective_Radius": {
+   "title": "Cloud Effective Radius (VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Aqua_Cloud_Fraction_Day": {
+   "title": "Cloud Fraction (Day, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_Cloud_Fraction_Day": {
+   "title": "Cloud Fraction (Day, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_Cloud_Fraction_Night": {
+   "title": "Cloud Fraction (Night, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_Cloud_Fraction_Night": {
+   "title": "Cloud Fraction (Night, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "SSMI_DMSP_F8_Cloud_Liquid_Water_Over_Oceans_Ascending": {
+   "title": "Cloud Liquid Water (Ascending, Local AM, DMSP-F8 / SSMI)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "SSMI_DMSP_F10_Cloud_Liquid_Water_Over_Oceans_Ascending": {
+   "title": "Cloud Liquid Water (Ascending, Local PM, DMSP-F10 / SSMI)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "SSMI_DMSP_F11_Cloud_Liquid_Water_Over_Oceans_Ascending": {
+   "title": "Cloud Liquid Water (Ascending, Local PM, DMSP-F11 / SSMI)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "SSMI_DMSP_F13_Cloud_Liquid_Water_Over_Oceans_Ascending": {
+   "title": "Cloud Liquid Water (Ascending, Local PM, DMSP-F13 / SSMI)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "SSMI_DMSP_F14_Cloud_Liquid_Water_Over_Oceans_Ascending": {
+   "title": "Cloud Liquid Water (Ascending, Local PM, DMSP-F14 / SSMI)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "SSMI_DMSP_F15_Cloud_Liquid_Water_Over_Oceans_Ascending": {
+   "title": "Cloud Liquid Water (Ascending, Local PM, DMSP-F15 / SSMI)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "SSMI_DMSP_F16_Cloud_Liquid_Water_Over_Oceans_Ascending": {
+   "title": "Cloud Liquid Water (Ascending, Local PM, DMSP-F16 / SSMIS)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "SSMI_DMSP_F17_Cloud_Liquid_Water_Over_Oceans_Ascending": {
+   "title": "Cloud Liquid Water (Ascending, Local PM, DMSP-F17 / SSMIS)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "SSMI_DMSP_F10_Cloud_Liquid_Water_Over_Oceans_Descending": {
+   "title": "Cloud Liquid Water (Descending, Local AM, DMSP-F10 / SSMI)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "SSMI_DMSP_F11_Cloud_Liquid_Water_Over_Oceans_Descending": {
+   "title": "Cloud Liquid Water (Descending, Local AM, DMSP-F11 / SSMI)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "SSMI_DMSP_F13_Cloud_Liquid_Water_Over_Oceans_Descending": {
+   "title": "Cloud Liquid Water (Descending, Local AM, DMSP-F13 / SSMI)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "SSMI_DMSP_F14_Cloud_Liquid_Water_Over_Oceans_Descending": {
+   "title": "Cloud Liquid Water (Descending, Local AM, DMSP-F14 / SSMI)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "SSMI_DMSP_F15_Cloud_Liquid_Water_Over_Oceans_Descending": {
+   "title": "Cloud Liquid Water (Descending, Local AM, DMSP-F15 / SSMI)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "SSMI_DMSP_F16_Cloud_Liquid_Water_Over_Oceans_Descending": {
+   "title": "Cloud Liquid Water (Descending, Local AM, DMSP-F16 / SSMIS)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "SSMI_DMSP_F17_Cloud_Liquid_Water_Over_Oceans_Descending": {
+   "title": "Cloud Liquid Water (Descending, Local AM, DMSP-F17 / SSMIS)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "SSMI_DMSP_F8_Cloud_Liquid_Water_Over_Oceans_Descending": {
+   "title": "Cloud Liquid Water (Descending, Local PM, DMSP-F8 / SSMI)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AMSRU2_Cloud_Liquid_Water_Day": {
+   "title": "Cloud Liquid Water Path ( Day, AMSRU2, GCOM-W1)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AMSRU2_Cloud_Liquid_Water_Night": {
+   "title": "Cloud Liquid Water Path ( Night, AMSRU2, GCOM-W1)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AMSRUE_Cloud_Liquid_Water_Day": {
+   "title": "Cloud Liquid Water Path (Day, AMSR2 (GCOM-W1), AMSRE (Aqua))",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AMSRU_L3_Cloud_Liquid_Water_Daily": {
+   "title": "Cloud Liquid Water Path (L3, Daily, AMSR2 (GCOM-W1), AMSRE (Aqua))",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AMSRU_L3_Cloud_Liquid_Water_Monthly": {
+   "title": "Cloud Liquid Water Path (L3, Monthly, AMSR2 (GCOM-W1), AMSRE (Aqua))",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AMSRU_L3_Cloud_Liquid_Water_Weekly": {
+   "title": "Cloud Liquid Water Path (L3, Weekly, AMSR2 (GCOM-W1), AMSRE (Aqua))",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AMSRUE_Cloud_Liquid_Water_Night": {
+   "title": "Cloud Liquid Water Path (Night, AMSR2 (GCOM-W1), AMSRE (Aqua))",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_Cloud_Multi_Layer_Flag": {
+   "title": "Cloud Multi Layer Flag (MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Terra_Cloud_Multi_Layer_Flag": {
+   "title": "Cloud Multi Layer Flag (MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Aqua_Cloud_Optical_Thickness_16": {
+   "title": "Cloud Optical Thickness (1.6µm, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Terra_Cloud_Optical_Thickness_16": {
+   "title": "Cloud Optical Thickness (1.6µm, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Aqua_Cloud_Optical_Thickness_16_PCL": {
+   "title": "Cloud Optical Thickness (1.6µm, PCL, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Terra_Cloud_Optical_Thickness_16_PCL": {
+   "title": "Cloud Optical Thickness (1.6µm, PCL, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Aqua_Cloud_Optical_Thickness_1621": {
+   "title": "Cloud Optical Thickness (2.1µm, 1621 Algorithm, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Terra_Cloud_Optical_Thickness_1621": {
+   "title": "Cloud Optical Thickness (2.1µm, 1621 Algorithm, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Aqua_Cloud_Optical_Thickness": {
+   "title": "Cloud Optical Thickness (2.1µm, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Terra_Cloud_Optical_Thickness": {
+   "title": "Cloud Optical Thickness (2.1µm, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Aqua_Cloud_Optical_Thickness_PCL_1621": {
+   "title": "Cloud Optical Thickness (2.1µm, PCL, 1621 Algorithm, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Terra_Cloud_Optical_Thickness_PCL_1621": {
+   "title": "Cloud Optical Thickness (2.1µm, PCL, 1621 Algorithm, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Aqua_Cloud_Optical_Thickness_PCL": {
+   "title": "Cloud Optical Thickness (2.1µm, PCL, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Terra_Cloud_Optical_Thickness_PCL": {
+   "title": "Cloud Optical Thickness (2.1µm, PCL, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA20_Cloud_Optical_Thickness": {
+   "title": "Cloud Optical Thickness (VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_SNPP_Cloud_Optical_Thickness": {
+   "title": "Cloud Optical Thickness (VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Aqua_Cloud_Phase_Infrared_Day": {
+   "title": "Cloud Phase (Infrared, Day, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_Cloud_Phase_Infrared_Day": {
+   "title": "Cloud Phase (Infrared, Day, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_Cloud_Phase_Infrared_Night": {
+   "title": "Cloud Phase (Infrared, Night, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_Cloud_Phase_Infrared_Night": {
+   "title": "Cloud Phase (Infrared, Night, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_Cloud_Phase_Optical_Properties": {
+   "title": "Cloud Phase Optical Properties (MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Terra_Cloud_Phase_Optical_Properties": {
+   "title": "Cloud Phase Optical Properties (MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "OMI_Cloud_Pressure": {
+   "title": "Cloud Pressure (OMI, Aura)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MISR_Cloud_Stereo_Height_Histogram_Bin_0.5km_Monthly": {
+   "title": "Cloud Stereo Height (No Wind Correction, &lt; 0.5 km, Monthly, MISR, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MISR_Cloud_Stereo_Height_Histogram_Bin_1.5-2.0km_Monthly": {
+   "title": "Cloud Stereo Height (No Wind Correction, 1.5 - 2.0 km, Monthly, MISR, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_Cloud_Top_Height_Day": {
+   "title": "Cloud Top Height (Day, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_Cloud_Top_Height_Day": {
+   "title": "Cloud Top Height (Day, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_NOAA20_Cloud_Top_Height_Day": {
+   "title": "Cloud Top Height (Day, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_SNPP_Cloud_Top_Height_Day": {
+   "title": "Cloud Top Height (Day, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "AIRS_L2_Cloud_Top_Height_Day": {
+   "title": "Cloud Top Height (L2, Day, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L2_Cloud_Top_Height_Night": {
+   "title": "Cloud Top Height (L2, Night, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_Cloud_Top_Height_Night": {
+   "title": "Cloud Top Height (Night, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_Cloud_Top_Height_Night": {
+   "title": "Cloud Top Height (Night, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_NOAA20_Cloud_Top_Height_Night": {
+   "title": "Cloud Top Height (Night, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_SNPP_Cloud_Top_Height_Night": {
+   "title": "Cloud Top Height (Night, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Aqua_Cloud_Top_Pressure_Day": {
+   "title": "Cloud Top Pressure (Day, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_Cloud_Top_Pressure_Day": {
+   "title": "Cloud Top Pressure (Day, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_Cloud_Top_Pressure_Night": {
+   "title": "Cloud Top Pressure (Night, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_Cloud_Top_Pressure_Night": {
+   "title": "Cloud Top Pressure (Night, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_Cloud_Top_Temp_Day": {
+   "title": "Cloud Top Temperature (Day, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_Cloud_Top_Temp_Day": {
+   "title": "Cloud Top Temperature (Day, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_Cloud_Top_Temp_Night": {
+   "title": "Cloud Top Temperature (Night, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_Cloud_Top_Temp_Night": {
+   "title": "Cloud Top Temperature (Night, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_Cloud_Water_Path": {
+   "title": "Cloud Water Path (MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Terra_Cloud_Water_Path": {
+   "title": "Cloud Water Path (MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Aqua_Cloud_Water_Path_PCL": {
+   "title": "Cloud Water Path (PCL, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Terra_Cloud_Water_Path_PCL": {
+   "title": "Cloud Water Path (PCL, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "TEMPO_L2_Cloud_Cloud_Fraction_Total_Granule": {
+   "title": "Clouds (L2, Cloud Fraction Total, Subdaily, TEMPO)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "TEMPO_L2_Cloud_Cloud_Pressure_Total_Granule": {
+   "title": "Clouds (L2, Cloud Pressure Total, Subdaily, TEMPO)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "TEMPO_L3_Cloud_Cloud_Fraction_Total": {
+   "title": "Clouds (L3, Cloud Fraction Total, Subdaily, TEMPO)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "TEMPO_L3_Cloud_Cloud_Pressure_Total": {
+   "title": "Clouds (L3, Cloud Pressure Total, Subdaily, TEMPO)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "AMSRE_Columnar_Water_Vapor_Night": {
+   "title": "Columnar Water Vapor (Night,  AMSR-E, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AMSRU2_Columnar_Water_Vapor_Night": {
+   "title": "Columnar Water Vapor (Night,  AMSRU2, GCOM-W1)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AMSRUE_Columnar_Water_Vapor_Night": {
+   "title": "Columnar Water Vapor (Night, AMSR2 (GCOM-W1), AMSRE (Aqua))",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_CorrectedReflectance_Bands367": {
+   "title": "Corrected Reflectance (Bands 3-6-7, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "MODIS_Aqua_CorrectedReflectance_Bands721": {
+   "title": "Corrected Reflectance (Bands 7-2-1, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "MODIS_Terra_CorrectedReflectance_Bands721": {
+   "title": "Corrected Reflectance (Bands 7-2-1, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "VIIRS_NOAA20_CorrectedReflectance_BandsM11-I2-I1": {
+   "title": "Corrected Reflectance (Bands M11-I2-I1, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "VIIRS_NOAA21_CorrectedReflectance_BandsM11-I2-I1": {
+   "title": "Corrected Reflectance (Bands M11-I2-I1, VIIRS, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "VIIRS_NOAA20_CorrectedReflectance_BandsM3-I3-M11": {
+   "title": "Corrected Reflectance (Bands M3-I3-M11, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "VIIRS_NOAA21_CorrectedReflectance_BandsM3-I3-M11": {
+   "title": "Corrected Reflectance (Bands M3-I3-M11, VIIRS, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "VIIRS_NOAA20_CorrectedReflectance_BandsM11-I2-I1_Granule": {
+   "title": "Corrected Reflectance (M11-I2-I1, Granules, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "VIIRS_SNPP_CorrectedReflectance_BandsM11-I2-I1_Granule": {
+   "title": "Corrected Reflectance (M11-I2-I1, Granules, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "VIIRS_SNPP_CorrectedReflectance_BandsM11-I2-I1": {
+   "title": "Corrected Reflectance (M11-I2-I1, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "VIIRS_NOAA20_CorrectedReflectance_BandsM3-I3-M11_Granule": {
+   "title": "Corrected Reflectance (M3-I3-M11, Granules, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "VIIRS_SNPP_CorrectedReflectance_BandsM3-I3-M11_Granule": {
+   "title": "Corrected Reflectance (M3-I3-M11, Granules, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "VIIRS_SNPP_CorrectedReflectance_BandsM3-I3-M11": {
+   "title": "Corrected Reflectance (M3-I3-M11, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "Sentinel-3_Combined_CorrectedReflectance_BandsOa4_S5_S6": {
+   "title": "Corrected Reflectance (Oa4-S5-S6, OLCI & SLSTR, Sentinel-3)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "Sentinel-3_Combined_CorrectedReflectance_BandsS6_O17_O8": {
+   "title": "Corrected Reflectance (S6-Oa17-Oa8, OLCI & SLSTR, Sentinel-3)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "VIIRS_NOAA20_CorrectedReflectance_TrueColor_Granule": {
+   "title": "Corrected Reflectance (True Color, Granules, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "VIIRS_SNPP_CorrectedReflectance_TrueColor_Granule": {
+   "title": "Corrected Reflectance (True Color, Granules, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "MODIS_Aqua_CorrectedReflectance_TrueColor": {
+   "title": "Corrected Reflectance (True Color, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "MODIS_Terra_CorrectedReflectance_TrueColor": {
+   "title": "Corrected Reflectance (True Color, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "VIIRS_NOAA20_CorrectedReflectance_TrueColor": {
+   "title": "Corrected Reflectance (True Color, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "VIIRS_NOAA21_CorrectedReflectance_TrueColor": {
+   "title": "Corrected Reflectance (True Color, VIIRS, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "VIIRS_SNPP_CorrectedReflectance_TrueColor": {
+   "title": "Corrected Reflectance (True Color, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "VIIRS_NOAA20_Angstrom_Exponent_Dark_Target_Ocean": {
+   "title": "Dark Target Aerosol Angstrom Exponent (Ocean, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_SNPP_Angstrom_Exponent_Dark_Target_Ocean": {
+   "title": "Dark Target Aerosol Angstrom Exponent (Ocean, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_Aerosol": {
+   "title": "Dark Target Aerosol Optical Depth (Land and Ocean, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_Aerosol": {
+   "title": "Dark Target Aerosol Optical Depth (Land and Ocean, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_NOAA20_AOD_Dark_Target_Land_Ocean": {
+   "title": "Dark Target Aerosol Optical Depth (Land and Ocean, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_NOAA21_AOD_Dark_Target_Land_Ocean": {
+   "title": "Dark Target Aerosol Optical Depth (Land and Ocean, VIIRS, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_SNPP_AOD_Dark_Target_Land_Ocean": {
+   "title": "Dark Target Aerosol Optical Depth (Land and Ocean, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_NOAA20_DayNightBand": {
+   "title": "Day/Night Band (VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA21_DayNightBand": {
+   "title": "Day/Night Band (VIIRS, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_SNPP_DayNightBand": {
+   "title": "Day/Night Band (VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA20_Angstrom_Exponent_Deep_Blue_Best_Estimate": {
+   "title": "Deep Blue Aerosol Angstrom Exponent (Land and Ocean, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_NOAA20_Angstrom_Exponent_Deep_Blue_Land_Ocean": {
+   "title": "Deep Blue Aerosol Angstrom Exponent (Land and Ocean, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_NOAA21_Angstrom_Exponent_Deep_Blue_Land_Ocean": {
+   "title": "Deep Blue Aerosol Angstrom Exponent (Land and Ocean, VIIRS, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_SNPP_Angstrom_Exponent_Deep_Blue_Land_Ocean": {
+   "title": "Deep Blue Aerosol Angstrom Exponent (Land and Ocean, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_SNPP_Angstrom_Exponent_Deep_Blue_Best_Estimate": {
+   "title": "Deep Blue Aerosol Angstrom Exponent (Land and Ocean, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_NOAA20_AOD_Deep_Blue_Land_Ocean": {
+   "title": "Deep Blue Aerosol Optical Depth (Land and Ocean, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_NOAA21_AOD_Deep_Blue_Land_Ocean": {
+   "title": "Deep Blue Aerosol Optical Depth (Land and Ocean, VIIRS, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_SNPP_AOD_Deep_Blue_Land_Ocean": {
+   "title": "Deep Blue Aerosol Optical Depth (Land and Ocean, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_NOAA20_AOT_Deep_Blue_Best_Estimate": {
+   "title": "Deep Blue Aerosol Optical Thickness (Land and Ocean, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_SNPP_AOT_Deep_Blue_Best_Estimate": {
+   "title": "Deep Blue Aerosol Optical Thickness (Land and Ocean, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_NOAA20_Aerosol_Type_Deep_Blue_Land_Ocean": {
+   "title": "Deep Blue Aerosol Type (Land and Ocean, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_NOAA21_Aerosol_Type_Deep_Blue_Land_Ocean": {
+   "title": "Deep Blue Aerosol Type (Land and Ocean, VIIRS, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_SNPP_Aerosol_Type_Deep_Blue_Land_Ocean": {
+   "title": "Deep Blue Aerosol Type (Land and Ocean, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_NOAA20_Aerosol_Type_Deep_Blue_Best_Estimate": {
+   "title": "Deep Blue Aerosol Type (VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_SNPP_Aerosol_Type_Deep_Blue_Best_Estimate": {
+   "title": "Deep Blue Aerosol Type (VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "GOES-East_ABI_Dust": {
+   "title": "Dust (ABI, GOES-East)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "GOES-West_ABI_Dust": {
+   "title": "Dust (ABI, GOES-West)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "AIRS_L2_Dust_Score_Day": {
+   "title": "Dust Score (L2, Day, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L2_Dust_Score_Night": {
+   "title": "Dust Score (L2, Night, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MERRA2_Dust_Surface_Mass_Concentration_Monthly": {
+   "title": "Dust Surface Mass Concentration (Monthly, MERRA2)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MERRA2_Dust_Surface_Mass_Concentration_PM25_Monthly": {
+   "title": "Dust Surface Mass Concentration (Monthly, Particulate Matter 2.5 µm, v5.12.4, St",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_CityLights_2012": {
+   "title": "Earth at Night (2012, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_NOAA20_L3_EVI_16Day": {
+   "title": "Enhanced Vegetation Index (L3, 16-Day, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_SNPP_L3_EVI_16Day": {
+   "title": "Enhanced Vegetation Index (L3, 16-Day, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_NOAA20_L3_EVI_Monthly": {
+   "title": "Enhanced Vegetation Index (L3, Monthly, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_SNPP_L3_EVI_Monthly": {
+   "title": "Enhanced Vegetation Index (L3, Monthly, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA20_EVI_8Day": {
+   "title": "Enhanced Vegetation Index (rolling 8-day, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_NOAA21_EVI_8Day": {
+   "title": "Enhanced Vegetation Index (rolling 8-day, VIIRS, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_SNPP_EVI_8Day": {
+   "title": "Enhanced Vegetation Index (rolling 8-day, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "GOES-East_ABI_FireTemp": {
+   "title": "Fire Temperature ( ABI, GOES-East)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "GOES-West_ABI_FireTemp": {
+   "title": "Fire Temperature ( ABI, GOES-West)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "PACE-PAX_CIRPAS-TO_Flight_Track": {
+   "title": "Flight Track (Per Flight, NPS CIRPAS facility instruments, CIRPAS Twin Otter, PA",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_Combined_Flood_1-Day": {
+   "title": "Flood (1-Day Window, VIIRS, NOAA-20 + NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "VIIRS_Combined_Flood_2-Day": {
+   "title": "Flood (2-Day Window, VIIRS, NOAA-20 + NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "VIIRS_Combined_Flood_3-Day": {
+   "title": "Flood (3-Day Window, VIIRS, NOAA-20 + NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "VIIRS_NOAA20_L4_FPAR_8Day": {
+   "title": "Fraction of Photosynthetically Active Radiation (L4, 8-Day, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_SNPP_L4_FPAR_8Day": {
+   "title": "Fraction of Photosynthetically Active Radiation (L4, 8-Day, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "SMAP_L3_Passive_Enhanced_Night_Freeze_Thaw": {
+   "title": "Freeze/Thaw (L3, Passive Enhanced, Night, Radiometer, SMAP)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "SMAP_L3_Passive_Night_Freeze_Thaw": {
+   "title": "Freeze/Thaw (L3, Passive, Night, Radiometer, SMAP)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_CrIS_NOAA20_BT_Band33_Fusion_Day": {
+   "title": "Fusion Brightness Temperature Band 33 (Day, VIIRS+CrIS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_CrIS_SNPP_BT_Band33_Fusion_Day": {
+   "title": "Fusion Brightness Temperature Band 33 (Day, VIIRS+CrIS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_CrIS_NOAA20_BT_Band33_Fusion_Night": {
+   "title": "Fusion Brightness Temperature Band 33 (Night, VIIRS+CrIS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_CrIS_SNPP_BT_Band33_Fusion_Night": {
+   "title": "Fusion Brightness Temperature Band 33 (Night, VIIRS+CrIS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA20_GapFilled_BRDF_Corrected_DayNightBand_Radiance": {
+   "title": "Gap-Filled BRDF Corrected Radiance (Day/Night Band, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_NOAA21_GapFilled_BRDF_Corrected_DayNightBand_Radiance": {
+   "title": "Gap-Filled BRDF Corrected Radiance (Day/Night Band, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_SNPP_GapFilled_BRDF_Corrected_DayNightBand_Radiance": {
+   "title": "Gap-Filled BRDF Corrected Radiance (Day/Night Band, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "GOES-East_ABI_GeoColor": {
+   "title": "Geo Color ( ABI, GOES-East)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "GOES-West_ABI_GeoColor": {
+   "title": "Geo Color ( ABI, GOES-West)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA20_L4_Gross_Primary_Productivity_8Day": {
+   "title": "Gross Primary Production (L4, 8-Day, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_SNPP_L4_Gross_Primary_Productivity_8Day": {
+   "title": "Gross Primary Production (L4, 8-Day, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "MERRA2_ISCCP_Cloud_Albedo_Monthly": {
+   "title": "ISCCP Cloud Albedo (Monthly, MERRA2)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_NOAA20_Ice_Surface_Temp_Day": {
+   "title": "Ice Surface Temperature (Day, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA21_Ice_Surface_Temp_Day": {
+   "title": "Ice Surface Temperature (Day, VIIRS, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_SNPP_Ice_Surface_Temp_Day": {
+   "title": "Ice Surface Temperature (Day, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA20_L3_Ice_Surface_Temp_Daily_Day": {
+   "title": "Ice Surface Temperature (L3, Daily, Day, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_SNPP_L3_Ice_Surface_Temp_Daily_Day": {
+   "title": "Ice Surface Temperature (L3, Daily, Day, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Aqua_L3_Ice_Surface_Temp_Daily_Night": {
+   "title": "Ice Surface Temperature (L3, Daily, Night, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Terra_L3_Ice_Surface_Temp_Daily_Night": {
+   "title": "Ice Surface Temperature (L3, Daily, Night, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA20_L3_Ice_Surface_Temp_Daily_Night": {
+   "title": "Ice Surface Temperature (L3, Daily, Night, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_SNPP_L3_Ice_Surface_Temp_Daily_Night": {
+   "title": "Ice Surface Temperature (L3, Daily, Night, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Aqua_Ice_Surface_Temp_Night": {
+   "title": "Ice Surface Temperature (Night, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Terra_Ice_Surface_Temp_Night": {
+   "title": "Ice Surface Temperature (Night, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA20_Ice_Surface_Temp_Night": {
+   "title": "Ice Surface Temperature (Night, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA21_Ice_Surface_Temp_Night": {
+   "title": "Ice Surface Temperature (Night, VIIRS, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_SNPP_Ice_Surface_Temp_Night": {
+   "title": "Ice Surface Temperature (Night, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Aqua_L3_SurfaceReflectance_Bands143_8Day": {
+   "title": "Land Surface Reflectance (8-Day, True Color, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "MODIS_Terra_L3_SurfaceReflectance_Bands143_8Day": {
+   "title": "Land Surface Reflectance (8-Day, True Color, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "MODIS_Aqua_SurfaceReflectance_Bands121": {
+   "title": "Land Surface Reflectance (Bands 1-2-1, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "MODIS_Terra_SurfaceReflectance_Bands121": {
+   "title": "Land Surface Reflectance (Bands 1-2-1, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "MODIS_Aqua_SurfaceReflectance_Bands721": {
+   "title": "Land Surface Reflectance (Bands 7-2-1, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "MODIS_Terra_SurfaceReflectance_Bands721": {
+   "title": "Land Surface Reflectance (Bands 7-2-1, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_NOAA20_SurfaceReflectance_BandsI1-I2-I1": {
+   "title": "Land Surface Reflectance (Bands I1-I2-I1 VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "VIIRS_SNPP_SurfaceReflectance_BandsI1-I2-I1": {
+   "title": "Land Surface Reflectance (Bands I1-I2-I1 VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "VIIRS_NOAA21_SurfaceReflectance_BandsI1-I2-I1": {
+   "title": "Land Surface Reflectance (Bands I1-I2-I1, VIIRS, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "VIIRS_NOAA20_SurfaceReflectance_BandsM5-M4-M3": {
+   "title": "Land Surface Reflectance (Bands I1-M4-M3, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_NOAA21_SurfaceReflectance_BandsM11-M7-M5": {
+   "title": "Land Surface Reflectance (Bands M11-M7-M5, Near Real Time, VIIRS, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_NOAA20_SurfaceReflectance_BandsM11-M7-M5": {
+   "title": "Land Surface Reflectance (Bands M11-M7-M5, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_SNPP_SurfaceReflectance_BandsM11-M7-M5": {
+   "title": "Land Surface Reflectance (Bands M11-M7-M5, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "MODIS_Aqua_L2G_SurfaceReflectance_Bands143_Daily": {
+   "title": "Land Surface Reflectance (L2G, Daily, True Color, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "MODIS_Terra_L2G_SurfaceReflectance_Bands143_Daily": {
+   "title": "Land Surface Reflectance (L2G, Daily, True Color, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_NOAA20_L3_SurfaceReflectance_BandsI1-I2-I1_8Day": {
+   "title": "Land Surface Reflectance (L3, 8-Day, Bands I1-I2-I1, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_SNPP_L3_SurfaceReflectance_BandsI1-I2-I1_8Day": {
+   "title": "Land Surface Reflectance (L3, 8-Day, Bands I1-I2-I1, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_NOAA20_L3_SurfaceReflectance_BandsM11-M7-M5_8Day": {
+   "title": "Land Surface Reflectance (L3, 8-Day, Bands M11-M7-M5, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_SNPP_L3_SurfaceReflectance_BandsM11-M7-M5_8Day": {
+   "title": "Land Surface Reflectance (L3, 8-Day, Bands M11-M7-M5, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "MODIS_Aqua_L3_SurfaceReflectance_Bands121_8Day": {
+   "title": "Land Surface Reflectance (L3, 8-Day, True Color, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "MODIS_Aqua_L3_SurfaceReflectance_Bands721_8Day": {
+   "title": "Land Surface Reflectance (L3, 8-Day, True Color, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "MODIS_Terra_L3_SurfaceReflectance_Bands721_8Day": {
+   "title": "Land Surface Reflectance (L3, 8-Day, True Color, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "MODIS_Terra_L3_SurfaceReflectance_Bands121_8Day": {
+   "title": "Land Surface Reflectance (L3, 8-Day, True Color, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level9"
+   ]
+  },
+  "VIIRS_NOAA20_L3_SurfaceReflectance_BandsM5-M4-M3_8Day": {
+   "title": "Land Surface Reflectance (L3, 8-Day, True Color, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_SNPP_L3_SurfaceReflectance_BandsM5-M4-M3_8Day": {
+   "title": "Land Surface Reflectance (L3, 8-Day, True Color, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_NOAA20_L3_SurfaceReflectance_BandsM5-M4-M3_Daily": {
+   "title": "Land Surface Reflectance (L3, Daily, True Color, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_SNPP_L3_SurfaceReflectance_BandsM5-M4-M3_Daily": {
+   "title": "Land Surface Reflectance (L3, Daily, True Color, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "MODIS_Aqua_SurfaceReflectance_Bands143": {
+   "title": "Land Surface Reflectance (True Color, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "MODIS_Terra_SurfaceReflectance_Bands143": {
+   "title": "Land Surface Reflectance (True Color, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_NOAA21_SurfaceReflectance_BandsM5-M4-M3": {
+   "title": "Land Surface Reflectance (True Color, Near Real Time, VIIRS, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_SNPP_SurfaceReflectance_BandsM5-M4-M3": {
+   "title": "Land Surface Reflectance (True Color, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "MODIS_Aqua_L3_Land_Surface_Temp_8Day_Night_TES": {
+   "title": "Land Surface Temperature (ASTER TES L3, 8-Day, Night, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Terra_L3_Land_Surface_Temp_8Day_Night_TES": {
+   "title": "Land Surface Temperature (ASTER TES L3, 8-Day, Night, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Aqua_L3_Land_Surface_Temp_Daily_Night_TES": {
+   "title": "Land Surface Temperature (ASTER TES L3, Daily, Night, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Terra_L3_Land_Surface_Temp_Daily_Night_TES": {
+   "title": "Land Surface Temperature (ASTER TES L3, Daily, Night, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Aqua_L3_Land_Surface_Temp_Monthly_CMG_Night_TES": {
+   "title": "Land Surface Temperature (ASTER TES L3, Monthly, Night, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_L3_Land_Surface_Temp_Monthly_CMG_Night_TES": {
+   "title": "Land Surface Temperature (ASTER TES L3, Monthly, Night, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_Land_Surface_Temp_Night_TES": {
+   "title": "Land Surface Temperature (ASTER TES, Night, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA20_Land_Surface_Temp_Day": {
+   "title": "Land Surface Temperature (Day, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA21_Land_Surface_Temp_Day": {
+   "title": "Land Surface Temperature (Day, VIIRS, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_SNPP_Land_Surface_Temp_Day": {
+   "title": "Land Surface Temperature (Day, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA20_L3_Land_Surface_Temp_8Day_Day": {
+   "title": "Land Surface Temperature (L3, 8-Day, Day, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_SNPP_L3_Land_Surface_Temp_8Day_Day": {
+   "title": "Land Surface Temperature (L3, 8-Day, Day, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Aqua_L3_Land_Surface_Temp_8Day_Night": {
+   "title": "Land Surface Temperature (L3, 8-Day, Night, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Terra_L3_Land_Surface_Temp_8Day_Night": {
+   "title": "Land Surface Temperature (L3, 8-Day, Night, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA20_L3_Land_Surface_Temp_8Day_Night": {
+   "title": "Land Surface Temperature (L3, 8-Day, Night, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_SNPP_L3_Land_Surface_Temp_8Day_Night": {
+   "title": "Land Surface Temperature (L3, 8-Day, Night, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA20_L3_Land_Surface_Temp_Daily_Day": {
+   "title": "Land Surface Temperature (L3, Daily, Day, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_SNPP_L3_Land_Surface_Temp_Daily_Day": {
+   "title": "Land Surface Temperature (L3, Daily, Day, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Aqua_L3_Land_Surface_Temp_Daily_Night": {
+   "title": "Land Surface Temperature (L3, Daily, Night, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Terra_L3_Land_Surface_Temp_Daily_Night": {
+   "title": "Land Surface Temperature (L3, Daily, Night, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA20_L3_Land_Surface_Temp_Daily_Night": {
+   "title": "Land Surface Temperature (L3, Daily, Night, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_SNPP_L3_Land_Surface_Temp_Daily_Night": {
+   "title": "Land Surface Temperature (L3, Daily, Night, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA20_L3_Land_Surface_Temp_Monthly_Day": {
+   "title": "Land Surface Temperature (L3, Monthly, Day, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_SNPP_L3_Land_Surface_Temp_Monthly_Day": {
+   "title": "Land Surface Temperature (L3, Monthly, Day, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Aqua_L3_Land_Surface_Temp_Monthly_Night": {
+   "title": "Land Surface Temperature (L3, Monthly, Night, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_L3_Land_Surface_Temp_Monthly_Night": {
+   "title": "Land Surface Temperature (L3, Monthly, Night, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_NOAA20_L3_Land_Surface_Temp_Monthly_Night": {
+   "title": "Land Surface Temperature (L3, Monthly, Night, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_SNPP_L3_Land_Surface_Temp_Monthly_Night": {
+   "title": "Land Surface Temperature (L3, Monthly, Night, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Aqua_Land_Surface_Temp_Night_TES": {
+   "title": "Land Surface Temperature (Night, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Aqua_Land_Surface_Temp_Night": {
+   "title": "Land Surface Temperature (Night, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Terra_Land_Surface_Temp_Night": {
+   "title": "Land Surface Temperature (Night, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA20_Land_Surface_Temp_Night": {
+   "title": "Land Surface Temperature (Night, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA21_Land_Surface_Temp_Night": {
+   "title": "Land Surface Temperature (Night, VIIRS, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_SNPP_Land_Surface_Temp_Night": {
+   "title": "Land Surface Temperature (Night, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA20_L4_LAI_8Day": {
+   "title": "Leaf Area Index (L4, 8-Day, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_SNPP_L4_LAI_8Day": {
+   "title": "Leaf Area Index (L4, 8-Day, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "MODIS_Combined_MAIAC_L2G_AerosolOpticalDepth": {
+   "title": "MAIAC Aerosol Optical Depth (MODIS, Combined Aqua and Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "AIRS_L2_Methane_400hPa_Volume_Mixing_Ratio_Day": {
+   "title": "Methane (L2, 400 hPa, Day, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L2_Methane_400hPa_Volume_Mixing_Ratio_Night": {
+   "title": "Methane (L2, 400 hPa, Night, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_Methane_400hPa_Volume_Mixing_Ratio_Daily_Day": {
+   "title": "Methane Volume Mixing Ratio at 400hPa (L3, Daytime/Ascending, Daily, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_Methane_400hPa_Volume_Mixing_Ratio_Monthly_Day": {
+   "title": "Methane Volume Mixing Ratio at 400hPa (L3, Daytime/Ascending, Monthly, AIRS, Aqu",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_Methane_400hPa_Volume_Mixing_Ratio_Daily_Night": {
+   "title": "Methane Volume Mixing Ratio at 400hPa (L3, Nighttime/Descending, Daily, AIRS, Aq",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_Methane_400hPa_Volume_Mixing_Ratio_Monthly_Night": {
+   "title": "Methane Volume Mixing Ratio at 400hPa (L3, Nighttime/Descending, Monthly, AIRS, ",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_Carbon_Dioxide_AIRS_AMSU_Monthly": {
+   "title": "Mole Fraction of Carbon Dioxide in Free Troposphere (L3, Monthly, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_Carbon_Dioxide_IR_Monthly": {
+   "title": "Mole Fraction of Carbon Dioxide in Free Troposphere (L3, Monthly, IR-only, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_NOAA20_L4_Net_Photosynthesis_8Day": {
+   "title": "Net Photosynthesis (L4, 8-Day, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_SNPP_L4_Net_Photosynthesis_8Day": {
+   "title": "Net Photosynthesis (L4, 8-Day, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_Night_Lights": {
+   "title": "Night Lights (VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_SNPP_DayNightBand_ENCC": {
+   "title": "Nighttime Imagery (Day/Night Band, Enhanced Near Constant Contrast, Suomi NPP, V",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "MLS_HNO3_46hPa_Night": {
+   "title": "Nitric Acid (46 hPa, Night, MLS, Aura)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MLS_N2O_46hPa_Night": {
+   "title": "Nitrous Oxide (46 hPa, Night, MLS, Aura)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_NOAA20_NDVI_8Day": {
+   "title": "Normalized Difference Vegetation Index (rolling 8-Day, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_SNPP_NDVI_8Day": {
+   "title": "Normalized Difference Vegetation Index (rolling 8-Day, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_NOAA21_NDVI_8Day": {
+   "title": "Normalized Difference Vegetation Index (rolling 8-day, VIIRS, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "AMSRU_Ocean_Wind_Speed_Night": {
+   "title": "Ocean Wind Speed ( Night, AMSRU, GCOM-W1)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AMSRUE_Ocean_Wind_Speed_Night": {
+   "title": "Ocean Wind Speed (Night, AMSR2 (GCOM-W1), AMSRE (Aqua))",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OrbitTracks_CloudSat_Ascending": {
+   "title": "Orbit Tracks (Ascending, CloudSat)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OrbitTracks_CloudSat_Descending": {
+   "title": "Orbit Tracks (Descending, CloudSat)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_All_Sky_Outgoing_Longwave_Radiation_Daily_Day": {
+   "title": "Outgoing Longwave Radiation (L3, Daytime/Ascending, Daily, AIRS, Aqua) ",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_All_Sky_Outgoing_Longwave_Radiation_Monthly_Day": {
+   "title": "Outgoing Longwave Radiation (L3, Daytime/Ascending, Monthly, AIRS, Aqua) ",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_All_Sky_Outgoing_Longwave_Radiation_Daily_Night": {
+   "title": "Outgoing Longwave Radiation (L3, Nighttime/Descending, Daily, AIRS, Aqua) ",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_All_Sky_Outgoing_Longwave_Radiation_Monthly_Night": {
+   "title": "Outgoing Longwave Radiation (L3, Nighttime/Descending, Monthly, AIRS, Aqua) ",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "PREFIRE_SAT1_Outgoing_Longwave_Radiative_Flux": {
+   "title": "Outgoing Longwave Radiative Flux (LEO TIRS, PREFIRE-Satellite 1)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "PREFIRE_SAT2_Outgoing_Longwave_Radiative_Flux": {
+   "title": "Outgoing Longwave Radiative Flux (LEO TIRS, PREFIRE-Satellite 2)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MLS_O3_46hPa_Night": {
+   "title": "Ozone (46 hPa, Night, MLS, Aura)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "TEMPO_L2_Ozone_Cloud_Fraction_Granule": {
+   "title": "Ozone (L2, Cloud Fraction, Subdaily, TEMPO)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "TEMPO_L2_Ozone_UV_Aerosol_Index_Granule": {
+   "title": "Ozone (L2, UV Aerosol Index, Subdaily, TEMPO)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "TEMPO_L3_Ozone_Cloud_Fraction": {
+   "title": "Ozone (L3, Cloud Fraction, Subdaily, TEMPO)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "TEMPO_L3_Ozone_UV_Aerosol_Index": {
+   "title": "Ozone (L3, UV Aerosol Index, Subdaily, TEMPO)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_SNPP_L2_Photosynthetically_Available_Radiation": {
+   "title": "Photosynthetically Available Radiation (L2, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA20_Photosynthetically_Available_Radiation": {
+   "title": "Photosynthetically Available Radiation (VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA21_Photosynthetically_Available_Radiation": {
+   "title": "Photosynthetically Available Radiation (VIIRS, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "AIRS_Precipitation_Day": {
+   "title": "Precipitation (Day, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_Precipitation_Night": {
+   "title": "Precipitation (Night, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "GOES-East_ABI_Band2_Red_Visible_1km": {
+   "title": "Red Visible (0.64 µm, Band 2, ABI, GOES-East)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "GOES-West_ABI_Band2_Red_Visible_1km": {
+   "title": "Red Visible (0.64 µm, Band 2, ABI, GOES-West)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "Himawari_AHI_Band3_Red_Visible_1km": {
+   "title": "Red Visible (0.64 µm, Band 3, AHI, Himawari)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "AIRS_L2_RelativeHumidity_500hPa_Day": {
+   "title": "Relative Humidity (L2, 500 hPa, Day, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L2_RelativeHumidity_500hPa_Night": {
+   "title": "Relative Humidity (L2, 500 hPa, Night, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L2_RelativeHumidity_700hPa_Day": {
+   "title": "Relative Humidity (L2, 700 hPa, Day, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L2_RelativeHumidity_700hPa_Night": {
+   "title": "Relative Humidity (L2, 700 hPa, Night, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L2_RelativeHumidity_850hPa_Day": {
+   "title": "Relative Humidity (L2, 850 hPa, Day, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L2_RelativeHumidity_850hPa_Night": {
+   "title": "Relative Humidity (L2, 850 hPa, Night, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_Surface_Relative_Humidity_Daily_Day": {
+   "title": "Relative Humidity at Surface (L3, Daytime/Ascending, Daily, AIRS, Aqua) ",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_Surface_Relative_Humidity_Monthly_Day": {
+   "title": "Relative Humidity at Surface (L3, Daytime/Ascending, Monthly, AIRS, Aqua) ",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_Surface_Relative_Humidity_Daily_Night": {
+   "title": "Relative Humidity at Surface (L3, Nighttime/Descending, Daily, AIRS, Aqua) ",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_Surface_Relative_Humidity_Monthly_Night": {
+   "title": "Relative Humidity at Surface (L3, Nighttime/Descending, Monthly, AIRS, Aqua) ",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_NOAA20_L3_Sea_Ice_Daily": {
+   "title": "Sea Ice Extent (L3, Daily, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_SNPP_L3_Sea_Ice_Daily": {
+   "title": "Sea Ice Extent (L3, Daily, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA20_Sea_Ice": {
+   "title": "Sea Ice Extent (VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA21_Sea_Ice": {
+   "title": "Sea Ice Extent (VIIRS, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_SNPP_Sea_Ice": {
+   "title": "Sea Ice Extent (VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_SNPP_L2_Sea_Surface_Temp_Day": {
+   "title": "Sea Surface Temperature (Day, L2, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Aqua_L3_SST_MidIR_4km_Night_8Day": {
+   "title": "Sea Surface Temperature (L3, Night, 8-Day, Mid Infrared, 4 km, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_L3_SST_MidIR_4km_Night_8Day": {
+   "title": "Sea Surface Temperature (L3, Night, 8-Day, Mid Infrared, 4 km, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_L3_SST_MidIR_9km_Night_8Day": {
+   "title": "Sea Surface Temperature (L3, Night, 8-Day, Mid Infrared, 9 km, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_L3_SST_MidIR_9km_Night_8Day": {
+   "title": "Sea Surface Temperature (L3, Night, 8-Day, Mid Infrared, 9 km, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_L3_SST_Thermal_4km_Night_8Day": {
+   "title": "Sea Surface Temperature (L3, Night, 8-Day, Thermal, 4 km, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_L3_SST_Thermal_4km_Night_8Day": {
+   "title": "Sea Surface Temperature (L3, Night, 8-Day, Thermal, 4 km, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_L3_SST_Thermal_9km_Night_8Day": {
+   "title": "Sea Surface Temperature (L3, Night, 8-Day, Thermal, 9 km, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_L3_SST_Thermal_9km_Night_8Day": {
+   "title": "Sea Surface Temperature (L3, Night, 8-Day, Thermal, 9 km, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_L3_SST_MidIR_4km_Night_Annual": {
+   "title": "Sea Surface Temperature (L3, Night, Annual, Mid Infrared, 4 km, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_L3_SST_MidIR_4km_Night_Annual": {
+   "title": "Sea Surface Temperature (L3, Night, Annual, Mid Infrared, 4 km, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_L3_SST_MidIR_9km_Night_Annual": {
+   "title": "Sea Surface Temperature (L3, Night, Annual, Mid Infrared, 9 km, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_L3_SST_MidIR_9km_Night_Annual": {
+   "title": "Sea Surface Temperature (L3, Night, Annual, Mid Infrared, 9 km, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_L3_SST_Thermal_4km_Night_Annual": {
+   "title": "Sea Surface Temperature (L3, Night, Annual, Thermal, 4 km, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_L3_SST_Thermal_4km_Night_Annual": {
+   "title": "Sea Surface Temperature (L3, Night, Annual, Thermal, 4 km, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_L3_SST_Thermal_9km_Night_Annual": {
+   "title": "Sea Surface Temperature (L3, Night, Annual, Thermal, 9 km, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_L3_SST_Thermal_9km_Night_Annual": {
+   "title": "Sea Surface Temperature (L3, Night, Annual, Thermal, 9 km, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_L3_SST_MidIR_4km_Night_Daily": {
+   "title": "Sea Surface Temperature (L3, Night, Daily, Mid Infrared, 4 km, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_L3_SST_MidIR_4km_Night_Daily": {
+   "title": "Sea Surface Temperature (L3, Night, Daily, Mid Infrared, 4 km, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_L3_SST_MidIR_9km_Night_Daily": {
+   "title": "Sea Surface Temperature (L3, Night, Daily, Mid Infrared, 9 km, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_L3_SST_MidIR_9km_Night_Daily": {
+   "title": "Sea Surface Temperature (L3, Night, Daily, Mid Infrared, 9 km, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_L3_SST_Thermal_4km_Night_Daily": {
+   "title": "Sea Surface Temperature (L3, Night, Daily, Thermal, 4 km, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_L3_SST_Thermal_4km_Night_Daily": {
+   "title": "Sea Surface Temperature (L3, Night, Daily, Thermal, 4 km, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_L3_SST_Thermal_9km_Night_Daily": {
+   "title": "Sea Surface Temperature (L3, Night, Daily, Thermal, 9 km, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_L3_SST_Thermal_9km_Night_Daily": {
+   "title": "Sea Surface Temperature (L3, Night, Daily, Thermal, 9 km, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_L3_SST_MidIR_4km_Night_Monthly": {
+   "title": "Sea Surface Temperature (L3, Night, Monthly, Mid Infrared, 4 km, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_L3_SST_MidIR_4km_Night_Monthly": {
+   "title": "Sea Surface Temperature (L3, Night, Monthly, Mid Infrared, 4 km, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_L3_SST_MidIR_9km_Night_Monthly": {
+   "title": "Sea Surface Temperature (L3, Night, Monthly, Mid Infrared, 9 km, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_L3_SST_MidIR_9km_Night_Monthly": {
+   "title": "Sea Surface Temperature (L3, Night, Monthly, Mid Infrared, 9 km, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_L3_SST_Thermal_4km_Night_Monthly": {
+   "title": "Sea Surface Temperature (L3, Night, Monthly, Thermal, 4 km, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_L3_SST_Thermal_4km_Night_Monthly": {
+   "title": "Sea Surface Temperature (L3, Night, Monthly, Thermal, 4 km, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_L3_SST_Thermal_9km_Night_Monthly": {
+   "title": "Sea Surface Temperature (L3, Night, Monthly, Thermal, 9 km, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_L3_SST_Thermal_9km_Night_Monthly": {
+   "title": "Sea Surface Temperature (L3, Night, Monthly, Thermal, 9 km, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_L2_Sea_Surface_Temp_Night": {
+   "title": "Sea Surface Temperature (Night, L2, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Terra_L2_Sea_Surface_Temp_Night": {
+   "title": "Sea Surface Temperature (Night, L2, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_SNPP_L2_Sea_Surface_Temp_Night": {
+   "title": "Sea Surface Temperature (Night, L2, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_NOAA20_NDSI_Snow_Cover": {
+   "title": "Snow Cover (Normalized Difference Snow Index, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_NOAA21_NDSI_Snow_Cover": {
+   "title": "Snow Cover (Normalized Difference Snow Index, VIIRS, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_SNPP_NDSI_Snow_Cover": {
+   "title": "Snow Cover (Normalized Difference Snow Index, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "SMAP_L2_Passive_Enhanced_Night_Soil_Moisture_Option3": {
+   "title": "Soil Moisture (L2, Passive Enhanced, Night, Dual Channel Algorithm, Radiometer, ",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "SMAP_L2_Passive_Enhanced_Night_Soil_Moisture_Option1": {
+   "title": "Soil Moisture (L2, Passive Enhanced, Night, Single Channel Algorithm, H Polariza",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "SMAP_L2_Passive_Enhanced_Night_Soil_Moisture_Option2": {
+   "title": "Soil Moisture (L2, Passive Enhanced, Night, Single Channel Algorithm, V Polariza",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "SMAP_L2_Passive_Night_Soil_Moisture_Option3": {
+   "title": "Soil Moisture (L2, Passive, Night, Dual Channel Algorithm, Radiometer, SMAP)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "SMAP_L2_Passive_Night_Soil_Moisture_Option1": {
+   "title": "Soil Moisture (L2, Passive, Night, Single Channel Algorithm, H Polarization, Rad",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "SMAP_L2_Passive_Night_Soil_Moisture_Option2": {
+   "title": "Soil Moisture (L2, Passive, Night, Single Channel Algorithm, V Polarization, Rad",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "SMAP_L3_Passive_Enhanced_Night_Soil_Moisture": {
+   "title": "Soil Moisture (L3, Passive Enhanced, Night, Radiometer, SMAP)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "SMAP_L3_Passive_Night_Soil_Moisture": {
+   "title": "Soil Moisture (L3, Passive, Night, Radiometer, SMAP)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AMSRE_Soil_Moisture_NPD_Night": {
+   "title": "Soil Moisture (Normalized Polarization Difference, Night,  AMSR-E, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AMSRUE_Soil_Moisture_NPD_Night": {
+   "title": "Soil Moisture (Normalized Polarization Difference, Night, AMSR2 (GCOM-W1), AMSRE",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AMSRU2_Soil_Moisture_NPD_Night": {
+   "title": "Soil Moisture (Normalized Polarization Difference, Night, AMSRU2, GCOM-W1)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AMSRE_Soil_Moisture_SCA_Night": {
+   "title": "Soil Moisture (Single Channel Algorithm, Night,  AMSR-E, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AMSRUE_Soil_Moisture_SCA_Night": {
+   "title": "Soil Moisture (Single Channel Algorithm, Night, AMSR2 (GCOM-W1), AMSRE (Aqua))",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AMSRU2_Soil_Moisture_SCA_Night": {
+   "title": "Soil Moisture (Single Channel Algorithm, Night, AMSRU2, GCOM-W1)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMPS_NOAA21_LimbProfiler_Aerosol_OpticalDepth": {
+   "title": "Stratospheric Aerosol Optical Depth (OMPS Limb Profiler, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMPS_SNPP_LimbProfiler_Aerosol_OpticalDepth": {
+   "title": "Stratospheric Aerosol Optical Depth (OMPS Limb Profiler, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MLS_SO2_147hPa_Night": {
+   "title": "Sulfur Dioxide (147 hPa, Night, MLS, Aura)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_Prata_SO2_Index_Day": {
+   "title": "Sulfur Dioxide (Prata, Day, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_Prata_SO2_Index_Night": {
+   "title": "Sulfur Dioxide (Prata, Night, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L2_Sulfur_Dioxide_Brightness_Temperature_Difference_Day": {
+   "title": "Sulfur Dioxide Brightness Temperature Difference (L2, Day, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L2_Sulfur_Dioxide_Brightness_Temperature_Difference_Night": {
+   "title": "Sulfur Dioxide Brightness Temperature Difference (L2, Night, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "Summer_Night_Min_Land_Surface_Temp_2013": {
+   "title": "Summer Nighttime Minimum Temperature (Global Summer LST Grids, 2013)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "UHI_Urban-Rural_Summer_Night_Min_Land_Surface_Temp_Difference_2013": {
+   "title": "Summer Nighttime Urban-Rural Land Surface Temperature Difference (Urban Heat Isl",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "AIRS_L2_Surface_Air_Temperature_Day": {
+   "title": "Surface Air Temperature (L2, Day, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L2_Surface_Air_Temperature_Night": {
+   "title": "Surface Air Temperature (L2, Night, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AMSRU2_Surface_Precipitation_Night": {
+   "title": "Surface Precipitation (Night,  AMSRU2, GCOM-W1)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AMSRUE_Surface_Precipitation_Night": {
+   "title": "Surface Precipitation (Night, AMSR2 (GCOM-W1), AMSRE (Aqua))",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AMSRE_Surface_Precipitation_Rate_Night": {
+   "title": "Surface Precipitation Rate (Night,  AMSR-E, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "Landsat_WELD_CorrectedReflectance_Bands157_Global_Annual": {
+   "title": "Surface Reflectance (NBAR, Bands 1-5-7, Global, Annual, v3.1, Landsat / WELD)",
+   "tms": [
+    "GoogleMapsCompatible_Level12"
+   ]
+  },
+  "Landsat_WELD_CorrectedReflectance_Bands157_Global_Monthly": {
+   "title": "Surface Reflectance (NBAR, Bands 1-5-7, Global, Monthly, v3.1, Landsat / WELD)",
+   "tms": [
+    "GoogleMapsCompatible_Level12"
+   ]
+  },
+  "Landsat_WELD_CorrectedReflectance_Bands743_Global_Annual": {
+   "title": "Surface Reflectance (NBAR, Bands 7-4-3, Global, Annual, v3.1, Landsat / WELD)",
+   "tms": [
+    "GoogleMapsCompatible_Level12"
+   ]
+  },
+  "Landsat_WELD_CorrectedReflectance_Bands743_Global_Monthly": {
+   "title": "Surface Reflectance (NBAR, Bands 7-4-3, Global, Monthly, v3.1, Landsat / WELD)",
+   "tms": [
+    "GoogleMapsCompatible_Level12"
+   ]
+  },
+  "Landsat_WELD_CorrectedReflectance_TrueColor_Global_Annual": {
+   "title": "Surface Reflectance (NBAR, True Color, Global, Annual, v3.1, Landsat / WELD)",
+   "tms": [
+    "GoogleMapsCompatible_Level12"
+   ]
+  },
+  "Landsat_WELD_CorrectedReflectance_TrueColor_Global_Monthly": {
+   "title": "Surface Reflectance (NBAR, True Color, Global, Monthly, v3.1, Landsat / WELD)",
+   "tms": [
+    "GoogleMapsCompatible_Level12"
+   ]
+  },
+  "AIRS_L2_Surface_Relative_Humidity_Day": {
+   "title": "Surface Relative Humidity (L2, Day, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L2_Surface_Relative_Humidity_Night": {
+   "title": "Surface Relative Humidity (L2, Night, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L2_Surface_Skin_Temperature_Day": {
+   "title": "Surface Skin Temperature (L2, Day, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L2_Surface_Skin_Temperature_Night": {
+   "title": "Surface Skin Temperature (L2, Night, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_Surface_Skin_Temperature_Daily_Day": {
+   "title": "Surface Skin Temperature (L3, Daytime/Ascending, Daily, AIRS, Aqua) ",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_Surface_Skin_Temperature_Monthly_Day": {
+   "title": "Surface Skin Temperature (L3, Daytime/Ascending, Monthly, AIRS, Aqua) ",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_Surface_Skin_Temperature_Daily_Night": {
+   "title": "Surface Skin Temperature (L3, Nighttime/Descending, Daily, AIRS, Aqua) ",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L3_Surface_Skin_Temperature_Monthly_Night": {
+   "title": "Surface Skin Temperature (L3, Nighttime/Descending, Monthly, AIRS, Aqua) ",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "LPRM_AMSRE_Surface_Soil_Moisture_C_Band_Night_Daily": {
+   "title": "Surface Soil Moisture C-band (Night, L3, LPRM, AMSR-E, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "LPRM_AMSR2_Downscaled_Surface_Soil_Moisture_C1_Band_Night_Daily": {
+   "title": "Surface Soil Moisture C1-band (Downscaled, Night, L3, LPRM, AMSR2, GCOM-W1)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "LPRM_AMSR2_Surface_Soil_Moisture_C1_Band_Night_Daily": {
+   "title": "Surface Soil Moisture C1-band (Night, L3, LPRM, AMSR2, GCOM-W1)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "LPRM_TMI_Surface_Soil_Moisture_X_Band_Night_Daily": {
+   "title": "Surface Soil Moisture X-band (Night, L3, LPRM, TMI, TRMM)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L2_Temperature_500hPa_Day": {
+   "title": "Temperature (L2, 500 hPa, Day, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L2_Temperature_500hPa_Night": {
+   "title": "Temperature (L2, 500 hPa, Night, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L2_Temperature_700hPa_Day": {
+   "title": "Temperature (L2, 700 hPa, Day, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L2_Temperature_700hPa_Night": {
+   "title": "Temperature (L2, 700 hPa, Night, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L2_Temperature_850hPa_Day": {
+   "title": "Temperature (L2, 850 hPa, Day, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L2_Temperature_850hPa_Night": {
+   "title": "Temperature (L2, 850 hPa, Night, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_NOAA20_Thermal_Anomalies_375m_All": {
+   "title": "Thermal Anomalies and Fires (375m, All, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_NOAA21_Thermal_Anomalies_375m_All": {
+   "title": "Thermal Anomalies and Fires (375m, All, VIIRS, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_SNPP_Thermal_Anomalies_375m_All": {
+   "title": "Thermal Anomalies and Fires (375m, All, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_NOAA20_Thermal_Anomalies_375m_Day": {
+   "title": "Thermal Anomalies and Fires (375m, Day, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_NOAA21_Thermal_Anomalies_375m_Day": {
+   "title": "Thermal Anomalies and Fires (375m, Day, VIIRS, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_SNPP_Thermal_Anomalies_375m_Day": {
+   "title": "Thermal Anomalies and Fires (375m, Day, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_NOAA20_Thermal_Anomalies_375m_Night": {
+   "title": "Thermal Anomalies and Fires (375m, Night, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_NOAA21_Thermal_Anomalies_375m_Night": {
+   "title": "Thermal Anomalies and Fires (375m, Night, VIIRS, NOAA-21)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_SNPP_Thermal_Anomalies_375m_Night": {
+   "title": "Thermal Anomalies and Fires (375m, Night, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "MODIS_Aqua_Thermal_Anomalies_Night": {
+   "title": "Thermal Anomalies and Fires (Night, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Combined_Thermal_Anomalies_Night": {
+   "title": "Thermal Anomalies and Fires (Night, MODIS, Aqua+Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MODIS_Terra_Thermal_Anomalies_Night": {
+   "title": "Thermal Anomalies and Fires (Night, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MERRA2_Total_Aerosol_Optical_Thickness_550nm_Extinction_Monthly": {
+   "title": "Total Aerosol Optical Thickness Extinction 550nm (Monthly, MERRA2)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MERRA2_Total_Aerosol_Optical_Thickness_550nm_Scattering_Monthly": {
+   "title": "Total Aerosol Optical Thickness Scattering 550nm (Monthly, MERRA2)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L2_Total_Cloud_Fraction_Day": {
+   "title": "Total Cloud Fraction (L2, Day, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AIRS_L2_Total_Cloud_Fraction_Night": {
+   "title": "Total Cloud Fraction (L2, Night, AIRS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MERRA2_Total_Dust_Deposition_Dry_Wet_Monthly": {
+   "title": "Total Dust Deposition, Dry+Wet All Bins (Monthly, MERRA2)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AMSRUE_Total_Precipitable_Water_Night": {
+   "title": "Total Precipitable Water (Night, AMSR2 (GCOM-W1), AMSRE (Aqua))",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AMSRU2_Total_Precipitable_Water_Night": {
+   "title": "Total Precpitable Water ( Night, AMSRU2, GCOM-W1)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "OMI_UV_Aerosol_Index": {
+   "title": "UV Aerosol Index (Local Noon, OMI, Aura)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "VIIRS_NOAA20_L3_NDVI_16Day": {
+   "title": "Vegetation Index (L3, 16-Day, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_SNPP_L3_NDVI_16Day": {
+   "title": "Vegetation Index (L3, 16-Day, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level8"
+   ]
+  },
+  "VIIRS_NOAA20_L3_NDVI_Monthly": {
+   "title": "Vegetation Index (L3, Monthly, VIIRS, NOAA-20)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "VIIRS_SNPP_L3_NDVI_Monthly": {
+   "title": "Vegetation Index (L3, Monthly, VIIRS, Suomi NPP)",
+   "tms": [
+    "GoogleMapsCompatible_Level7"
+   ]
+  },
+  "MLS_H2O_46hPa_Night": {
+   "title": "Water Vapor (46 hPa, Night, MLS, Aura)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Aqua_Water_Vapor_5km_Night": {
+   "title": "Water Vapor Infrared (Night, MODIS, Aqua)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "MODIS_Terra_Water_Vapor_5km_Night": {
+   "title": "Water Vapor Infrared (Night, MODIS, Terra)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  },
+  "AMSRU2_Wind_Speed_Night": {
+   "title": "Wind Speed ( Night, AMSRU2, GCOM-W1)",
+   "tms": [
+    "GoogleMapsCompatible_Level6"
+   ]
+  }
+ },
+ "gibs_tile_test": {
+  "VIIRS_NOAA20_CorrectedReflectance_TrueColor": {
+   "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_NOAA20_CorrectedReflectance_TrueColor/default/2026-10-31/GoogleMapsCompatible_Level9/8/102/161.jpg",
+   "ok": true,
+   "status": 200,
+   "sec": 0.58,
+   "bytes": 12728,
+   "err": null
+  },
+  "MODIS_Terra_CorrectedReflectance_TrueColor": {
+   "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default/2026-10-31/GoogleMapsCompatible_Level9/8/102/161.jpg",
+   "ok": true,
+   "status": 200,
+   "sec": 0.22,
+   "bytes": 15067,
+   "err": null
+  },
+  "VIIRS_SNPP_CorrectedReflectance_TrueColor": {
+   "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/2026-10-31/GoogleMapsCompatible_Level9/8/102/161.jpg",
+   "ok": true,
+   "status": 200,
+   "sec": 0.22,
+   "bytes": 11693,
+   "err": null
+  }
+ }
+}
