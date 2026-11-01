@@ -13,7 +13,7 @@
   "stream_km2": 5.0,
   "res": 0.0025,
   "max_depth": 50.0,
-  "gee": 1,
+  "gee": 0,
   "modis": "data/static/landcover_modis_iran_2025.npz",
   "outline": "data/static/iran_outline.json",
   "dem_source": "auto",
@@ -23,18 +23,18 @@
  "dem_source": "Copernicus GLO-90 (AWS Open Data, tiles 105/105)",
  "pyflwdir_version": "0.5.12",
  "gee_stats": {
-  "soil_ok": 43,
+  "soil_ok": 0,
   "soil_fail": 0,
-  "kntu_ok": 43,
+  "kntu_ok": 0,
   "kntu_fail": 0,
   "soil_isric_ok": 0,
   "soil_isric_fail": 0
  },
  "cn_source": {
-  "kntu_basins": 1341,
-  "modis_only_basins": 2,
-  "soil_basins": 1343,
-  "hsg_default_C_basins": 0
+  "kntu_basins": 0,
+  "modis_only_basins": 1337,
+  "soil_basins": 0,
+  "hsg_default_C_basins": 1337
  },
  "susceptibility": {
   "formula": "index = 100 * sum_i w_i * percentile_rank_i  (ranks over all Iranian sub-basins; larger factor => larger susceptibility)",
@@ -49,10 +49,10 @@
    "form_factor": 0.05
   },
   "level_breaks_q20_40_60_80": [
-   42.19,
-   48.17,
-   52.22,
-   57.44
+   43.13,
+   48.08,
+   51.9,
+   56.84
   ],
   "levels": {
    "1": "Very Low",
@@ -71,18 +71,18 @@
   "sensitivity": {
    "samples": 400,
    "dirichlet_concentration": 40,
-   "median_level_stability": 0.585,
-   "share_basins_stability_ge_0.8": 0.282,
-   "median_rank_std_percentile": 0.0949
+   "median_level_stability": 0.565,
+   "share_basins_stability_ge_0.8": 0.259,
+   "median_rank_std_percentile": 0.1108
   },
   "caution": "RELATIVE susceptibility ranking, not a probability and not a forecast. Weights are expert-chosen (AHP-like) and NOT calibrated to observed floods."
  },
  "counts": {
-  "basins": 1343,
-  "area_km2_total": 275632.0,
-  "area_km2_median": 253.4,
+  "basins": 1337,
+  "area_km2_total": 274132.0,
+  "area_km2_median": 253.5,
   "area_km2_p10": 1.3,
-  "area_km2_p90": 339.3
+  "area_km2_p90": 339.7
  },
  "assumptions": {
   "cn_modis_igbp": {
@@ -281,8 +281,8 @@
   ]
  },
  "output": {
-  "geojson_bytes": 1952936,
-  "features": 1343
+  "geojson_bytes": 2725654,
+  "features": 1337
  },
- "runtime_s": 3082
+ "runtime_s": 27
 }

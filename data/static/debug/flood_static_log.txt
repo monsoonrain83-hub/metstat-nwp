@@ -1,15 +1,14 @@
-[     8s] AWS GLO-90 tiles ok=105 missing=0 of 105
-[     8s] DEM valid cells: 13.1 M of 13.1 M; elev min/max -43 / 5073
-[    21s] flow directions ready; pits: 1809
+[     7s] AWS GLO-90 tiles ok=105 missing=0 of 105
+[     7s] DEM valid cells: 13.1 M of 13.1 M; elev min/max -43 / 5073
+[    20s] flow directions ready; pits: 1809
 [    21s] topological order cells: 13120000 of valid 13120000
-[    23s] sub-basins before Iran filter: 4416
-[    23s] sub-basins kept (>=50% inside Iran): 1343
+[    22s] sub-basins before sliver merge: 4416
+[    22s] sliver merge pass 0 merged 449
+[    22s] sliver merge pass 1 merged 0
+[    22s] sub-basins before Iran filter: 3967
+[    22s] sub-basins kept (>=50% inside Iran): 1337
 [    25s] terrain features done
-[    25s] land-cover/soil tiles to process: 47
-[    26s] Earth Engine ready
-[    26s] GEE tiles (touching Iran): 43
-[  1573s]   GEE tiles done 25/43 {'soil_ok': 28, 'soil_fail': 0, 'kntu_ok': 25, 'kntu_fail': 0, 'soil_isric_ok': 0, 'soil_isric_fail': 0}
-[  3081s] GEE stats: {'soil_ok': 43, 'soil_fail': 0, 'kntu_ok': 43, 'kntu_fail': 0, 'soil_isric_ok': 0, 'soil_isric_fail': 0} first error: None
-[  3081s] land cover / CN done
-[  3082s] polygonised: 1343
-[  3082s] OK  basins=1343  geojson=2.0 MB
+[    25s] land-cover/soil tiles to process: 45
+[    25s] land cover / CN done
+[    26s] polygonised: 1337
+[    27s] OK  basins=1337  geojson=2.7 MB
