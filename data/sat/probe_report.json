@@ -1,0 +1,104 @@
+{
+ "utc": "2026-11-01T09:26:27.845136Z",
+ "wms": {
+  "caps": {
+   "status": 200,
+   "bytes": 282238,
+   "sec": 1.46,
+   "err": null
+  },
+  "n_layers": 116,
+  "mtg_layers": {
+   "mtg_fd:frp": {
+    "title": "Fire Radiative Power (FRP)",
+    "time": "2026-07-23T00:00:00.000Z/2026-11-01T09:00:00.000Z/PT10M"
+   },
+   "mtg_fd:h40b": {
+    "title": "Blended FCI / LEO MW precipitation - MTG - 0 degree",
+    "time": "2026-07-23T00:00:00.000Z/2026-11-01T09:00:00.000Z/PT10M"
+   },
+   "mtg_fd:ir105_hrfi": {
+    "title": "FCI HRFI IR10.5 μm Image - MTG-I - 0 degree",
+    "time": "2024-09-23T00:00:00.000Z/2026-11-01T09:00:00.000Z/PT10M"
+   },
+   "mtg_fd:li_afa": {
+    "title": "LI Accumulated Flash Area - MTG-I - 0 degree",
+    "time": "2025-05-30T15:00:00.000Z/2026-11-01T09:10:00.000Z/PT5M"
+   },
+   "mtg_fd:rgb_cloudphase": {
+    "title": "Cloud Phase RGB - MTG-I - 0 degree",
+    "time": "2024-09-23T02:00:00.000Z/2026-11-01T09:00:00.000Z/PT10M"
+   },
+   "mtg_fd:rgb_cloudtype": {
+    "title": "Cloud Type RGB - MTG-I - 0 degree",
+    "time": "2025-06-01T17:20:00.000Z/2026-11-01T09:00:00.000Z/PT10M"
+   },
+   "mtg_fd:rgb_dust": {
+    "title": "Dust RGB - MTG-I - 0 degree",
+    "time": "2024-10-22T00:40:00.000Z/2026-11-01T09:00:00.000Z/PT10M"
+   },
+   "mtg_fd:rgb_firetemperature": {
+    "title": "Fire Temperature RGB - MTG-I - 0 degree",
+    "time": "2025-08-05T00:00:00.000Z/2026-11-01T09:00:00.000Z/PT10M"
+   },
+   "mtg_fd:rgb_fog": {
+    "title": "Fog / Low Clouds RGB - MTG-I - 0 degree",
+    "time": "2025-06-06T18:40:00.000Z/2026-11-01T09:00:00.000Z/PT10M"
+   },
+   "mtg_fd:rgb_geocolour": {
+    "title": "Geo Colour RGB - MTG-I - 0 degree",
+    "time": "2024-09-23T00:00:00.000Z/2026-11-01T09:00:00.000Z/PT10M"
+   },
+   "mtg_fd:rgb_snow": {
+    "title": "Snow RGB - MTG - 0 degree",
+    "time": "2025-12-10T00:00:00.000Z/2026-11-01T09:00:00.000Z/PT10M"
+   },
+   "mtg_fd:rgb_truecolour": {
+    "title": "True Colour RGB - MTG-I - 0 degree",
+    "time": "2024-09-23T02:00:00.000Z/2026-11-01T09:00:00.000Z/PT10M"
+   },
+   "mtg_fd:vis06_hrfi": {
+    "title": "FCI HRFI VIS0.6 μm Image - MTG-I - 0 degree",
+    "time": "2024-09-16T02:40:00.000Z/2026-11-01T09:00:00.000Z/PT10M"
+   }
+  },
+  "msg_layers_count": 54,
+  "samples": {
+   "mtg_fd:ir105_hrfi": {
+    "ok": true,
+    "status": 200,
+    "sec": 5.4,
+    "bytes": 353454,
+    "ctype": "image/png",
+    "err": null
+   },
+   "mtg_fd:rgb_dust": {
+    "ok": true,
+    "status": 200,
+    "sec": 25.65,
+    "bytes": 1177270,
+    "ctype": "image/png",
+    "err": null
+   },
+   "mtg_fd:rgb_truecolour": {
+    "ok": true,
+    "status": 200,
+    "sec": 29.33,
+    "bytes": 1346091,
+    "ctype": "image/png",
+    "err": null
+   },
+   "mtg_fd:vis06_hrfi": {
+    "ok": true,
+    "status": 200,
+    "sec": 8.21,
+    "bytes": 638061,
+    "ctype": "image/png",
+    "err": null
+   }
+  }
+ },
+ "eumdac": {
+  "secrets_present": false
+ }
+}
