@@ -1,0 +1,6 @@
+4.0K	/tmp/sat_tiles/ingest_report.json
+7.0M	/tmp/sat_tiles/msg_iodc_rgb_convection
+2.9M	/tmp/sat_tiles/msg_iodc_wv062
+5.4M	/tmp/sat_tiles/mtg_fd_ir105_hrfi
+11M	/tmp/sat_tiles/mtg_fd_rgb_dust
+7.6M	/tmp/sat_tiles/mtg_fd_vis06_hrfi

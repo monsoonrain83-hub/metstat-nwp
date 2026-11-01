@@ -1,0 +1,56 @@
+{
+ "utc": "2026-11-01T11:21:58.247997Z",
+ "n_tiles_per_layer": 438,
+ "layers": {
+  "mtg_fd:vis06_hrfi": {
+   "layer": "mtg_fd:vis06_hrfi",
+   "observation_time_utc": "2026-11-01T11:00:00.000Z",
+   "fetched_utc": "2026-11-01T11:25:49.736203Z",
+   "tiles_ok": 438,
+   "tiles_failed": 0,
+   "bytes": 6777438,
+   "seconds": 231.5,
+   "source": "EUMETSAT EUMETView WMS"
+  },
+  "mtg_fd:ir105_hrfi": {
+   "layer": "mtg_fd:ir105_hrfi",
+   "observation_time_utc": "2026-11-01T11:00:00.000Z",
+   "fetched_utc": "2026-11-01T11:28:42.807878Z",
+   "tiles_ok": 438,
+   "tiles_failed": 0,
+   "bytes": 4406574,
+   "seconds": 173.1,
+   "source": "EUMETSAT EUMETView WMS"
+  },
+  "mtg_fd:rgb_dust": {
+   "layer": "mtg_fd:rgb_dust",
+   "observation_time_utc": "2026-11-01T11:00:00.000Z",
+   "fetched_utc": "2026-11-01T11:33:55.721306Z",
+   "tiles_ok": 438,
+   "tiles_failed": 0,
+   "bytes": 10286838,
+   "seconds": 312.9,
+   "source": "EUMETSAT EUMETView WMS"
+  },
+  "msg_iodc:wv062": {
+   "layer": "msg_iodc:wv062",
+   "observation_time_utc": "2026-11-01T11:00:00.000Z",
+   "fetched_utc": "2026-11-01T11:37:35.607410Z",
+   "tiles_ok": 438,
+   "tiles_failed": 0,
+   "bytes": 1817662,
+   "seconds": 219.9,
+   "source": "EUMETSAT EUMETView WMS"
+  },
+  "msg_iodc:rgb_convection": {
+   "layer": "msg_iodc:rgb_convection",
+   "observation_time_utc": "2026-11-01T10:45:00.000Z",
+   "fetched_utc": "2026-11-01T11:41:13.145490Z",
+   "tiles_ok": 438,
+   "tiles_failed": 0,
+   "bytes": 6262078,
+   "seconds": 217.5,
+   "source": "EUMETSAT EUMETView WMS"
+  }
+ }
+}
