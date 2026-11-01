@@ -17,6 +17,7 @@
   "modis": "data/static/landcover_modis_iran_2025.npz",
   "outline": "data/static/iran_outline.json",
   "dem_source": "auto",
+  "merit": "data/merit/merit_iran_basins.geojson",
   "limit_rows": 0
  },
  "notes": [],
@@ -31,10 +32,10 @@
   "soil_isric_fail": 0
  },
  "cn_source": {
-  "kntu_basins": 6888,
-  "modis_only_basins": 10,
-  "soil_basins": 6897,
-  "hsg_default_C_basins": 1
+  "kntu_basins": 5581,
+  "modis_only_basins": 20,
+  "soil_basins": 5601,
+  "hsg_default_C_basins": 0
  },
  "susceptibility": {
   "formula": "index = 100 * sum_i w_i * percentile_rank_i  (ranks over all Iranian sub-basins; larger factor => larger susceptibility)",
@@ -49,10 +50,10 @@
    "form_factor": 0.05
   },
   "level_breaks_q20_40_60_80": [
-   42.61,
-   47.5,
-   52.36,
-   57.77
+   40.66,
+   47.13,
+   53.17,
+   59.67
   ],
   "levels": {
    "1": "Very Low",
@@ -71,18 +72,18 @@
   "sensitivity": {
    "samples": 400,
    "dirichlet_concentration": 40,
-   "median_level_stability": 0.588,
-   "share_basins_stability_ge_0.8": 0.274,
-   "median_rank_std_percentile": 0.0944
+   "median_level_stability": 0.632,
+   "share_basins_stability_ge_0.8": 0.309,
+   "median_rank_std_percentile": 0.0826
   },
   "caution": "RELATIVE susceptibility ranking, not a probability and not a forecast. Weights are expert-chosen (AHP-like) and NOT calibrated to observed floods."
  },
  "counts": {
-  "basins": 6898,
-  "area_km2_total": 1616252.0,
-  "area_km2_median": 258.4,
-  "area_km2_p10": 4.9,
-  "area_km2_p90": 345.9
+  "basins": 5601,
+  "area_km2_total": 1611155.0,
+  "area_km2_median": 293.8,
+  "area_km2_p10": 115.0,
+  "area_km2_p90": 395.6
  },
  "assumptions": {
   "cn_modis_igbp": {
@@ -281,8 +282,8 @@
   ]
  },
  "output": {
-  "geojson_bytes": 10305922,
-  "features": 6898
+  "geojson_bytes": 15081408,
+  "features": 5601
  },
- "runtime_s": 7636
+ "runtime_s": 7510
 }

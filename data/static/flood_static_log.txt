@@ -1,22 +1,24 @@
-[    22s] AWS GLO-90 tiles ok=348 missing=9 of 357
-[    22s]   aws error x9: HTTP response code: 404
-[    22s] DEM valid cells: 50.2 M of 51.2 M; elev min/max -43 / 5547
-[    54s] flow directions ready; pits: 3653
-[    56s] topological order cells: 50216000 of valid 50216000
-[    58s] sub-basins before Iran filter: 14725
-[    59s] sub-basins kept (>=50% inside Iran): 6898
-[    67s] terrain features done
-[    67s] land-cover/soil tiles to process: 206
-[    68s] Earth Engine ready
-[    68s] GEE tiles (touching Iran): 197
-[  1009s]   GEE tiles done 25/197 {'soil_ok': 34, 'soil_fail': 0, 'kntu_ok': 27, 'kntu_fail': 0, 'soil_isric_ok': 0, 'soil_isric_fail': 0}
-[  1989s]   GEE tiles done 50/197 {'soil_ok': 60, 'soil_fail': 0, 'kntu_ok': 53, 'kntu_fail': 0, 'soil_isric_ok': 0, 'soil_isric_fail': 0}
-[  2961s]   GEE tiles done 75/197 {'soil_ok': 83, 'soil_fail': 0, 'kntu_ok': 76, 'kntu_fail': 0, 'soil_isric_ok': 0, 'soil_isric_fail': 0}
-[  4019s]   GEE tiles done 100/197 {'soil_ok': 108, 'soil_fail': 0, 'kntu_ok': 101, 'kntu_fail': 0, 'soil_isric_ok': 0, 'soil_isric_fail': 0}
-[  4960s]   GEE tiles done 125/197 {'soil_ok': 133, 'soil_fail': 0, 'kntu_ok': 126, 'kntu_fail': 0, 'soil_isric_ok': 0, 'soil_isric_fail': 0}
-[  5945s]   GEE tiles done 150/197 {'soil_ok': 160, 'soil_fail': 0, 'kntu_ok': 153, 'kntu_fail': 0, 'soil_isric_ok': 0, 'soil_isric_fail': 0}
-[  6881s]   GEE tiles done 175/197 {'soil_ok': 182, 'soil_fail': 0, 'kntu_ok': 175, 'kntu_fail': 0, 'soil_isric_ok': 0, 'soil_isric_fail': 0}
-[  7628s] GEE stats: {'soil_ok': 197, 'soil_fail': 0, 'kntu_ok': 197, 'kntu_fail': 0, 'soil_isric_ok': 0, 'soil_isric_fail': 0} first error: None
-[  7628s] land cover / CN done
-[  7632s] polygonised: 6898
-[  7636s] OK  basins=6898  geojson=10.3 MB
+[    30s] AWS GLO-90 tiles ok=348 missing=9 of 357
+[    30s]   aws error x9: HTTP response code: 404
+[    30s] DEM valid cells: 50.2 M of 51.2 M; elev min/max -43 / 5547
+[    62s] flow directions ready; pits: 3653
+[    63s] topological order cells: 50216000 of valid 50216000
+[    66s] sub-basins before sliver merge: 14725
+[    75s] MERIT labelling: basins 5616 cells labelled 24743010
+[    75s] sub-basins before Iran filter: 5616
+[    76s] sub-basins kept (>=50% inside Iran): 5601
+[    83s] terrain features done
+[    84s] land-cover/soil tiles to process: 199
+[    85s] Earth Engine ready
+[    85s] GEE tiles (touching Iran): 197
+[  1103s]   GEE tiles done 25/197 {'soil_ok': 33, 'soil_fail': 0, 'kntu_ok': 26, 'kntu_fail': 0, 'soil_isric_ok': 0, 'soil_isric_fail': 0}
+[  1930s]   GEE tiles done 50/197 {'soil_ok': 57, 'soil_fail': 0, 'kntu_ok': 50, 'kntu_fail': 0, 'soil_isric_ok': 0, 'soil_isric_fail': 0}
+[  2847s]   GEE tiles done 75/197 {'soil_ok': 83, 'soil_fail': 0, 'kntu_ok': 76, 'kntu_fail': 0, 'soil_isric_ok': 0, 'soil_isric_fail': 0}
+[  3744s]   GEE tiles done 100/197 {'soil_ok': 107, 'soil_fail': 0, 'kntu_ok': 100, 'kntu_fail': 0, 'soil_isric_ok': 0, 'soil_isric_fail': 0}
+[  4767s]   GEE tiles done 125/197 {'soil_ok': 132, 'soil_fail': 0, 'kntu_ok': 125, 'kntu_fail': 0, 'soil_isric_ok': 0, 'soil_isric_fail': 0}
+[  5750s]   GEE tiles done 150/197 {'soil_ok': 160, 'soil_fail': 0, 'kntu_ok': 153, 'kntu_fail': 0, 'soil_isric_ok': 0, 'soil_isric_fail': 0}
+[  6750s]   GEE tiles done 175/197 {'soil_ok': 184, 'soil_fail': 0, 'kntu_ok': 177, 'kntu_fail': 0, 'soil_isric_ok': 0, 'soil_isric_fail': 0}
+[  7504s] GEE stats: {'soil_ok': 197, 'soil_fail': 0, 'kntu_ok': 197, 'kntu_fail': 0, 'soil_isric_ok': 0, 'soil_isric_fail': 0} first error: None
+[  7504s] land cover / CN done
+[  7504s] polygonised: 5601
+[  7510s] OK  basins=5601  geojson=15.1 MB
