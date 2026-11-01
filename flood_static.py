@@ -253,6 +253,34 @@ def main():
     stream = (acc >= a.stream_km2) & valid2.ravel()
     isout = fc.mark_outlets(order, ds, cell_area, stream, a.a_target)
     lab, nb = fc.label_basins(order, ds, isout)
+    log("sub-basins before sliver merge:", nb)
+    # ---- merge sliver basins (thin D8 artefacts on flat ground) into the DOWNSTREAM basin by un-marking their outlet
+    from scipy import ndimage as _ndi
+    for _pass in range(5):
+        L2 = lab.reshape(nrows, ncols)
+        sl_ = _ndi.find_objects(L2)
+        cnt_ = np.bincount(lab, minlength=nb + 1)
+        outl = np.full(nb + 1, -1, np.int64)
+        oi = np.flatnonzero(isout)
+        outl[lab[oi]] = oi
+        n_un = 0
+        for k, s_ in enumerate(sl_, start=1):
+            if s_ is None or outl[k] < 0:
+                continue
+            h = s_[0].stop - s_[0].start
+            w = s_[1].stop - s_[1].start
+            A = float(cnt_[k])
+            elong = max(h, w) / max(np.sqrt(A), 1.0)
+            fill = A / max(h * w, 1)
+            sliver = (elong > 6.0 and fill < 0.35) or (cnt_[k] * (res * 111.0) ** 2 < 15.0)
+            o = outl[k]
+            if sliver and ds[o] != o:
+                isout[o] = False
+                n_un += 1
+        log("sliver merge pass", _pass, "merged", n_un)
+        if n_un == 0:
+            break
+        lab, nb = fc.label_basins(order, ds, isout)
     log("sub-basins before Iran filter:", nb)
 
     # ---------------- Iran filter
@@ -549,7 +577,7 @@ def main():
         if not g:
             continue
         g = g[0] if len(g) == 1 else unary_union(g)
-        g = g.simplify(res * 1.5, preserve_topology=True)
+        g = g.simplify(res * 0.75, preserve_topology=True)
         gj = mapping(g)
 
         def rnd(c):
