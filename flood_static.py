@@ -382,7 +382,7 @@ def main():
             try:
                 if dead["gee"] >= 3:
                     raise RuntimeError("EE skipped after repeated permission errors")
-                out[k] = gee_grid.fetch_tile(ee, img, bbox, res)
+                out[k] = gee_grid.fetch_tile_sub(ee, img, bbox, res, sub=(0.5 if k == 0 else 0.25))
                 gee_stat[("soil_ok", "kntu_ok")[k]] += 1
             except Exception as ex:  # noqa: BLE001
                 gee_stat[("soil_fail", "kntu_fail")[k]] += 1

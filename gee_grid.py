@@ -65,6 +65,24 @@ def fetch_tile(ee, image, bbox_wsen, res, retries=5, pause=4.0):
     raise RuntimeError("EE tile failed: %s" % str(err)[:300])
 
 
+def fetch_tile_sub(ee, image, bbox_wsen, res, sub=0.25, **kw):
+    """Same as fetch_tile but assembled from sub x sub degree pieces (EE limits reprojection size)."""
+    w, s, e, n = bbox_wsen
+    ncol = int(round((e - w) / res))
+    nrow = int(round((n - s) / res))
+    step = int(round(sub / res))
+    out = None
+    for r0 in range(0, nrow, step):
+        for c0 in range(0, ncol, step):
+            r1, c1 = min(r0 + step, nrow), min(c0 + step, ncol)
+            bb = (w + c0 * res, n - r1 * res, w + c1 * res, n - r0 * res)
+            a = fetch_tile(ee, image, bb, res, **kw)
+            if out is None:
+                out = np.zeros((a.shape[0], nrow, ncol), np.float32)
+            out[:, r0:r1, c0:c1] = a[:, :r1 - r0, :c1 - c0]
+    return out
+
+
 # ---- images -------------------------------------------------------------------------
 def soil_image(ee):
     """Top-soil (0-30 cm, depth-weighted) sand and clay in % from ISRIC SoilGrids 2.0 (CC BY 4.0)."""
