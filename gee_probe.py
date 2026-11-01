@@ -47,7 +47,7 @@ try:
             n2 = s_ + size
             try:
                 url = im.getDownloadURL({"region": ee.Geometry.Rectangle([w, s_, e_, n2], "EPSG:4326", False),
-                    "crs": "EPSG:4326", "crsTransform": [res, 0, w, 0, -res, n2], "format": "GEO_TIFF"})
+                    "crs": "EPSG:4326", "crs_transform": [res, 0, w, 0, -res, n2], "format": "GEO_TIFF"})
                 r = requests.get(url, timeout=600)
                 note("notice", "%s size=%s status=%s bytes=%d body=%r" % (nm, size, r.status_code, len(r.content), r.content[:300] if r.status_code != 200 else b""))
             except Exception as ex:

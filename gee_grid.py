@@ -49,7 +49,7 @@ def fetch_tile(ee, image, bbox_wsen, res, retries=5, pause=4.0):
             region = ee.Geometry.Rectangle([w, s, e, n], "EPSG:4326", False)
             url = image.getDownloadURL({
                 "region": region, "crs": "EPSG:4326",
-                "crsTransform": [res, 0, w, 0, -res, n], "format": "GEO_TIFF"})
+                "crs_transform": [res, 0, w, 0, -res, n], "format": "GEO_TIFF"})
             r = requests.get(url, timeout=600)
             r.raise_for_status()
             a = parse_download(r.content)
