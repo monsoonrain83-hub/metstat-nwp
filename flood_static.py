@@ -453,7 +453,7 @@ def main():
         log("GEE tiles (touching Iran):", len(jobs))
         first_err = None
         done = 0
-        with ThreadPoolExecutor(4) as exr:
+        with ThreadPoolExecutor(8) as exr:
             for job, (soil, kn, er) in exr.map(get_gee, jobs):
                 process(job, soil, kn)
                 first_err = first_err or er
