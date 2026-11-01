@@ -192,6 +192,7 @@ def main():
     ap.add_argument("--modis", default="data/static/landcover_modis_iran_2025.npz")
     ap.add_argument("--outline", default="data/static/iran_outline.json")
     ap.add_argument("--dem-source", default="auto", choices=["auto", "aws", "gee"])
+    ap.add_argument("--merit", default="", help="aggregated MERIT-Basins geojson (gid, down_gid): replaces D8 labelling")
     ap.add_argument("--limit-rows", type=int, default=0, help="debug: only first N rows of the grid")
     a = ap.parse_args()
     res = a.res
@@ -256,7 +257,7 @@ def main():
     log("sub-basins before sliver merge:", nb)
     # ---- merge sliver basins (thin D8 artefacts on flat ground) into the DOWNSTREAM basin by un-marking their outlet
     from scipy import ndimage as _ndi
-    for _pass in range(5):
+    for _pass in range(0 if a.merit else 5):
         L2 = lab.reshape(nrows, ncols)
         sl_ = _ndi.find_objects(L2)
         cnt_ = np.bincount(lab, minlength=nb + 1)
@@ -281,6 +282,20 @@ def main():
         if n_un == 0:
             break
         lab, nb = fc.label_basins(order, ds, isout)
+    if a.merit:
+        import rasterio.features as _rf
+        from shapely.geometry import shape as _sh
+        _fc = json.load(open(a.merit))
+        _shapes = [(_sh(_f["geometry"]), int(_f["properties"]["gid"])) for _f in _fc["features"] if _f["geometry"]]
+        merit_geom = {int(_f["properties"]["gid"]): _sh(_f["geometry"]) for _f in _fc["features"] if _f["geometry"]}
+        lab = _rf.rasterize(_shapes, out_shape=(nrows, ncols), transform=tr, fill=0, dtype="int32").ravel().astype(np.int32)
+        nb = int(max(merit_geom))
+        isout[:] = False
+        _idx = np.flatnonzero(lab > 0)
+        _o = np.lexsort((acc[_idx], lab[_idx]))
+        _ls = lab[_idx][_o]
+        isout[_idx[_o][np.r_[_ls[1:] != _ls[:-1], True]]] = True      # outlet = max-accumulation cell of each MERIT basin
+        log("MERIT labelling: basins", len(merit_geom), "cells labelled", int(_idx.size))
     log("sub-basins before Iran filter:", nb)
 
     # ---------------- Iran filter
@@ -299,6 +314,7 @@ def main():
     out_lab = lab[outs]
     ds_of = ds[outs]
     ds_new = np.where(ds_of == outs, 0, lab[ds_of])        # 0 = leaves Iran / terminal sink
+    ds_new = np.where(ds_new == out_lab, 0, ds_new)
     ds_id = np.zeros(m + 1, np.int32)
     ds_id[out_lab] = ds_new
 
@@ -567,7 +583,12 @@ def main():
     from shapely.geometry import shape, mapping, MultiPolygon
     from shapely.ops import unary_union
     polys = {}
-    for geom, val in rasterio.features.shapes(lab.reshape(nrows, ncols).astype(np.int32), mask=(lab.reshape(nrows, ncols) > 0), transform=tr, connectivity=8):
+    if a.merit:
+        for _g, _geom in merit_geom.items():
+            if _g < new_id.size and new_id[_g] > 0:
+                polys.setdefault(int(new_id[_g]), []).append(_geom)
+    else:
+      for geom, val in rasterio.features.shapes(lab.reshape(nrows, ncols).astype(np.int32), mask=(lab.reshape(nrows, ncols) > 0), transform=tr, connectivity=8):
         polys.setdefault(int(val), []).append(shape(geom))
     log("polygonised:", len(polys))
     feats_out = []

@@ -13,6 +13,9 @@ on:
       gee:
         description: "use Earth Engine for soil + KNTU (1/0)"
         default: "1"
+      merit:
+        description: "MERIT basins geojson path (empty = D8)"
+        default: ""
       res:
         description: "grid step in degrees"
         default: "0.0025"
@@ -37,7 +40,7 @@ jobs:
         run: |
           OUT=data/static
           if [ "${{ inputs.limit_rows }}" != "0" ]; then OUT=data/static/debug; fi
-          python flood_static.py --out $OUT --limit-rows ${{ inputs.limit_rows }} --a-target ${{ inputs.a_target }} --gee ${{ inputs.gee }} --res ${{ inputs.res }}
+          python flood_static.py --out $OUT --limit-rows ${{ inputs.limit_rows }} --a-target ${{ inputs.a_target }} --gee ${{ inputs.gee }} --res ${{ inputs.res }} $( [ -n "${{ inputs.merit }}" ] && echo --merit ${{ inputs.merit }} )
       - name: commit results
         if: always()
         run: |

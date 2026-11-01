@@ -1,0 +1,25 @@
+name: merit-build
+# Aggregate MERIT-Basins unit catchments into ~250 km2 Iranian sub-basins (needs Google Drive; runs on GitHub runner)
+on:
+  workflow_dispatch:
+    inputs:
+      a_target: {description: "target area km2", default: "250"}
+      codes: {description: "optional comma list of level-2 codes (empty = scan all)", default: ""}
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install gdown geopandas pyogrio shapely numpy
+      - name: build
+        run: python merit_basins.py --a-target ${{ inputs.a_target }} --codes "${{ inputs.codes }}" 2>&1 | tee data/merit/build_log.txt
+      - name: commit
+        if: always()
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@users.noreply.github.com"
+          git add data/merit; git commit -m "merit build" || true; git pull --rebase origin main; git push
