@@ -34,5 +34,19 @@ try:
     v = img.sample(pt, 10).first().get("classification").getInfo()
     note("notice","KNTU class at Tehran (expect 1=Urban): %s" % v)
 
+    import requests, gee_grid
+    res = 0.0025
+    for nm, im in (("soil", gee_grid.soil_image(ee)), ("kntu", gee_grid.kntu_fraction_image(ee))):
+        for size in (0.05, 1.0):
+            w, s_, n_ = 51.0, 35.0, 36.0
+            e_ = w + size
+            n2 = s_ + size
+            try:
+                url = im.getDownloadURL({"region": ee.Geometry.Rectangle([w, s_, e_, n2], "EPSG:4326", False),
+                    "crs": "EPSG:4326", "crsTransform": [res, 0, w, 0, -res, n2], "format": "GEO_TIFF"})
+                r = requests.get(url, timeout=600)
+                note("notice", "%s size=%s status=%s bytes=%d body=%r" % (nm, size, r.status_code, len(r.content), r.content[:300] if r.status_code != 200 else b""))
+            except Exception as ex:
+                note("warning", "%s size=%s: %s" % (nm, size, str(ex)[:600]))
 except Exception as e:
     fatal("%s: %s" % (type(e).__name__, e))
