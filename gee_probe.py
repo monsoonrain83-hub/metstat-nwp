@@ -35,6 +35,10 @@ try:
     note("notice","KNTU class at Tehran (expect 1=Urban): %s" % v)
 
     import requests, gee_grid
+    lc0 = ee.Image("KNTU/LiDARLab/IranLandCover/V1").select("classification")
+    note("notice", "KNTU proj=%s scale=%s" % (lc0.projection().crs().getInfo(), lc0.projection().nominalScale().getInfo()))
+    sg0 = ee.Image("projects/soilgrids-isric/sand_mean")
+    note("notice", "SG proj=%s scale=%s bands=%s" % (sg0.select(0).projection().crs().getInfo(), sg0.select(0).projection().nominalScale().getInfo(), sg0.bandNames().getInfo()[:4]))
     res = 0.0025
     for nm, im in (("soil", gee_grid.soil_image(ee)), ("kntu", gee_grid.kntu_fraction_image(ee))):
         for size in (0.05, 1.0):
