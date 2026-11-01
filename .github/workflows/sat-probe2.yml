@@ -1,0 +1,20 @@
+name: sat-probe2
+on: workflow_dispatch
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests eumdac
+      - env:
+          EUMETSAT_KEY: ${{ secrets.EUMETSAT_KEY }}
+          EUMETSAT_SECRET: ${{ secrets.EUMETSAT_SECRET }}
+        run: python tools/sat_probe2.py
+      - run: |
+          git config user.name "metstat-bot"; git config user.email "bot@users.noreply.github.com"
+          git add data/sat; git commit -m "sat-probe2 report" || echo none
+          git pull --rebase origin main; git push origin HEAD:main
