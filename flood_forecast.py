@@ -4,7 +4,7 @@ Runoff: SCS-CN, AMC-II (CN2 from the static layer), Ia=0.2S. Output is NOT calib
 import json, math, time, sys, datetime as dt, os
 import requests
 SITE="data/static/flood_basins_site.json"; OUT="data/flood/forecast_latest.json"
-MODELS={"ecmwf":"ecmwf_ifs025","gfs":"gfs_seamless"}; WIN=[1,3,6,12,24]; H=72; BATCH=100
+MODELS={"ecmwf":"ecmwf_ifs025","gfs":"gfs_seamless"}; WIN=[1,3,6,12,24,48,72,120]; H=120; BATCH=100
 B=json.load(open(SITE))["b"]
 def cell(v): return round((math.floor(v/0.25)+0.5)*0.25,3)
 cells={}
