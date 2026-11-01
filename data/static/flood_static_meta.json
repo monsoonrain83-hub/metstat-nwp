@@ -23,16 +23,16 @@
  "dem_source": "Copernicus GLO-90 (AWS Open Data, tiles 348/357)",
  "pyflwdir_version": "0.5.12",
  "gee_stats": {
-  "soil_ok": 0,
-  "soil_fail": 197,
-  "kntu_ok": 0,
-  "kntu_fail": 197,
-  "soil_isric_ok": 197,
+  "soil_ok": 197,
+  "soil_fail": 0,
+  "kntu_ok": 197,
+  "kntu_fail": 0,
+  "soil_isric_ok": 0,
   "soil_isric_fail": 0
  },
  "cn_source": {
-  "kntu_basins": 0,
-  "modis_only_basins": 6898,
+  "kntu_basins": 6888,
+  "modis_only_basins": 10,
   "soil_basins": 6897,
   "hsg_default_C_basins": 1
  },
@@ -49,10 +49,10 @@
    "form_factor": 0.05
   },
   "level_breaks_q20_40_60_80": [
-   41.18,
-   47.25,
-   52.54,
-   59.13
+   42.61,
+   47.5,
+   52.36,
+   57.77
   ],
   "levels": {
    "1": "Very Low",
@@ -71,9 +71,9 @@
   "sensitivity": {
    "samples": 400,
    "dirichlet_concentration": 40,
-   "median_level_stability": 0.632,
-   "share_basins_stability_ge_0.8": 0.312,
-   "median_rank_std_percentile": 0.0802
+   "median_level_stability": 0.588,
+   "share_basins_stability_ge_0.8": 0.274,
+   "median_rank_std_percentile": 0.0944
   },
   "caution": "RELATIVE susceptibility ranking, not a probability and not a forecast. Weights are expert-chosen (AHP-like) and NOT calibrated to observed floods."
  },
@@ -281,8 +281,8 @@
   ]
  },
  "output": {
-  "geojson_bytes": 9649699,
+  "geojson_bytes": 10305922,
   "features": 6898
  },
- "runtime_s": 9598
+ "runtime_s": 7636
 }
