@@ -1,0 +1,28 @@
+name: merit-probe
+# Probe: can the runner list/download MERIT-Basins v1.0_bugfix1 from Google Drive? (listing only)
+on: workflow_dispatch
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install gdown
+      - name: list
+        run: |
+          python - <<'PY' 2>&1 | tee data/merit/listing.txt
+          import gdown
+          try:
+              fs = gdown.download_folder(id="1J8vyqCnSdquY1cRI1PPsXzMBLBXKzzoW", skip_download=True, quiet=True, use_cookies=False)
+              for f in fs: print(f.path, f.id)
+          except Exception as e:
+              print("ERR", repr(e)[:500])
+          PY
+      - name: commit
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@users.noreply.github.com"
+          git add data/merit; git commit -m "merit probe listing" || true; git pull --rebase origin main; git push
