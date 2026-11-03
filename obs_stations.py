@@ -3,7 +3,7 @@
 Sources: NOAA ISD history (id/name/lat/lon/elev/ICAO), AWC station cache (ICAO/WMO/site),
 activity check: AWC METAR (last 24h) and OGIMET SYNOP (last 48h). No value is guessed:
 missing fields stay null; active=true ONLY if a real report was received."""
-import csv, io, gzip, json, sys, time, re, datetime as dt, urllib.request, urllib.parse
+import os, csv, io, gzip, json, sys, time, re, datetime as dt, urllib.request, urllib.parse
 UA = "MetStat-obs/1.0 (weather research site)"
 # ISO2 for ISD 'CTRY' is FIPS; AWC uses ISO2. Region (Iran + neighbours + Gulf/Caspian/Caucasus/Central Asia)
 FIPS = {"IR","IZ","AF","PK","TX","UZ","TI","AJ","AM","GG","TU","SA","AE","MU","QA","KU","BA","KZ","SY","IS","JO","RS","YE","IN"}
@@ -61,6 +61,7 @@ def synop_active(db):
         v["synop"] = bool(lines); v["last_synop"] = lines[-1].split(",")[1:5] if lines else None
         time.sleep(2.5)   # be polite to OGIMET
 def main():
+    global_start = time.time()
     db = isd(); awc(db)
     if not db: sys.exit("no station source reachable - nothing written (no fake data)")
     metar_active(db)
@@ -68,6 +69,7 @@ def main():
     rows = []
     for k, v in sorted(db.items()):
         v["active"] = bool(v.get("metar") or v.get("synop")); v["id"] = k; rows.append(v)
+    os.makedirs("data/obs", exist_ok=True)
     json.dump(dict(generated=dt.datetime.utcnow().isoformat() + "Z", n=len(rows), n_active=sum(r["active"] for r in rows),
         sources=["NOAA ISD history", "AWC station cache", "AWC METAR 24h", "OGIMET SYNOP 48h"], stations=rows),
         open("data/obs/stations.json", "w"), ensure_ascii=False, separators=(",", ":"))
