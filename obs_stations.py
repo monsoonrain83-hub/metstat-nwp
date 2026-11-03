@@ -22,7 +22,7 @@ def isd():
     if not b: return out
     for r in csv.DictReader(io.StringIO(b.decode("latin-1"))):
         if r["CTRY"] not in FIPS or not r["LAT"] or not r["LON"]: continue
-        if r["END"] < (dt.date.today() - dt.timedelta(days=400)).strftime("%Y%m%d"): continue
+        if r["END"] < (dt.date.today() - dt.timedelta(days=2000)).strftime("%Y%m%d"): continue
         usaf = r["USAF"]
         wmo = usaf if re.fullmatch(r"\d{5}", usaf) and not usaf.startswith("99") else None
         key = wmo or (r["ICAO"] or usaf)
@@ -62,7 +62,7 @@ def synop_active(db):
         time.sleep(2.5)   # be polite to OGIMET
 def main():
     global_start = time.time()
-    db = isd(); awc(db)
+    db = isd(); print("ISD rows", len(db)); awc(db)
     if not db: sys.exit("no station source reachable - nothing written (no fake data)")
     metar_active(db)
     if "--no-synop" not in sys.argv: synop_active(db)
