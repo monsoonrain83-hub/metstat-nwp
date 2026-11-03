@@ -56,5 +56,12 @@ for name,mid in MODELS.items():
             for i in idx:
                 P[i]=int(round(p*10)); Q[i]=int(round(scs(p,B[i]["cn"])*10)); T[i]=bi
         M["P"][str(w)]=P; M["Q"][str(w)]=Q; M["T"][str(w)]=T
+    ck=sorted(R.keys()); cidx={k:j for j,k in enumerate(ck)}
+    M["hp"]=[[int(round((0.0 if v is None else float(v))*10)) for v in R[k][1]] for k in ck]
+    co=[None]*len(B)
+    for k,idx in cells.items():
+        if k in cidx:
+            for i in idx: co[i]=cidx[k]
+    M["co"]=co
     out["models"][name]=M
 os.makedirs("data/flood",exist_ok=True); json.dump(out,open(OUT,"w"),separators=(",",":")); print("wrote",OUT,os.path.getsize(OUT),flush=True)
