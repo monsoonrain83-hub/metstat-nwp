@@ -1,5 +1,8 @@
 name: obs-stations
-on: { workflow_dispatch: {}, schedule: [{ cron: "17 3 * * 1" }] }
+on:
+  workflow_dispatch: {}
+  schedule: [{ cron: "17 3 * * 1" }]
+  push: { branches: [obs-stage1], paths: [".github/workflows/obs-stations.yml", "obs_stations.py"] }
 permissions: { contents: write }
 jobs:
   build:
