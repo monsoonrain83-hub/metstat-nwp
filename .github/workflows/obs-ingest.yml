@@ -1,0 +1,33 @@
+name: obs-ingest
+on:
+  workflow_dispatch: { inputs: { daily: { description: "run daily aggregation", default: "no" } } }
+  schedule:
+    - cron: "22 * * * *"        # هر ساعت: METAR + SYNOP
+    - cron: "40 6 * * *"        # ۰۶:۴۰ UTC (۱۰:۱۰ ایران): آمار ۲۴ساعتهٔ منتهی به ۰۶ UTC
+  push: { branches: [obs-stage1], paths: ["obs_fetch.py", "obs_decode.py", ".github/workflows/obs-ingest.yml"] }
+permissions: { contents: write, issues: write }
+concurrency: { group: obs-ingest, cancel-in-progress: false }
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: python obs_test.py
+      - name: ingest
+        run: |
+          if [ "${{ github.event.schedule }}" = "40 6 * * *" ] || [ "${{ github.event.inputs.daily }}" = "yes" ] || [ "${{ github.event_name }}" = "push" ]; then python obs_fetch.py --daily; else python obs_fetch.py; fi
+      - name: monthly notice (1st of month, UTC)
+        if: github.event.schedule == '40 6 * * *'
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          if [ "$(date -u +%d)" = "01" ]; then
+            PM=$(date -u -d "yesterday" +%Y-%m)
+            gh issue create --title "آمار روزانهٔ ایستگاه‌ها برای ماه $PM آماده ورود به پایگاه اقلیمی است" --body "فایل data/obs/daily/$PM.csv (آمار ۲۴ساعتهٔ منتهی به ۰۹:۳۰ ایران: بارش، دمای کمینه/بیشینه، بیشینهٔ باد) آماده است. لطفاً بررسی و به آمار اقلیمی ایستگاه‌ها اضافه کنید." || true
+          fi
+      - run: |
+          git config user.name obs-bot; git config user.email obs-bot@users.noreply.github.com
+          git add data/obs; git commit -m "obs: ingest" || exit 0
+          for i in 1 2 3; do git pull --rebase -q && git push && break || sleep 5; done
