@@ -94,3 +94,19 @@ for k, v in SC.items():
     assert len(v['edges']) == len(v['colors']) + 1, (k, len(v['edges']), len(v['colors']))
 
 def hex2rgb(h): return tuple(int(h[i:i + 2], 16) for i in (1, 3, 5))
+
+# r192: پالت پیوستهٔ آنومالی (برگرفته از نمونهٔ کاربر): منفی = فیروزه‌ای→آبی→بنفش، مثبت = کرم→زرد→نارنجی→قرمز→صورتی
+_AN_NEG = ['#e8efef', '#c3dfe2', '#a1d8dd', '#80ceda', '#73b7ce', '#7da4cf', '#7786bf', '#5d62a2', '#5f50a5', '#4a3a8c']   # صفر ← شدیدترین منفی
+_AN_POS = ['#f1ebd6', '#f3e0b5', '#f8cb54', '#fd9452', '#ff8352', '#f86b57', '#e57083', '#d9567a']                       # صفر ← شدیدترین مثبت
+def _hx(c): return [int(c[i:i + 2], 16) for i in (1, 3, 5)]
+def _an_color(u):
+    K = _AN_NEG if u < 0 else _AN_POS; x = min(abs(u), 1.0) * (len(K) - 1); i = min(int(x), len(K) - 2); f = x - i
+    a, b = _hx(K[i]), _hx(K[i + 1]); return '#%02x%02x%02x' % tuple(int(round(a[j] + (b[j] - a[j]) * f)) for j in range(3))
+def _an_scale(lim, step):
+    n = int(round(2 * lim / step)); ed = [-INF] + [round(-lim + i * step, 4) for i in range(n + 1)] + [INF]
+    cols = [_an_color(((i + 0.5) / (len(ed) - 1)) * 2 - 1) for i in range(len(ed) - 1)]
+    return dict(colors=cols, edges=ed)
+SC.update({
+    'tanom':  _an_scale(12, 1), 'tanom5': _an_scale(8, 0.5), 'tanom10': _an_scale(8, 0.5),
+    'z500a':  _an_scale(30, 1), 'z850a': _an_scale(25, 1), 'z700a': _an_scale(25, 1), 'mslpa': _an_scale(20, 1),
+})

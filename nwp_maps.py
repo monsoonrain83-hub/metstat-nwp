@@ -81,14 +81,16 @@ for pid, hh, ev, mx, v in SN_WIN:
     PARAMS[pid] = dict(kind='win', var='snow', h=hh, every=ev, maxlead=mx, sc='pr_' + v, wv=v, models=ALL, unit='mm', skip_empty=True,
                        en=(f'Snowfall (water equivalent), {hh}h (mm)' if hh else 'Total snowfall (water equivalent) (mm)'),
                        fa=(f'بارش برف {hh} ساعته (آب معادل)'.translate(FAD) if hh else 'برف تجمعی (آب معادل)'))
-I_EC = ['ecmwf']; I_ECA = ['ecmwf']; I_ECG = ['ecmwf', 'gfs', 'gfs25']
+I_EC = ['ecmwf']; I_ECZ = ['ecmwf', 'gfs', 'gem']; I_ECA = ['ecmwf']; I_ECG = ['ecmwf', 'gfs', 'gfs25']
 I_CV = ['ecmwf', 'gfs', 'gfs25', 'icon', 'ukmo']      # مدل‌هایی که CAPE دارند (نتیجهٔ probe)؛ شاخص‌های ترازی از ترازهای فشاری همان مدل
 PARAMS.update({
     't2m':   dict(kind='inst', sc='temp', models=I_ECA, unit='°C', en='Temperature 2m (°C)', fa='دمای ۲ متری', lapse=True),
     'tsoil': dict(kind='inst', sc='temp', models=I_ECA, unit='°C', en='Soil temperature near surface (°C)', fa='دمای خاک نزدیک سطح'),
     'tmax':  dict(kind='day', sc='temp', models=I_ECA, unit='°C', en='Max. temperature 2m, 24h (°C)', fa='دمای بیشینه ۲۴ ساعته', lapse=True),
     'tmin':  dict(kind='day', sc='temp', models=I_ECA, unit='°C', en='Min. temperature 2m, 24h (°C)', fa='دمای کمینه ۲۴ ساعته', lapse=True),
-    'tanom': dict(kind='day', sc='tanom', models=I_ECA, unit='K', en='Temperature 2m anomaly, daily mean (K)', fa='انومالی دمای ۲ متری (میانگین روزانه)', lapse=True),
+    'tanom': dict(kind='day', sc='tanom', models=I_ECZ, unit='K', en='Temperature 2m anomaly, daily mean (K)', fa='انومالی دمای ۲ متری (میانگین روزانه)', lapse=True),
+    'tanom5': dict(kind='day', sc='tanom5', models=I_ECZ, unit='K', win_d=5, en='Temperature 2m anomaly, 5-day mean (K)', fa='انومالی دمای ۲ متری (میانگین ۵ روزه)', lapse=True),
+    'tanom10': dict(kind='day', sc='tanom10', models=I_ECZ, unit='K', win_d=10, en='Temperature 2m anomaly, 10-day mean (K)', fa='انومالی دمای ۲ متری (میانگین ۱۰ روزه)', lapse=True),
     'rh':    dict(kind='inst', sc='rh', models=I_EC, unit='%', en='Relative humidity 2m (%)', fa='رطوبت نسبی ۲ متری'),
     'pw':    dict(kind='inst', sc='pw', models=I_EC, unit='mm', en='Entire Atmosphere Precipitable Water (mm)', fa='آب قابل بارش'),
     'ki':    dict(kind='inst', sc='ki', models=I_ECG, unit='', en='K-Index', fa='شاخص K'),
@@ -156,7 +158,7 @@ PARAMS.update({
     'w10':   dict(kind='inst', sc='wind10', models=I_ECG, unit='kt', me_only=True, ln=True, en='MSLP (mb) & 10m Wind Speed (kt)', fa='فشار سطح دریا و سرعت باد ۱۰ متری (گره)'),
     'w250':  dict(kind='inst', sc='windup', models=I_EC, unit='kt', me_only=True, ln=True, en='250mb Wind Speed/Streamlines (kt) & MSLP Extrema (mb)', fa='سرعت باد و خطوط جریان ۲۵۰ هکتوپاسکال (گره)'),
     'w200':  dict(kind='inst', sc='windup', models=I_EC, unit='kt', me_only=True, ln=True, en='200mb Wind Speed/Streamlines (kt)', fa='سرعت باد و خطوط جریان ۲۰۰ هکتوپاسکال (گره)'),
-    'z500a': dict(kind='inst', sc='z500a', models=I_EC, unit='dm', me_only=True, ln=True, en='500hPa Geopotential Height (dm) & Anomaly', fa='ارتفاع ژئوپتانسیل ۵۰۰ هکتوپاسکال و انومالی (دکامتر)'),
+    'z500a': dict(kind='inst', sc='z500a', models=I_ECZ, unit='dm', me_only=True, ln=True, en='500hPa Geopotential Height (dm) & Anomaly', fa='ارتفاع ژئوپتانسیل ۵۰۰ هکتوپاسکال و انومالی (دکامتر)'),
     'z850a': dict(kind='inst', sc='z850a', models=I_EC, unit='dm', me_only=True, ln=True, en='850hPa Geopotential Height (dm) & Anomaly', fa='ارتفاع ژئوپتانسیل ۸۵۰ هکتوپاسکال و انومالی (دکامتر)'),
     'z700a': dict(kind='inst', sc='z700a', models=I_EC, unit='dm', me_only=True, ln=True, en='700hPa Geopotential Height (dm) & Anomaly', fa='ارتفاع ژئوپتانسیل ۷۰۰ هکتوپاسکال و انومالی (دکامتر)'),
     'mslpa': dict(kind='inst', sc='mslpa', models=I_ECG, unit='hPa', me_only=True, ln=True, en='MSLP (hPa) & Anomaly', fa='فشار سطح دریا و انومالی (هکتوپاسکال)'),
@@ -177,7 +179,7 @@ for _a in [x[0] for x in PR_WIN] + [x[0] for x in SN_WIN] + ['rh']:
 # دسته‌بندی استاندارد برای منوهای نمایشگر (شناسه، نام فارسی، ترتیب)
 CATS = [('pr', 'بارش', 1), ('sn', 'برف', 2), ('tp', 'دما', 3), ('hm', 'رطوبت و آب قابل بارش', 4), ('sf', 'فشار و باد سطحی', 5),
         ('ul', 'ارتفاع ژئوپتانسیل و رطوبت ترازهای بالا', 6), ('uw', 'باد در ترازهای بالا', 7), ('dy', 'دینامیک، جبهه و ابر همرفتی', 7.5), ('cv', 'همرفت و ناپایداری', 8), ('rd', 'بازتاب و هوای مهم', 9), ('sc', 'نقشه‌های ثانویه (همرفت، تگرگ، آذرخش، سیل، هشدار)', 10)]
-_CAT = {'t2m': 'tp', 'tsoil': 'tp', 'tmax': 'tp', 'tmin': 'tp', 'tanom': 'tp', 't2mr': 'tp', 'tmaxr': 'tp', 'tminr': 'tp', 'rh': 'hm', 'rhr': 'hm', 'pw': 'hm', 'gust': 'sf', 'sfc': 'sf', 'w10': 'sf',
+_CAT = {'t2m': 'tp', 'tsoil': 'tp', 'tmax': 'tp', 'tmin': 'tp', 'tanom': 'tp', 'tanom5': 'tp', 'tanom10': 'tp', 't2mr': 'tp', 'tmaxr': 'tp', 'tminr': 'tp', 'rh': 'hm', 'rhr': 'hm', 'pw': 'hm', 'gust': 'sf', 'sfc': 'sf', 'w10': 'sf',
         'z850': 'ul', 'z700': 'ul', 'z500': 'ul', 'z500a': 'ul', 'z850a': 'ul', 'z700a': 'ul', 'mslpa': 'sf', 'thk1000': 'ul', 'thk8550': 'ul', 'thk7050': 'ul', 'thk8570': 'ul', 'w500': 'uw', 'w300': 'uw', 'w250': 'uw', 'w200': 'uw',
         'tt': 'cv', 'ko': 'cv', 'shw': 'cv', 'lr75': 'cv', 'lr85': 'cv', 'sh06': 'cv', 'sh85': 'cv', 'swt': 'cv', 'fzl': 'cv', 'hgz': 'cv',
         'ki': 'cv', 'cape': 'cv', 'cin': 'cv', 'si': 'cv', 'gdi': 'cv', 'li': 'cv', 'refl': 'rd', 'sigwx': 'rd',
@@ -1092,11 +1094,36 @@ def _clim_interp(Z3, C, R, d):
     z = Z3[a] * (1 - u) + Z3[b] * u
     fi = (np.where(R.lon < 0, R.lon + 360, R.lon) - C['lon'][0]) / (C['lon'][1] - C['lon'][0]); fj = (R.lat - C['lat'][0]) / (C['lat'][1] - C['lat'][0])
     return map_coordinates(z, np.array([fj, fi]), order=1, mode='nearest', prefilter=False).astype(np.float32)
+ERA5C = None
+def load_era5c():
+    """r192: اقلیم روزانهٔ ERA5 (۱۹۹۰–۲۰۱۹، WeatherBench2) روی شبکهٔ ۱ درجه؛ کلیدها z500/z700/z850 (m) و msl (hPa)."""
+    global ERA5C
+    if ERA5C is not None: return ERA5C or None
+    ERA5C = False
+    try:
+        p = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'static', 'era5_clim_1deg.npz')
+        if os.path.exists(p):
+            z = np.load(p); ERA5C = {k: np.asarray(z[k], np.float32) for k in z.files}; log('اقلیم ERA5 بارگذاری شد')
+        else: log('اقلیم ERA5 یافت نشد؛ از NCEP استفاده می‌شود')
+    except Exception as e: log(f'اقلیم ERA5 خوانده نشد ({e})')
+    return ERA5C or None
+def _era5_at(key, R, d):
+    C = load_era5c()
+    if C is None or key not in C: return None
+    A = C[key]; n = A.shape[0]; x = ((d.timetuple().tm_yday - 1) + d.hour / 24.0) % 365.0 * (n / 365.0)
+    a = int(math.floor(x)) % n; b = (a + 1) % n; u = x - math.floor(x); f = A[a] * (1 - u) + A[b] * u
+    lon = np.where(R.lon < 0, R.lon, R.lon)
+    fi = (lon - C['lon'][0]) / (C['lon'][1] - C['lon'][0]); fj = (R.lat - C['lat'][0]) / (C['lat'][1] - C['lat'][0])
+    return map_coordinates(f, np.array([fj, fi]), order=1, mode='nearest', prefilter=False).astype(np.float32)
 def z_clim_at(R, d, lvl=500):
+    E = _era5_at(f'z{lvl}', R, d)
+    if E is not None: return E
     C = load_zclim()
     return None if C is None else _clim_interp(C['zs'][lvl], C, R, d)
 def z500_clim_at(R, d): return z_clim_at(R, d, 500)
 def slp_clim_at(R, d):
+    E = _era5_at('msl', R, d)
+    if E is not None: return E
     C = load_slpclim()
     return None if C is None else _clim_interp(C['z'], C, R, d)
 
@@ -1117,9 +1144,10 @@ SEC_UPPER = {f'{q}_{p}hPa' for q in ('temperature', 'relative_humidity', 'geopot
 MM_ON = False       # با --mm روشن می‌شود (مالتی‌مدل)
 def needed_vars(mkey, pids, kind):
     v = {'precipitation', 'snowfall_water_equivalent'}
-    if mkey in ('ecmwf', 'ukmo') or MM_ON: v |= {'temperature_2m'}
+    if mkey in ('ecmwf', 'ukmo', 'gfs', 'gem') or MM_ON: v |= {'temperature_2m'}
     if MM_ON: v |= {'wind_direction_10m', 'wind_speed_10m', 'pressure_msl', 'relative_humidity_2m', 'wind_gusts_10m'}
     if mkey == 'ecmwf': v |= {'temperature_2m_max', 'temperature_2m_min'}
+    if kind == 'all' and mkey in ('gfs', 'gem'): v |= {'geopotential_height_500hPa'}      # r192: انومالی Z500 برای GFS/GEM
     if kind == 'all':
         if mkey == 'ecmwf9':
             v |= {'temperature_2m', 'relative_humidity_2m', 'wind_gusts_10m', 'wind_u_component_10m', 'wind_v_component_10m', 'cape', 'precipitation_type'}
@@ -1411,7 +1439,7 @@ class Engine:
                 if cs_off is not None and cs_off.shape == c['snow'].shape: c['snow'] = np.nan_to_num(np.minimum(cs_off, cp_off)).astype(np.float32)
             st.hist[name][vt] = (c['precip'].copy(), c['snow'].copy())
             if i > 0 and lead % 24 == 0 and cp_off is None: log(f'  [{mkey}/{name}] تجمعی بارش +{lead}h: میانگین {np.nanmean(c["precip"]):.2f} · بیشینه {np.nanmax(c["precip"]):.1f} mm   (برای بررسی با منبع بیرونی)')
-            if 'temperature_2m' in d and (mkey == 'ecmwf' or MM_ON):
+            if 'temperature_2m' in d and (mkey in ('ecmwf', 'gfs', 'gem') or MM_ON):
                 st.tser[name][vt] = (d['temperature_2m'], d.get('temperature_2m_max', d['temperature_2m']), d.get('temperature_2m_min', d['temperature_2m']), dt_h)
         made = 0
         for rk, R in s.regions.items():
@@ -1459,7 +1487,7 @@ class Engine:
                     st.have.add(fname); made += 1
                     continue
                 sc = styles.SC[P['sc']]
-                mk = dict(v=1, p=pid, m=M['name'], r=f'{run:%Y%m%d%H}', t=f'{vt:%Y%m%d%H}', g=rk, h=P.get('h', 0) if P['kind'] == 'win' else (24 if P['kind'] == 'day' else 0),
+                mk = dict(v=1, p=pid, m=M['name'], r=f'{run:%Y%m%d%H}', t=f'{vt:%Y%m%d%H}', g=rk, h=P.get('h', 0) if P['kind'] == 'win' else (24 * P.get('win_d', 1) if P['kind'] == 'day' else 0),
                           s=P['sc'], u=P['unit'], n=P['fa'], e=edges_txt(sc['edges']))
                 if P.get('wv'): mk['wv'] = P['wv']
                 title = P['en']
@@ -1674,7 +1702,7 @@ class Engine:
     def make(s, P, pid, st, D, R, vt, lead, dt_h):
         mkey = st.model; d = D.get('main', {}); src = st.srcs['main']
         I = lambda a, order=1: R.interp(src, a, order)
-        if R.key == 'me' and pid == 'tanom':                    # اقلیم ایستگاهی فقط روی کادر ایران تعریف است
+        if R.key == 'me' and pid.startswith('tanom'):                    # اقلیم ایستگاهی فقط روی کادر ایران تعریف است
             o = s.make(P, pid, st, D, R.iran, vt, lead, dt_h)
             return None if o is None else (R.from_iran(o[0]), {})
         if P['kind'] == 'win':
@@ -1695,17 +1723,23 @@ class Engine:
             if not P.get('raw'): f = f * s.precip_factor(st, R)          # بارش/برف: ضریب ارتفاعی غیرخطی (خام: pid با پسوند r)
             return (f, dict(note='Elevation-adjusted: P×(1+χΔz)/(1−χΔz), χ=0.27/km, effective height capped at 2500 m, cell total conserved') if not P.get('raw') else {})
         if P['kind'] == 'day':
-            ser = st.tser['main']; ts = sorted(t for t in ser if vt - timedelta(hours=24) < t <= vt)
-            if len(ts) < 3: return None
+            ser = st.tser['main']; wd = P.get('win_d', 1); ts = sorted(t for t in ser if vt - timedelta(hours=24 * wd) < t <= vt)
+            if len(ts) < 3 * wd: return None
+            if wd > 1:                                         # میانگین ۵/۱۰ روزه: پوشش زمانی کامل لازم است (≥۹۰٪ گام‌های پنجره)
+                dts = [ser[t][3] for t in ts if ser[t][3]]; step = float(np.median(dts)) if dts else 6.0
+                if len(ts) < 0.9 * 24 * wd / max(step, 1.0): return None
             if pid in ('tmax', 'tmaxr'):
                 f = lambda: np.nanmax(np.stack([ser[t][1] for t in ts]), 0)
             elif pid in ('tmin', 'tminr'):
                 f = lambda: np.nanmin(np.stack([ser[t][2] for t in ts]), 0)
             else:
                 f = lambda: np.nanmean(np.stack([ser[t][0] for t in ts]), 0)
-            T = I(f()) if P.get('raw') else s.lapse(st, R, f, full=(pid == 'tanom'))
-            if pid == 'tanom':
-                C = clim_at(R, vt - timedelta(hours=12))
+            T = I(f()) if P.get('raw') else s.lapse(st, R, f, full=pid.startswith('tanom'))
+            if pid.startswith('tanom'):
+                if wd > 1:
+                    Cs = [clim_at(R, vt - timedelta(hours=24 * wd) + timedelta(hours=24 * k + 12)) for k in range(wd)]
+                    C = None if any(c is None for c in Cs) else np.mean(Cs, 0)
+                else: C = clim_at(R, vt - timedelta(hours=12))
                 if C is None: return None
                 return (T - C, dict(note='Anomaly vs. 1991–2020 IRIMO station normals (Iran only)'))
             return (T, {})
