@@ -27,6 +27,16 @@ jobs:
             PM=$(date -u -d "yesterday" +%Y-%m)
             gh issue create --title "آمار روزانهٔ ایستگاه‌ها برای ماه $PM آماده ورود به پایگاه اقلیمی است" --body "فایل data/obs/daily/$PM.csv (آمار ۲۴ساعتهٔ منتهی به ۰۹:۳۰ ایران: بارش، دمای کمینه/بیشینه، بیشینهٔ باد) آماده است. لطفاً بررسی و به آمار اقلیمی ایستگاه‌ها اضافه کنید." || true
           fi
+      - name: push to host (needs updated nwp_upload.php on host; failures are ignored)
+        continue-on-error: true
+        env: { MX_HOST: "${{ secrets.MX_HOST }}", MX_KEY: "${{ secrets.MX_KEY }}" }
+        run: |
+          [ -z "$MX_HOST" ] && exit 0
+          M=$(date -u +%Y-%m)
+          for f in latest.json daily_latest.json stations.json daily/$M.csv; do
+            n=$(basename $f); [ "$f" = "daily/$M.csv" ] && n="daily_$M.csv"
+            [ -f data/obs/$f ] && curl -fsS -m 60 -F "name=$n" -F "f=@data/obs/$f" "$MX_HOST/nwp_upload.php?a=obsput&key=$MX_KEY" || echo "upload failed: $f"
+          done
       - run: |
           git config user.name obs-bot; git config user.email obs-bot@users.noreply.github.com
           git add data/obs; git commit -m "obs: ingest" || exit 0

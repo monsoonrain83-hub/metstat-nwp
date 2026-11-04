@@ -29,6 +29,15 @@ if ($KEY === '' || $KEY === 'CHANGE-ME' || !hash_equals($KEY, (string)($_GET['ke
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') jout(['error' => 'POST only'], 405);
 $a = (string)($_GET['a'] ?? '');
 
+if ($a === 'obsput') {                     // r176: رصد METAR/SYNOP — latest.json / daily_latest.json / stations.json / daily_YYYY-MM.csv ← data/obs/
+    $OD = "$DATA/obs"; @mkdir($OD, 0755, true); $nm = (string)($_POST['name'] ?? '');
+    if (!preg_match('~^(latest|daily_latest|stations)\.json$|^daily_\d{4}-\d{2}\.csv$~', $nm)) jout(['error' => 'name'], 400);
+    if (empty($_FILES['f']['tmp_name']) || !is_uploaded_file($_FILES['f']['tmp_name'])) jout(['error' => 'no file'], 400);
+    if (filesize($_FILES['f']['tmp_name']) > 8 * 1024 * 1024) jout(['error' => 'too big'], 400);
+    $t = "$OD/$nm.tmp" . getmypid(); if (!move_uploaded_file($_FILES['f']['tmp_name'], $t)) jout(['error' => 'move'], 500);
+    rename($t, "$OD/$nm"); jout(['ok' => 1, 'name' => $nm]);
+}
+
 if ($a === 'clim') {                       // اقلیم ایستگاهی شبکه‌بندی‌شده (برای انومالی دما)؛ در پوشهٔ عمومی نیست
     $f = "$DIR/clim_tmean.npz"; if (!is_file($f)) jout(['error' => 'no clim'], 404);
     header('Content-Type: application/octet-stream'); readfile($f); exit;
