@@ -1,0 +1,20 @@
+name: nwp-watchdog
+# r190: اگر هیچ ران nwp در حال اجرا/صف نبود (کرش، لغو، صف لغوشده)، ران جدید راه می‌اندازد
+on:
+  schedule:
+    - cron: "*/20 * * * *"
+  workflow_dispatch: {}
+permissions:
+  actions: write
+  contents: read
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          n=$(gh run list --repo "$GITHUB_REPOSITORY" -w nwp.yml -L 20 --json status -q '[.[]|select(.status=="in_progress" or .status=="queued" or .status=="waiting" or .status=="pending" or .status=="requested")]|length')
+          echo "active nwp runs: $n"
+          if [ "$n" = "0" ]; then gh workflow run nwp.yml --repo "$GITHUB_REPOSITORY" --ref main; echo "started nwp"; fi

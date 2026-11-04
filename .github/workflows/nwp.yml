@@ -44,8 +44,17 @@ jobs:
         continue-on-error: true
         run: python nwp_maps.py --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}" --probe --models ${{ matrix.m }}
       - name: maps
-        # حلقه ۳۲۰ دقیقه + ۱۲ دقیقه فرصت پایانی آپلود، پیش از سقف ۳۵۸ دقیقهٔ job
-        run: python nwp_maps.py --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}" --loop --max-minutes 320 --models ${{ matrix.m }} --shard ${{ matrix.s }} --mm-ext
+        # r190: خودترمیم — اگر پروسس بمیرد/هاست موقتاً قطع شود، بعد از ۲ دقیقه با زمان باقی‌ماندهٔ بودجه دوباره بالا می‌آید (قبلاً job تا ۶ ساعت بعد مرده می‌ماند)
+        run: |
+          END=$((SECONDS+19800))   # بودجهٔ ۳۳۰ دقیقه؛ سقف job = ۳۵۸
+          rc=1
+          while :; do
+            LEFT=$(( (END-SECONDS)/60 - 14 )); [ "$LEFT" -lt 10 ] && break
+            python nwp_maps.py --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}" --loop --max-minutes "$LEFT" --models ${{ matrix.m }} --shard ${{ matrix.s }} --mm-ext; rc=$?
+            [ "$rc" -eq 0 ] && break
+            echo "::warning::exit $rc — restart in 120s"; sleep 120
+          done
+          exit $rc
 
   mm:
     # مالتی‌مدل: فقط میدان‌ها را از همهٔ مدل‌ها می‌خواند (بدون ساخت نقشهٔ تک‌مدل) و نقشهٔ ترکیبی می‌سازد؛ سه سهم موازی
@@ -65,4 +74,25 @@ jobs:
       - name: install
         run: pip install -r requirements.txt
       - name: multimodel
-        run: python nwp_maps.py --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}" --loop --max-minutes 320 --models ecmwf9,ecmwf,gfs,gfs25,icon,gem,ukmo --regions iran,fars,me --mm mmcache --mm-only --shard ${{ matrix.s }}
+        run: |
+          END=$((SECONDS+19800)); rc=1
+          while :; do
+            LEFT=$(( (END-SECONDS)/60 - 14 )); [ "$LEFT" -lt 10 ] && break
+            python nwp_maps.py --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}" --loop --max-minutes "$LEFT" --models ecmwf9,ecmwf,gfs,gfs25,icon,gem,ukmo --regions iran,fars,me --mm mmcache --mm-only --shard ${{ matrix.s }}; rc=$?
+            [ "$rc" -eq 0 ] && break
+            echo "::warning::exit $rc — restart in 120s"; sleep 120
+          done
+          exit $rc
+
+  chain:
+    # r190: زنجیرهٔ بی‌وقفه — بلافاصله پس از پایان این ران (موفق یا ناموفق) ران بعدی صف می‌شود؛ cron و watchdog فقط پشتیبان‌اند
+    needs: [maps, mm]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run nwp.yml --repo "$GITHUB_REPOSITORY" --ref "${{ github.ref_name }}"
