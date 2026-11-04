@@ -18,13 +18,14 @@ jobs:
       - run: python obs_test.py
       - name: ingest
         run: |
-          if [ "${{ github.event.schedule }}" = "40 6 * * *" ] || [ "${{ github.event.inputs.daily }}" = "yes" ] || [ "${{ github.event_name }}" = "push" ]; then python obs_fetch.py --daily; else python obs_fetch.py; fi
+          # r190: جدول روزانه (بارش ۲۴ساعته، Tmin/Tmax، باد) بعد از رسیدن SYNOP ساعت ۰۶ UTC (۰۹:۳۰ ایران) در هر اجرای ساعتی تا آخر روز بازمحاسبه می‌شود (گزارش‌های دیررس هم وارد شوند)؛ دیگر وابسته به cron ساعت ۰۶:۴۰ نیست که گیت‌هاب گاهی اجرا نمی‌کند
+          if [ "$(date -u +%H%M)" -ge 0625 ] || [ "${{ github.event.inputs.daily }}" = "yes" ] || [ "${{ github.event_name }}" = "push" ]; then python obs_fetch.py --daily; else python obs_fetch.py; fi
       - name: monthly notice (1st of month, UTC)
-        if: github.event.schedule == '40 6 * * *'
         env: { GH_TOKEN: "${{ github.token }}" }
         run: |
-          if [ "$(date -u +%d)" = "01" ]; then
+          if [ "$(date -u +%d)" = "01" ] && [ "$(date -u +%H%M)" -ge 0640 ]; then
             PM=$(date -u -d "yesterday" +%Y-%m)
+            gh issue list --state all --search "$PM in:title آمار روزانهٔ ایستگاه‌ها" --json title -q '.[].title' | grep -q "$PM" && exit 0
             gh issue create --title "آمار روزانهٔ ایستگاه‌ها برای ماه $PM آماده ورود به پایگاه اقلیمی است" --body "فایل data/obs/daily/$PM.csv (آمار ۲۴ساعتهٔ منتهی به ۰۹:۳۰ ایران: بارش، دمای کمینه/بیشینه، بیشینهٔ باد) آماده است. لطفاً بررسی و به آمار اقلیمی ایستگاه‌ها اضافه کنید." || true
           fi
       - name: push to host (needs updated nwp_upload.php on host; failures are ignored)

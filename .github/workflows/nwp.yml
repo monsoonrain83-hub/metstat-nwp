@@ -96,3 +96,24 @@ jobs:
       - env:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run nwp.yml --repo "$GITHUB_REPOSITORY" --ref "${{ github.ref_name }}"
+
+  tick:
+    # r190: زمان‌بند پشتیبان — cron گیت‌هاب اجراهای ساعتی را گاهی رد می‌کند (بین ۰۵:۱۷ و ۱۳:۰۶ UTC هیچ ران رصد نبود). این job هر ساعت در دقیقهٔ ۲۲ و ۵۲ در صورت نبودن ران رصدِ ≤۳۵ دقیقه‌ای، obs-ingest را راه می‌اندازد
+    runs-on: ubuntu-latest
+    timeout-minutes: 358
+    permissions:
+      actions: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          END=$((SECONDS+20400)); last=""
+          while [ $SECONDS -lt $END ]; do
+            m=$(date -u +%M); k=$(date -u +%Y%m%d%H%M)
+            if { [ "$m" = "22" ] || [ "$m" = "52" ]; } && [ "$k" != "$last" ]; then
+              last=$k
+              recent=$(gh run list --repo "$GITHUB_REPOSITORY" -w obs-ingest.yml -L 5 --json createdAt -q '[.[]|select((now - (.createdAt|fromdateiso8601)) < 2100)]|length' || echo 0)
+              [ "$recent" = "0" ] && gh workflow run obs-ingest.yml --repo "$GITHUB_REPOSITORY" --ref main && echo "dispatched obs-ingest $k"
+            fi
+            sleep 20
+          done
