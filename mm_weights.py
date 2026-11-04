@@ -92,7 +92,7 @@ def group_of(pid):
     p = str(pid)
     if p in ('p1', 'p3', 'p6', 'p24', 'p48', 'p120', 'pacc'): return 'precip'
     if p in ('s1', 's3', 's6', 'snow24', 's48', 's120', 'snowacc'): return 'snow'
-    if p in ('t2m', 'tmax', 'tmin', 'tanom'): return 'temp'
+    if p in ('t2m', 'tmax', 'tmin', 'tanom', 'tanom5', 'tanom10'): return 'temp'
     if p in ('rh', 'pw'): return 'humidity'
     if p in ('ki', 'cape', 'si', 'gdi', 'refl', 'li', 'cin', 'tt', 'ko', 'shw', 'lr75', 'lr85', 'sh06', 'sh85', 'swt', 'fzl', 'hgz'): return 'convection'
     if p in ('gust', 'w500', 'w300'): return 'wind'
