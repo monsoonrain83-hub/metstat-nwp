@@ -1,9 +1,9 @@
 {
- "time": "2026-11-04T16:20Z",
+ "time": "2026-11-04T20:27Z",
  "states": {
-  "Iran": 66,
-  "Iraq": 4,
-  "Turkey": 51,
+  "Iran": 108,
+  "Iraq": 0,
+  "Turkey": 117,
   "Azerbaijan": 3,
   "Armenia": 0,
   "Georgia": 1,
@@ -13,17 +13,17 @@
   "Afghanistan": -1,
   "Pakistan": 14,
   "Saudi_Arabia": 26,
-  "Oman": 15,
+  "Oman": 29,
   "United_Arab_Emirates": 7,
   "Qatar": 1,
   "Kuwait": 1,
   "Bahrain": 1,
   "Kazakhstan": 12,
-  "Syria": 0,
+  "Syria": 3,
   "Jordan": 7,
-  "Yemen": 2
+  "Yemen": 1
  },
- "metar": 562,
- "synop": 222,
- "synop_unmatched": 19557
+ "metar": 978,
+ "synop": 342,
+ "synop_unmatched": 19649
 }
