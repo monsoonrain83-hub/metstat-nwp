@@ -6,7 +6,7 @@ missing fields stay null; active=true ONLY if a real report was received."""
 import os, csv, io, gzip, json, sys, time, re, datetime as dt, urllib.request, urllib.parse
 UA = "MetStat-obs/1.0 (weather research site)"
 # ISO2 for ISD 'CTRY' is FIPS; AWC uses ISO2. Region (Iran + neighbours + Gulf/Caspian/Caucasus/Central Asia)
-FIPS = {"IR","IZ","AF","PK","TX","UZ","TI","AJ","AM","GG","TU","SA","AE","MU","QA","KU","BA","KZ","SY","IS","JO","RS","YE","IN"}
+FIPS = {"IR","IZ","AF","PK","TX","UZ","TI","AJ","AM","GG","TU","SA","AE","MU","QA","KU","BA","KZ","SY","IS","JO","YE"}
 ISO = {"IR","IQ","AF","PK","TM","UZ","TJ","AZ","AM","GE","TR","SA","AE","OM","QA","KW","BH","KZ","SY","IL","JO","YE"}
 def get(url, tries=3, timeout=60):
     for i in range(tries):
@@ -30,10 +30,11 @@ def isd():
             lat=float(r["LAT"]), lon=float(r["LON"]), elev=float(r["ELEV(M)"]) if r["ELEV(M)"] else None, src=["isd"])
     return out
 def awc(db):
+    ok = lambda s: isinstance(s.get("lat"), (int, float)) and isinstance(s.get("lon"), (int, float)) and -90 < s["lat"] <= 90 and -180 <= s["lon"] <= 180 and s["lon"] > -99
     b = get("https://aviationweather.gov/data/cache/stations.cache.json.gz")
     if not b: return
     for s in json.loads(gzip.decompress(b)):
-        if s.get("country") not in ISO: continue
+        if s.get("country") not in ISO or not ok(s): continue
         icao = s.get("icaoId"); wmo = str(s.get("wmoId") or "").zfill(5) if s.get("wmoId") else None
         k = next((k for k, v in db.items() if (icao and v["icao"] == icao) or (wmo and v["wmo"] == wmo)), None)
         if k is None:
