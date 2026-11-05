@@ -88,6 +88,16 @@ def read_nc(path, vname):
     log(f'  nc: var={key} dims={v.dimensions} units="{units}" shape={tuple(data.shape)} offs={offs[:4]}..')
     ds.close(); return data, lon, lat, offs, units
 
+MAX_AGE_DAYS = 75   # r193: NMME ماهانه است (انتشار حدود روز ۸–۱۰)؛ قدیمی‌تر از این یعنی پوشهٔ مدل در CPC دیگر به‌روز نمی‌شود (مثل CanCM4i/GEM5-NEMO که روی ۲۰۲۴-۰۶-۰۸ مانده‌اند)
+
+def too_old(run, now=None, max_days=None):
+    """run = «YYYYMMDDHH»؛ True اگر از max_days روز (پیش‌فرض MAX_AGE_DAYS) قدیمی‌تر باشد."""
+    from datetime import datetime, timezone
+    now = now or datetime.now(timezone.utc)
+    try: t = datetime.strptime(str(run)[:8], '%Y%m%d').replace(tzinfo=timezone.utc)
+    except ValueError: return False
+    return (now - t).days > (max_days or MAX_AGE_DAYS)
+
 def month_add(y, m, k): m += k; return y + (m - 1) // 12, (m - 1) % 12 + 1
 
 def run_model(up, mkey, init_dirs, a):
@@ -96,6 +106,7 @@ def run_model(up, mkey, init_dirs, a):
     subs = sorted(x for x in links(d) if re.fullmatch(r'\d{8,10}/', x)); 
     if not subs: log(f'  ✗ {mkey}: پوشهٔ اجرا نیست'); return 0
     sub = subs[-1]; ym = sub[:6]; y0, m0 = int(ym[:4]), int(ym[4:6]); run = sub[:8] + '00' if len(sub) >= 9 else ym + '0800'
+    if too_old(run): log(f'  ✗ {mkey}: آخرین اجرای CPC ({run}) قدیمی‌تر از {MAX_AGE_DAYS} روز است؛ منبع متوقف شده و دوباره آپلود نمی‌شود'); return 0   # r193
     files = [f for f in links(d + sub) if f.endswith('.nc')]
     made = 0; started = False
     for vn, (pid, fa, unit, cat, sc, mul) in VARS.items():
