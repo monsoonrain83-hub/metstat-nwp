@@ -4,7 +4,12 @@ name: seas5
 on:
   schedule:
     - cron: "30 14 * * *"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "آپلود حتی اگر همین run روی هاست هست (برای آزمون)"
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -25,4 +30,4 @@ jobs:
         env:
           CDSAPI_URL: https://cds.climate.copernicus.eu/api
           CDSAPI_KEY: ${{ secrets.CDSAPI_KEY }}
-        run: python seas5_maps.py --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}"
+        run: python seas5_maps.py --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}" ${{ inputs.force && '--force' || '' }}
