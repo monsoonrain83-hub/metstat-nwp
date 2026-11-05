@@ -1,0 +1,22 @@
+name: seas5-probe
+# r194: آزمون یک‌باره (دستی) — فقط ۳ درخواست کوچک به CDS می‌زند و ساختار پاسخ را چاپ می‌کند؛ هیچ داده‌ای آپلود نمی‌شود.
+on:
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: install
+        run: pip install numpy xarray netCDF4 cdsapi requests cfgrib eccodes
+      - name: probe CDS (SEAS5)
+        env:
+          CDSAPI_URL: https://cds.climate.copernicus.eu/api
+          CDSAPI_KEY: ${{ secrets.CDSAPI_KEY }}
+        run: python seas5_probe.py
