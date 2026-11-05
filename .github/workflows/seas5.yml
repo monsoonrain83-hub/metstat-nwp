@@ -1,0 +1,28 @@
+name: seas5
+# r194: نقشه‌های ماهانه (ecmwfseas) و فصلی ۳ماهه (ecmwfseass) ECMWF SEAS5 از CDS → هاست.
+# هر روز یک بار؛ اگر run ماه جاری روی هاست باشد بلافاصله خارج می‌شود (SEAS5 هر ماه یک بار، حدود روز ۵ منتشر می‌شود).
+on:
+  schedule:
+    - cron: "30 14 * * *"
+  workflow_dispatch: {}
+permissions:
+  contents: read
+concurrency:
+  group: seas5
+  cancel-in-progress: false
+jobs:
+  seas5:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: install
+        run: pip install -r requirements.txt && pip install xarray netCDF4 cdsapi cfgrib eccodes
+      - name: SEAS5 monthly + seasonal maps
+        env:
+          CDSAPI_URL: https://cds.climate.copernicus.eu/api
+          CDSAPI_KEY: ${{ secrets.CDSAPI_KEY }}
+        run: python seas5_maps.py --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}"
