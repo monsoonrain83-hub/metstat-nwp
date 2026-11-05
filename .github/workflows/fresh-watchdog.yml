@@ -1,0 +1,34 @@
+name: fresh-watchdog
+# r193: «اجرای موفق» ≠ «داده تازه». این workflow سن واقعی هر مدل را از manifest هاست می‌خواند و
+# فقط اگر داده از سقف مجاز (fresh_check.py) قدیمی‌تر بود و آن workflow در حال اجرا/صف نبود، آن را راه می‌اندازد.
+# ران‌های NWP روزانه را دست نمی‌زند (آن‌ها را nwp-watchdog.yml نگه می‌دارد).
+on:
+  schedule:
+    - cron: "17 */3 * * *"
+  workflow_dispatch: {}
+permissions:
+  actions: write
+  contents: read
+concurrency:
+  group: fresh-watchdog
+  cancel-in-progress: false
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: check freshness and re-dispatch stale workflows
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MX_HOST: ${{ secrets.MX_HOST }}
+        run: |
+          [ -z "$MX_HOST" ] && { echo "MX_HOST not set"; exit 0; }
+          python fresh_check.py --manifest "${MX_HOST%/}/data/manifest.json" | tee /tmp/fresh.txt
+          for wf in $(grep '^TRIGGER ' /tmp/fresh.txt | awk '{print $2}'); do
+            n=$(gh run list --repo "$GITHUB_REPOSITORY" -w "$wf" -L 20 --json status -q '[.[]|select(.status=="in_progress" or .status=="queued" or .status=="waiting" or .status=="pending" or .status=="requested")]|length')
+            if [ "$n" = "0" ]; then gh workflow run "$wf" --repo "$GITHUB_REPOSITORY" --ref main && echo "dispatched $wf"; else echo "$wf already active ($n)"; fi
+          done
