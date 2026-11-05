@@ -1,7 +1,7 @@
 {
- "time": "2026-11-05T01:30Z",
+ "time": "2026-11-05T02:22Z",
  "states": {
-  "Iran": 0,
+  "Iran": 21,
   "Iraq": 0,
   "Turkey": 0,
   "Azerbaijan": 0,
@@ -23,8 +23,7 @@
   "Jordan": 0,
   "Yemen": 0
  },
- "metar": 32,
- "synop": 7,
- "synop_unmatched": 19742,
- "fallback_per_block": true
+ "metar": 285,
+ "synop": 28,
+ "synop_unmatched": 19693
 }
