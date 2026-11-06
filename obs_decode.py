@@ -37,8 +37,11 @@ def decode_synop(raw):
                 else: r["td"] = _sgn(x[1], x[2:])
             elif c == "3" and r["p"] is None and x[1:].isdigit():
                 v = int(x[1:]) / 10; r["p"] = v + (1000 if v < 500 else 0)
-            elif c == "4" and r["slp"] is None and x[1:].isdigit() and x[1] != "9":
-                v = int(x[1:]) / 10; r["slp"] = v + (1000 if v < 500 else 0)
+            elif c == "4" and r["slp"] is None and x[1:].isdigit():
+                # r193: قبلاً «x[1] != "9"» فشار 900.0–999.9 hPa (گروه 49xxx) را دور می‌ریخت. گروه ژئوپتانسیل 4a3hhh هرگز با 9 شروع نمی‌شود؛
+                # برای جلوگیری از اشتباه با آن، فقط مقدار در بازهٔ فیزیکی فشار سطح دریا پذیرفته می‌شود.
+                v = int(x[1:]) / 10; v = v + (1000 if v < 500 else 0)
+                if 870 <= v <= 1085: r["slp"] = v
             elif c == "6" and r["rr"] is None and x[1:4].isdigit() and x[4].isdigit():
                 n = int(x[1:4]); mm = 0.0 if n == 990 else (n - 990) / 10 if n > 990 else float(n)
                 r["rr"] = mm; r["rr_h"] = {"1": 6, "2": 12, "3": 18, "4": 24, "5": 1, "6": 2, "7": 3, "8": 9, "9": 15}.get(x[4])
