@@ -53,7 +53,7 @@ def main():
             p = ln.split(",", 6)
             if len(p) < 7 or not p[0].isdigit(): continue
             sid = by_w.get(p[0])
-            if not sid: log["synop_unmatched"] += 1; continue
+            if not sid: log["synop_unmatched"] += 1; log.setdefault("unmatched_wmo", {}); log["unmatched_wmo"][p[0]] = log["unmatched_wmo"].get(p[0], 0) + 1; continue   # r193: فهرست WMOهای بی‌تطبیق برای تکمیل ایستگاه‌ها
             try: t = iso(dt.datetime(int(p[1]), int(p[2]), int(p[3]), int(p[4]), int(p[5]), tzinfo=UTC))
             except Exception: continue
             k = (sid, "synop", t)

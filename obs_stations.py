@@ -20,12 +20,19 @@ def isd():
     b = get("https://www.ncei.noaa.gov/pub/data/noaa/isd-history.csv")
     out = {}
     if not b: return out
-    for r in csv.DictReader(io.StringIO(b.decode("latin-1"))):
+    rows_isd = list(csv.DictReader(io.StringIO(b.decode("latin-1"))))
+    own5 = {r["USAF"] for r in rows_isd if re.fullmatch(r"\d{5}", r["USAF"]) and not r["USAF"].startswith("99")}   # r193: شمارهٔ WMOهایی که یک ردیف ۵ رقمی دارند
+    for r in rows_isd:
         if r["CTRY"] not in FIPS or not r["LAT"] or not r["LON"]: continue
         if r["END"] < (dt.date.today() - dt.timedelta(days=2000)).strftime("%Y%m%d"): continue
         usaf = r["USAF"]
-        wmo = usaf if re.fullmatch(r"\d{5}", usaf) and not usaf.startswith("99") else None
-        key = wmo or (r["ICAO"] or usaf)
+        w5 = usaf if re.fullmatch(r"\d{5}", usaf) and not usaf.startswith("99") else None
+        # r193: ایستگاه‌های WMO در ISD معمولاً USAF = شمارهٔ WMO + «0» (۶ رقمی) دارند، مثل انزلی 407180 ← 40718. قبلاً فقط ۵ رقمی می‌پذیرفتیم،
+        # پس ایستگاه‌های ایرانی با شمارهٔ ۶ رقمی بدون WMO می‌ماندند و گزارش SYNOP‌شان در obs_fetch «بی‌تطبیق» دور ریخته می‌شد.
+        # رقم ششم غیر از ۰ (مثل 407802) زیرایستگاه/ایستگاه دوم است و WMO نیست. فعال بودن را همچنان فقط گزارش واقعی Ogimet تعیین می‌کند.
+        w6 = usaf[:5] if re.fullmatch(r"\d{5}0", usaf) and not usaf.startswith("99") and usaf[:5] not in own5 else None
+        wmo = w5 or w6
+        key = w5 or (r["ICAO"] or usaf)      # کلید/شناسهٔ قبلی دست نمی‌خورد
         out[key] = dict(wmo=wmo, icao=r["ICAO"] or None, name_en=r["STATION NAME"].title(), country_fips=r["CTRY"],
             lat=float(r["LAT"]), lon=float(r["LON"]), elev=float(r["ELEV(M)"]) if r["ELEV(M)"] else None, src=["isd"])
     return out
@@ -65,11 +72,25 @@ def main():
     global_start = time.time()
     db = isd(); print("ISD rows", len(db)); awc(db)
     if not db: sys.exit("no station source reachable - nothing written (no fake data)")
+    seen_w = {}                                    # r193: یک WMO فقط روی یک ردیف بماند (ردیف دارای ICAO/AWC ارجح است)
+    for k, v in sorted(db.items(), key=lambda kv: (not kv[1].get("icao"), kv[0])):
+        w = v.get("wmo")
+        if w and w in seen_w: v["wmo"] = None
+        elif w: seen_w[w] = k
     metar_active(db)
     if "--no-synop" not in sys.argv: synop_active(db)
     rows = []
+    # r193: شناسه‌های قبلی (که سایت، recent.json و CSV روزانه به آن‌ها وابسته‌اند) حفظ می‌شود؛ ایستگاه تازه‌ای که WMO گرفت با شمارهٔ WMO شناسایی می‌شود.
+    prev = {}
+    try: prev = json.load(open("data/obs/stations.json", encoding="utf-8")).get("stations", [])
+    except Exception: pass
+    pw = {p["wmo"]: p["id"] for p in prev if p.get("wmo")}; pi = {p["icao"]: p["id"] for p in prev if p.get("icao")}; used = set()
     for k, v in sorted(db.items()):
-        v["active"] = bool(v.get("metar") or v.get("synop")); v["id"] = k; rows.append(v)
+        v["active"] = bool(v.get("metar") or v.get("synop"))
+        cand = pi.get(v.get("icao")) or pw.get(v.get("wmo")) or (v.get("wmo") if v.get("active") else None) or k
+        if cand in used: cand = k
+        if cand in used: cand = f"{k}_{len(used)}"
+        v["id"] = cand; used.add(cand); rows.append(v)
     os.makedirs("data/obs", exist_ok=True)
     json.dump(dict(generated=dt.datetime.utcnow().isoformat() + "Z", n=len(rows), n_active=sum(r["active"] for r in rows),
         sources=["NOAA ISD history", "AWC station cache", "AWC METAR 24h", "OGIMET SYNOP 48h"], stations=rows),
