@@ -24,7 +24,7 @@ def isd():
     own5 = {r["USAF"] for r in rows_isd if re.fullmatch(r"\d{5}", r["USAF"]) and not r["USAF"].startswith("99")}   # r193: شمارهٔ WMOهایی که یک ردیف ۵ رقمی دارند
     for r in rows_isd:
         if r["CTRY"] not in FIPS or not r["LAT"] or not r["LON"]: continue
-        if r["END"] < (dt.date.today() - dt.timedelta(days=2000)).strftime("%Y%m%d"): continue
+        if r["END"] < (dt.date.today() - dt.timedelta(days=7300 if r["CTRY"] == "IR" else 2000)).strftime("%Y%m%d"): continue   # r193: ایران ۲۰ سال (ایستگاه‌های ISD با END قدیمی ولی هنوز در SYNOP)
         usaf = r["USAF"]
         w5 = usaf if re.fullmatch(r"\d{5}", usaf) and not usaf.startswith("99") else None
         # r193: ایستگاه‌های WMO در ISD معمولاً USAF = شمارهٔ WMO + «0» (۶ رقمی) دارند، مثل انزلی 407180 ← 40718. قبلاً فقط ۵ رقمی می‌پذیرفتیم،
@@ -49,6 +49,21 @@ def awc(db):
                 lat=s.get("lat"), lon=s.get("lon"), elev=s.get("elev"), src=[])
         e = db[k]; e["icao"] = e["icao"] or icao; e["wmo"] = e["wmo"] or wmo
         e["country"] = s.get("country"); e["state"] = s.get("state") or None; e["src"].append("awc")
+def manual(db, path="obs_extra_stations.csv"):
+    """r193: ایستگاه‌های تأییدشده با دست (WMO، نام، مختصات) که در ISD/AWC نیستند ولی در SYNOP گزارش می‌دهند.
+    ستون‌ها: wmo,name_en,lat,lon,elev,country_fips,province. ردیف ناقص/نامعتبر نادیده گرفته می‌شود؛ مختصات ایران باید در ۲۴–۴۰°N و ۴۳–۶۴°E باشد."""
+    if not os.path.exists(path): return 0
+    have = {v.get("wmo") for v in db.values() if v.get("wmo")}; n = 0
+    for r in csv.DictReader(open(path, encoding="utf-8-sig")):
+        w = (r.get("wmo") or "").strip()
+        try: la, lo = float(r.get("lat") or ""), float(r.get("lon") or "")
+        except ValueError: continue
+        cc = (r.get("country_fips") or ("IR" if re.fullmatch(r"40[7-9]\d\d", w) else "")).strip()
+        if not re.fullmatch(r"\d{5}", w) or w in have or not cc or not (-90 < la <= 90 and -180 <= lo <= 180): continue
+        if cc == "IR" and not (24 <= la <= 40 and 43 <= lo <= 64): print("manual: مختصات خارج از ایران، رد شد", w, la, lo, file=sys.stderr); continue
+        el = r.get("elev"); db[w] = dict(wmo=w, icao=None, name_en=(r.get("name_en") or "").strip(), country_fips=cc, lat=la, lon=lo, elev=float(el) if el not in (None, "") else None,
+                                         src=["manual"], province=(r.get("province") or "").strip() or None); have.add(w); n += 1
+    print("manual stations added:", n); return n
 def metar_active(db):
     ids = sorted({v["icao"] for v in db.values() if v.get("icao")})
     seen = {}
@@ -70,7 +85,7 @@ def synop_active(db):
         time.sleep(2.5)   # be polite to OGIMET
 def main():
     global_start = time.time()
-    db = isd(); print("ISD rows", len(db)); awc(db)
+    db = isd(); print("ISD rows", len(db)); awc(db); manual(db)
     if not db: sys.exit("no station source reachable - nothing written (no fake data)")
     seen_w = {}                                    # r193: یک WMO فقط روی یک ردیف بماند (ردیف دارای ICAO/AWC ارجح است)
     for k, v in sorted(db.items(), key=lambda kv: (not kv[1].get("icao"), kv[0])):
