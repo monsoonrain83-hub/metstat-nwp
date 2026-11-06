@@ -1,5 +1,5 @@
 {
- "time": "2026-11-06T07:52Z",
+ "time": "2026-11-06T08:52Z",
  "states": {
   "Iran": 21,
   "Iraq": 0,
@@ -23,7 +23,7 @@
   "Jordan": 0,
   "Yemen": 0
  },
- "metar": 276,
+ "metar": 361,
  "synop": 46,
- "synop_unmatched": 19771
+ "synop_unmatched": 19768
 }
