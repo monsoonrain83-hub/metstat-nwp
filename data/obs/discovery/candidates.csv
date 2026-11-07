@@ -1,0 +1,26 @@
+﻿status,confidence,source,wmo,icao,name_en,name_fa,lat,lon,elev,province,registry_id,registry_name,km,decision
+possible_duplicate,low,isd,,,Izmit,,40.767,29.9,76.0,,170661,Izmit,0.0,pending
+possible_duplicate,low,isd,,,Javlenka,,54.4,68.4,115.0,,287751,Javlenka,0.0,pending
+possible_duplicate,low,isd,,,Chkalovo,,53.6,70.5,164.9,,288841,Chkalovo,0.0,pending
+possible_duplicate,low,isd,,,Janibek,,49.4,46.8,28.0,,344731,Janibek,0.0,pending
+possible_duplicate,low,isd,,,Aksai,,51.16,52.998,62.8,,351171,Aksai,0.0,pending
+possible_duplicate,low,isd,,,Baikadam,,43.8,69.9,336.0,,382021,Baikadam,0.0,pending
+possible_duplicate,low,isd,,,Merke,,42.9,73.2,702.0,,383511,Merke,0.0,pending
+possible_duplicate,low,isd,,,Sedom,,31.031,35.392,-388.0,,401921,Sedom,0.0,pending
+possible_duplicate,low,isd,,,Erbil Intl,,36.233,43.967,408.7,,406356,Erbil Intl,0.0,pending
+possible_duplicate,low,isd,,,Kish Island,,26.517,53.983,31.0,,407802,Kish Island,0.0,pending
+possible_duplicate,low,isd,,,Sirri Island,,25.9,54.533,13.0,,407803,Sirri Island,0.0,pending
+possible_duplicate,low,isd,,,Ilam,,33.583,46.4,1368.0,,407804,Ilam,0.0,pending
+possible_duplicate,low,isd,,,Khoram Abad,,33.433,48.283,1184.0,,407805,Khoram Abad,0.0,pending
+possible_duplicate,low,isd,,,Hamadan,,34.867,48.55,1801.0,,407806,Hamadan,0.0,pending
+possible_duplicate,low,isd,,,Sarakhs,,36.5,61.067,295.0,,407809,Sarakhs,0.0,pending
+possible_duplicate,low,isd,,,Babulsar,,36.717,52.65,-21.0,,40736,Babulsar,0.0,pending
+possible_duplicate,low,isd,,,Noshahr,,36.65,51.467,-19.0,,407822,Noshahr,0.0,pending
+possible_duplicate,low,isd,,,Yasouj,,30.683,51.55,1871.0,,407824,Yasouj,0.0,pending
+possible_duplicate,low,isd,,,Ardabil,,38.317,48.417,1348.0,,407825,Ardabil,0.0,pending
+possible_duplicate,low,isd,,,Abumusa Island,,25.867,55.033,7.0,,408351,Abumusa Island,0.0,pending
+possible_duplicate,low,isd,,,Al Maktoum Intl Airport,,24.886,55.172,18.9,,411945,Al Maktoum Intl Airport,0.0,pending
+possible_duplicate,low,isd,,,Rafo Adam,,22.5,57.383,327.4,,412645,Rafo Adam,0.0,pending
+possible_duplicate,low,isd,,,Turbat Intl,,25.983,63.033,152.0,,415195,Turbat Intl,0.0,pending
+possible_duplicate,low,isd,,,Chitral,,35.883,71.8,1494.0,,415205,Chitral,0.0,pending
+possible_duplicate,low,isd,,,Saidu Sharif,,34.817,72.35,970.0,,415235,Saidu Sharif,0.0,pending

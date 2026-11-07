@@ -1,0 +1,19 @@
+{
+ "generated": "2026-11-07T05:14:48+00:00",
+ "mode": "REVIEW",
+ "registry_n": 1037,
+ "registry_active": 774,
+ "sources": "atlas,isd_awc",
+ "source_rows": 1037,
+ "status": {
+  "match": 1012,
+  "possible_duplicate": 25
+ },
+ "high_confidence_new": 0,
+ "approved_exported": 0,
+ "registry_issues": {
+  "wmo_not_reporting": 146,
+  "icao_without_wmo": 178
+ },
+ "limits": []
+}
