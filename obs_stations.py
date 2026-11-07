@@ -49,21 +49,56 @@ def awc(db):
                 lat=s.get("lat"), lon=s.get("lon"), elev=s.get("elev"), src=[])
         e = db[k]; e["icao"] = e["icao"] or icao; e["wmo"] = e["wmo"] or wmo
         e["country"] = s.get("country"); e["state"] = s.get("state") or None; e["src"].append("awc")
-def manual(db, path="obs_extra_stations.csv"):
-    """r193: ایستگاه‌های تأییدشده با دست (WMO، نام، مختصات) که در ISD/AWC نیستند ولی در SYNOP گزارش می‌دهند.
-    ستون‌ها: wmo,name_en,lat,lon,elev,country_fips,province. ردیف ناقص/نامعتبر نادیده گرفته می‌شود؛ مختصات ایران باید در ۲۴–۴۰°N و ۴۳–۶۴°E باشد."""
+def manual(db, path="obs_extra_stations.csv", conflicts_out="data/obs/station_conflicts.json"):
+    """r193: ایستگاه‌های ایران از پایگاه اطلس سایت (فرم رسمی IRIMO) — ستون‌ها: wmo,name_en,name_fa,lat,lon,elev,country_fips,province,source.
+    قواعد (هیچ تطبیقی بر پایهٔ شباهت نام انجام نمی‌شود؛ فقط شمارهٔ WMO + فاصلهٔ مختصات):
+      • WMO در db نیست ← ایستگاه اضافه می‌شود (src=manual). فعال‌بودنش را باز هم فقط گزارش واقعی Ogimet تعیین می‌کند.
+      • WMO هست و فاصله ≤ ۲۵ km ← همان ایستگاه است؛ فقط فیلدهای خالی (province, name_fa) پر می‌شود.
+      • WMO هست، فاصله > ۲۵ km و ردیف موجود فقط از ISD و WMO حدسی از USAF است (بدون ICAO/AWC) ← WMO از ردیف ISD برداشته و ایستگاه رسمی اضافه می‌شود.
+      • WMO هست، فاصله > ۲۵ km و ردیف موجود AWC/ICAO دارد ← دست نمی‌خورد و برای بازبینی در station_conflicts.json ثبت می‌شود.
+    مختصات ایران باید در ۲۴–۴۰°N و ۴۳–۶۴°E باشد؛ ردیف نامعتبر رد می‌شود."""
     if not os.path.exists(path): return 0
-    have = {v.get("wmo") for v in db.values() if v.get("wmo")}; n = 0
+    import math
+    def hav(a, b, c, d):
+        p = math.pi / 180; x = math.sin((c - a) * p / 2) ** 2 + math.cos(a * p) * math.cos(c * p) * math.sin((d - b) * p / 2) ** 2
+        return 2 * 6371 * math.asin(math.sqrt(x))
+    byw = {v["wmo"]: k for k, v in db.items() if v.get("wmo")}; add = enr = rep = 0; conf = []
     for r in csv.DictReader(open(path, encoding="utf-8-sig")):
         w = (r.get("wmo") or "").strip()
         try: la, lo = float(r.get("lat") or ""), float(r.get("lon") or "")
         except ValueError: continue
         cc = (r.get("country_fips") or ("IR" if re.fullmatch(r"40[7-9]\d\d", w) else "")).strip()
-        if not re.fullmatch(r"\d{5}", w) or w in have or not cc or not (-90 < la <= 90 and -180 <= lo <= 180): continue
+        if not re.fullmatch(r"\d{5}", w) or not cc or not (-90 < la <= 90 and -180 <= lo <= 180): continue
         if cc == "IR" and not (24 <= la <= 40 and 43 <= lo <= 64): print("manual: مختصات خارج از ایران، رد شد", w, la, lo, file=sys.stderr); continue
-        el = r.get("elev"); db[w] = dict(wmo=w, icao=None, name_en=(r.get("name_en") or "").strip(), country_fips=cc, lat=la, lon=lo, elev=float(el) if el not in (None, "") else None,
-                                         src=["manual"], province=(r.get("province") or "").strip() or None); have.add(w); n += 1
-    print("manual stations added:", n); return n
+        prov = (r.get("province") or "").strip() or None; fa = (r.get("name_fa") or "").strip() or None
+        if w in byw:
+            v = db[byw[w]]; d = hav(v["lat"], v["lon"], la, lo)
+            if d <= 25:
+                for fld, val in (("province", prov), ("name_fa", fa)):
+                    if val and not v.get(fld): v[fld] = val
+                enr += 1; continue
+            c = dict(wmo=w, existing=dict(key=byw[w], name=v.get("name_en"), lat=v["lat"], lon=v["lon"], src=v.get("src"), icao=v.get("icao")), atlas=dict(name=r.get("name_en"), lat=la, lon=lo), km=round(d, 1))
+            if v.get("src") == ["isd"] and not v.get("icao"): c["action"] = "isd_wmo_removed_atlas_added"; conf.append(c); v["wmo"] = None; rep += 1
+            else: c["action"] = "kept_existing_needs_review"; conf.append(c); continue
+        # r194: اگر ردیف METAR (ICAO، بدون WMO) در فاصلهٔ کمتر از ۰٫۵ km باشد، همان ایستگاه فیزیکی است ← WMO به همان ردیف اضافه می‌شود
+        # (یک ایستگاه، چند شناسه). فاصلهٔ ۰٫۵ تا ۳ km عمداً ادغام نمی‌شود (مثلاً دوشان‌تپه و مهرآباد) و در station_discovery برای بازبینی می‌آید.
+        near = None
+        for k2, v2 in db.items():
+            if v2.get("wmo") or not v2.get("icao") or v2.get("country_fips") not in (cc, None): continue
+            d2 = hav(v2["lat"], v2["lon"], la, lo)
+            if d2 < 0.5 and (near is None or d2 < near[0]): near = (d2, k2)
+        if near:
+            v2 = db[near[1]]; v2["wmo"] = w; byw[w] = near[1]
+            for fld, val in (("province", prov), ("name_fa", fa)):
+                if val and not v2.get(fld): v2[fld] = val
+            if "manual" not in v2.setdefault("src", []): v2["src"].append("manual")
+            conf.append(dict(wmo=w, action="wmo_attached_to_icao_row", existing=dict(key=near[1], name=v2.get("name_en"), icao=v2.get("icao")), atlas=dict(name=r.get("name_en"), lat=la, lon=lo), km=round(near[0], 2)))
+            enr += 1; continue
+        el = r.get("elev"); k = w if w not in db else w + "_a"
+        db[k] = dict(wmo=w, icao=None, name_en=(r.get("name_en") or "").strip(), name_fa=fa, country_fips=cc, lat=la, lon=lo, elev=float(el) if el not in (None, "") else None, src=["manual"], province=prov); byw[w] = k; add += 1
+    if conf:
+        os.makedirs(os.path.dirname(conflicts_out) or ".", exist_ok=True); json.dump(conf, open(conflicts_out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    print(f"manual: added {add}, enriched {enr}, isd-wmo replaced {rep}, conflicts {len(conf)}"); return add
 def metar_active(db):
     ids = sorted({v["icao"] for v in db.values() if v.get("icao")})
     seen = {}
