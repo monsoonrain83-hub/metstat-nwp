@@ -1098,3 +1098,763 @@ date,id,wmo,icao,name,rr24,rr24_src,tmax,tmax_src,tmin,tmin_src,wmax_ms,wmax_src
 2026-11-06,UZSB,,UZSB,Bukhara Arpt,,,23,obs-hourly,10,obs-hourly,5.1,obs,47
 2026-11-06,UZSK,,UZSK,Karshi Arpt,,,25,obs-hourly,14,obs-hourly,3.1,obs,48
 2026-11-06,UZTP,,UZTP,Tashkent-Khumo Intl,,,22,obs-hourly,9,obs-hourly,7.2,obs,48
+2026-11-07,17020,17020,,Bartin,,,15.1,synop-sec3,8.4,obs-hourly,2.1,obs,22
+2026-11-07,17022,17022,LTAS,Zonguldak/Çaycuma Arpt,,,11.8,synop-sec3,6.7,obs-hourly,5.1,obs,30
+2026-11-07,17024,17024,,Inebolu,,,12.1,synop-sec3,6.4,obs-hourly,8.7,obs,22
+2026-11-07,17026,17026,,Sinop,,,14.9,synop-sec3,8.6,obs-hourly,4.6,obs,22
+2026-11-07,17030,17030,,Samsun,,,14.6,synop-sec3,8.9,obs-hourly,5.7,obs,22
+2026-11-07,17033,17033,,Ordu,,,13.7,synop-sec3,10.4,obs-hourly,2.1,obs,22
+2026-11-07,17034,17034,,Giresun,,,14.1,synop-sec3,9.9,obs-hourly,5.7,obs,22
+2026-11-07,17040,17040,,Rize,,,16.2,synop-sec3,10.7,obs-hourly,3.1,obs,22
+2026-11-07,17042,17042,,Hopa,,,14.9,synop-sec3,10.9,obs-hourly,3.1,obs,22
+2026-11-07,17045,17045,,Artvin,,,10.8,synop-sec3,6.4,obs-hourly,4.1,obs,22
+2026-11-07,17046,17046,,Ardahan,,,4.2,synop-sec3,0.0,obs-hourly,1.5,obs,22
+2026-11-07,17050,17050,,Edirne,,,13.8,synop-sec3,4.6,obs-hourly,2.1,obs,22
+2026-11-07,17052,17052,,Kirklareli,,,12.8,synop-sec3,4.0,obs-hourly,3.6,obs,22
+2026-11-07,17056,17056,,Tekirdag,,,13.5,synop-sec3,5.9,obs-hourly,3.6,obs,22
+2026-11-07,17059,17059,,Kumkoy,,,21.4,synop-sec3,7.4,obs-hourly,8.7,obs,22
+2026-11-07,17061,17061,,Sariyer,,,12.7,synop-sec3,7.8,obs-hourly,6.2,obs,22
+2026-11-07,17064,17064,,Istanbul Bolge (Kartal),,,13.4,synop-sec3,7.5,obs-hourly,1.0,obs,22
+2026-11-07,17068,17068,,Cengiztopel,,,13.2,synop-sec3,,,3.6,obs,7
+2026-11-07,17069,17069,,Adapazari,,,13.6,synop-sec3,7.9,obs-hourly,2.1,obs,22
+2026-11-07,17070,17070,,Bolu,,,7.3,synop-sec3,2.4,obs-hourly,2.1,obs,22
+2026-11-07,17072,17072,,Duzce,,,12.0,synop-sec3,7.0,obs-hourly,2.1,obs,22
+2026-11-07,17080,17080,,Cankiri,,,13.5,synop-sec3,3.6,obs-hourly,6.7,obs,22
+2026-11-07,17084,17084,,Corum,,,11.2,synop-sec3,5.6,obs-hourly,4.6,obs,22
+2026-11-07,17085,17085,,Amasya,,,12.7,synop-sec3,7.2,obs-hourly,3.1,obs,22
+2026-11-07,17086,17086,LTAW,Tokat Arpt,,,11.4,synop-sec3,7,obs-hourly,3.6,obs,36
+2026-11-07,17088,17088,,Gumushane,,,8.7,synop-sec3,4.5,obs-hourly,2.6,obs,22
+2026-11-07,17089,17089,,Bayburt,,,8.9,synop-sec3,3.3,obs-hourly,2.1,obs,22
+2026-11-07,17090,17090,LTAR,Sivas,,,6,obs-hourly,1,obs-hourly,5.7,obs,23
+2026-11-07,17095,17095,,Erzurum Bolge,,,7.3,synop-sec3,-0.2,obs-hourly,1.5,obs,22
+2026-11-07,17098,17098,LTCF,Kars/Harakani Arpt,,,6.1,synop-sec3,-0.1,obs-hourly,4.1,obs,30
+2026-11-07,17099,17099,LTCO,Ağrı Arpt,,,8.7,synop-sec3,3.4,obs-hourly,3.6,obs,32
+2026-11-07,17100,17100,,Igdir,,,12.1,synop-sec3,7.6,obs-hourly,0.5,obs,22
+2026-11-07,17120,17120,,Bilecik,,,9.1,synop-sec3,4.4,obs-hourly,3.1,obs,22
+2026-11-07,17127,17127,LTAE,Murted ),,,12.0,synop-sec3,,,3.6,obs,7
+2026-11-07,17130,17130,,Ankara/Central,,,10.9,synop-sec3,3.3,obs-hourly,3.1,obs,22
+2026-11-07,17135,17135,,Kirikkale,,,12.5,synop-sec3,3.9,obs-hourly,3.1,obs,22
+2026-11-07,17140,17140,,Yozgat,,,7.1,synop-sec3,2.3,obs-hourly,1.5,obs,22
+2026-11-07,17145,17145,LTFD,Balikesir/Seyit Arpt,,,13,obs-hourly,7,obs-hourly,9.8,obs,23
+2026-11-07,17155,17155,,Kutahya,,,6.1,synop-sec3,2.1,obs-hourly,3.6,obs,20
+2026-11-07,17160,17160,,Kirsehir,,,9.9,synop-sec3,4.0,obs-hourly,5.1,obs,22
+2026-11-07,17165,17165,,Tunceli,,,10.7,synop-sec3,6.6,obs-hourly,2.6,obs,22
+2026-11-07,17175,17175,,Ayvalik,,,15.0,synop-sec3,9.1,obs-hourly,5.1,obs,22
+2026-11-07,17180,17180,,Dikili,,,15.9,synop-sec3,7.4,obs-hourly,3.1,obs,22
+2026-11-07,17186,17186,,Manisa,,,15.4,synop-sec3,9.5,obs-hourly,1.5,obs,22
+2026-11-07,17188,17188,LTBO,Uşak Arpt,,,11,obs-hourly,8,obs-hourly,7.2,obs,9
+2026-11-07,17191,17191,,Cihanbeyli,,,8.5,synop-sec3,2.5,obs-hourly,5.1,obs,22
+2026-11-07,17192,17192,,Aksaray,,,10.7,synop-sec3,4.9,obs-hourly,3.6,obs,22
+2026-11-07,17193,17193,,Nevsehir,,,7.8,synop-sec3,4.0,obs-hourly,2.6,obs,22
+2026-11-07,17195,17195,LTAU,Kayseri Intl,,,10.1,synop-sec3,5,obs-hourly,9.3,obs,53
+2026-11-07,17200,17200,LTAT,Malatya Arpt,,,10.8,synop-sec3,7,obs-hourly,4.1,obs,54
+2026-11-07,17204,17204,,Mus,,,7.9,synop-sec3,6.0,obs-hourly,1.0,obs,22
+2026-11-07,17210,17210,,Siirt,,,11.5,synop-sec3,9.2,obs-hourly,1.5,obs,22
+2026-11-07,17220,17220,,Izmir/Guzelyali,,,18.1,synop-sec3,9.4,obs-hourly,5.1,obs,22
+2026-11-07,17221,17221,,Cesme,,,16.6,synop-sec3,10.7,obs-hourly,7.2,obs,22
+2026-11-07,17234,17234,LTBD,Aydin/Çıldır Arpt,,,19.4,synop-sec3,5,obs-hourly,4.6,obs,45
+2026-11-07,17237,17237,,Denizli,,,16.2,synop-sec3,7.2,obs-hourly,2.1,obs,22
+2026-11-07,17238,17238,,Burdur,,,15.1,synop-sec3,3.8,obs-hourly,2.1,obs,22
+2026-11-07,17239,17239,,Aksehir,,,7.3,synop-sec3,3.7,obs-hourly,1.5,obs,22
+2026-11-07,17246,17246,,Karaman,,,10.4,synop-sec3,5.4,obs-hourly,2.1,obs,22
+2026-11-07,17248,17248,,Eregli/Konya,,,10.7,synop-sec3,6.3,obs-hourly,2.6,obs,22
+2026-11-07,17250,17250,,Nigde,,,10.7,synop-sec3,5.4,obs-hourly,4.1,obs,22
+2026-11-07,17260,17260,LTAJ,Gaziantep Arpt,,,14.4,synop-sec3,10,obs-hourly,3.6,obs,58
+2026-11-07,17262,17262,,Kilis,,,15.9,synop-sec3,11.5,obs-hourly,2.1,obs,22
+2026-11-07,17270,17270,,Sanliurfa,,,15.9,synop-sec3,12.4,obs-hourly,2.1,obs,22
+2026-11-07,17285,17285,,Hakkari,,,9.1,synop-sec3,3.1,obs-hourly,4.1,obs,22
+2026-11-07,17292,17292,,Mugla,,,15.9,synop-sec3,5.4,obs-hourly,2.1,obs,22
+2026-11-07,17296,17296,,Fethiye,,,23.3,synop-sec3,11.4,obs-hourly,2.1,obs,22
+2026-11-07,17297,17297,,Datca,,,18.6,synop-sec3,14.5,obs-hourly,11.8,obs,22
+2026-11-07,17298,17298,,Marmaris,,,21.7,synop-sec3,11.1,obs-hourly,2.1,obs,22
+2026-11-07,17302,17302,,Antalya-Bolge,,,25.7,synop-sec3,14.3,obs-hourly,2.1,obs,22
+2026-11-07,17310,17310,,Alanya,,,24.7,synop-sec3,16.8,obs-hourly,2.6,obs,22
+2026-11-07,17320,17320,,Anamur,,,24.6,synop-sec3,15.4,obs-hourly,4.1,obs,22
+2026-11-07,17330,17330,,Silifke,,,23.5,synop-sec3,15.3,obs-hourly,3.6,obs,22
+2026-11-07,17340,17340,,Mersin,,,24.4,synop-sec3,15.1,obs-hourly,3.1,obs,22
+2026-11-07,17355,17355,,Osmaniye,,,21.2,synop-sec3,12.0,obs-hourly,1.5,obs,22
+2026-11-07,17375,17375,,Finike,,,22.7,synop-sec3,13.8,obs-hourly,2.6,obs,22
+2026-11-07,17380,17380,,Kas,,,23.2,synop-sec3,14.6,obs-hourly,3.1,obs,22
+2026-11-07,28764,28764,,Presnogorkovka,,,5.7,synop-sec3,-3.5,synop-sec3,17.0,obs,8
+2026-11-07,28766,28766,,Blagoveshchenka,,,8.5,synop-sec3,-1.6,synop-sec3,17.0,obs,8
+2026-11-07,28843,28843,,Komsomolec,,,3.4,synop-sec3,-1.0,synop-sec3,21.0,obs,8
+2026-11-07,28863,28863,,Maryevka,,,9.8,synop-sec3,-3.6,synop-sec3,6.0,obs,8
+2026-11-07,28867,28867,,Sarykol,,,6.4,synop-sec3,-0.9,synop-sec3,8.0,obs,8
+2026-11-07,28873,28873,,Krasnoarmejsk,,,12.0,synop-sec3,-3.3,synop-sec3,16.0,obs,8
+2026-11-07,28879,28879,,Kokshetay,,,10.7,synop-sec3,-2.2,synop-sec3,7.0,obs,8
+2026-11-07,28948,28948,,Georgiyevka,,,2.2,synop-sec3,-0.4,synop-sec3,16.0,obs,8
+2026-11-07,28966,28966,,Ruzaevka,,,8.2,synop-sec3,-4.4,synop-sec3,5.0,obs,8
+2026-11-07,28978,28978,,Balkasino,,,10.0,synop-sec3,-6.5,synop-sec3,6.0,obs,8
+2026-11-07,28984,28984,,Sucinsk,,,10.2,synop-sec3,-7.0,synop-sec3,16.0,obs,8
+2026-11-07,28993,28993,,Golubovka,,,12.4,synop-sec3,2.3,synop-sec3,7.0,obs,8
+2026-11-07,29802,29802,,Mikhailovka,,,9.6,synop-sec3,2.9,synop-sec3,5.0,obs,8
+2026-11-07,29807,29807,,Ertis,,,10.8,synop-sec3,3.7,synop-sec3,6.0,obs,8
+2026-11-07,29906,29906,,Uspenka,,,11.2,synop-sec3,3.2,synop-sec3,4.0,obs,8
+2026-11-07,34394,34394,,Dzhambala South,,,2.2,synop-sec3,2.0,synop-sec3,7.0,obs,8
+2026-11-07,34398,34398,,Zhalpaktal,,,4.8,synop-sec3,3.8,synop-sec3,5.0,obs,8
+2026-11-07,34691,34691,,Novyj Ushtogan,,,6.4,synop-sec3,0.9,synop-sec3,6.0,obs,8
+2026-11-07,34798,34798,,Ganjushkino,,,8.9,synop-sec3,0.5,synop-sec3,7.0,obs,8
+2026-11-07,35078,35078,,Atbasar,,,11.4,synop-sec3,-6.4,synop-sec3,7.0,obs,8
+2026-11-07,35085,35085,,Akkol',,,12.2,synop-sec3,-2.0,synop-sec3,7.0,obs,8
+2026-11-07,35092,35092,,Bestobe,,,13.4,synop-sec3,3.3,obs-hourly,7.0,obs,8
+2026-11-07,35106,35106,,Sharakkop,,,3.7,synop-sec3,1.5,synop-sec3,5.0,obs,8
+2026-11-07,35107,35107,,Kamemka,,,3.5,synop-sec3,2.4,synop-sec3,6.0,obs,8
+2026-11-07,35118,35118,,Cingirlau,,,3.5,synop-sec3,1.7,synop-sec3,7.0,obs,8
+2026-11-07,35167,35167,,Derzhavinsk,,,9.2,synop-sec3,-5.7,obs-hourly,4.0,obs,8
+2026-11-07,35173,35173,,Zhaltyr,,,12.6,synop-sec3,-4.7,synop-sec3,17.0,obs,8
+2026-11-07,35217,35217,,Dzhambejty,,,5.0,synop-sec3,1.5,synop-sec3,10.0,obs,8
+2026-11-07,35234,35234,,Kos-Istek,,,1.9,synop-sec3,0.1,synop-sec3,16.0,obs,8
+2026-11-07,35235,35235,,Stepnoe,,,1.8,synop-sec3,-0.3,obs-hourly,13.0,obs,24
+2026-11-07,35283,35283,,Vishnevka,,,15.0,synop-sec3,3.2,synop-sec3,15.0,obs,8
+2026-11-07,35284,35284,,Arykty,,,11.9,synop-sec3,-1.6,synop-sec3,9.0,obs,8
+2026-11-07,35302,35302,,Chapaevo,,,4.3,synop-sec3,2.9,obs-hourly,7.0,obs,8
+2026-11-07,35315,35315,,Karatyubinskiy,,,5.6,synop-sec3,3.9,synop-sec3,7.0,obs,8
+2026-11-07,35325,35325,,Llinka,,,5.0,synop-sec3,1.4,synop-sec3,7.0,obs,8
+2026-11-07,35334,35334,,Tokmansay,,,1.8,synop-sec3,-2.2,obs-hourly,8.0,obs,24
+2026-11-07,35344,35344,,Karabutak,,,3.0,synop-sec3,-5.9,synop-sec3,9.0,obs,8
+2026-11-07,35357,35357,,Barshino,,,13.1,synop-sec3,1.4,synop-sec3,8.0,obs,8
+2026-11-07,35358,35358,,Torgai,,,5.9,synop-sec3,-5.3,synop-sec3,7.0,obs,8
+2026-11-07,35361,35361,,Amangeldy,,,10.2,synop-sec3,-7.2,synop-sec3,3.0,obs,8
+2026-11-07,35363,35363,,Arkalyk,,,12.1,synop-sec3,-5.7,synop-sec3,8.0,obs,8
+2026-11-07,35406,35406,,Taipak,,,6.5,synop-sec3,3.7,synop-sec3,7.0,obs,8
+2026-11-07,35416,35416,,Uil,,,5.9,synop-sec3,2.5,synop-sec3,7.0,obs,8
+2026-11-07,35426,35426,,Temir,,,4.1,synop-sec3,-3.2,synop-sec3,4.0,obs,8
+2026-11-07,35437,35437,,Emba,,,3.3,synop-sec3,-2.6,synop-sec3,7.0,obs,8
+2026-11-07,35475,35475,,Shubarkul,,,10.9,synop-sec3,1.5,obs-hourly,8.0,obs,24
+2026-11-07,35497,35497,,Zharyk,,,12.0,synop-sec3,4.4,synop-sec3,15.0,obs,8
+2026-11-07,35498,35498,,Aksu-Ayuly,,,10.6,synop-sec3,1.6,synop-sec3,4.0,obs,8
+2026-11-07,35522,35522,,Karaul Kel'Dy,,,4.7,synop-sec3,-0.5,synop-sec3,5.0,obs,8
+2026-11-07,35563,35563,,Ulytau,,,8.5,synop-sec3,-0.8,synop-sec3,3.0,obs,8
+2026-11-07,35576,35576,,Kzylzhar,,,14.1,synop-sec3,7.0,synop-sec3,7.0,obs,8
+2026-11-07,35615,35615,,Makat,,,7.0,synop-sec3,-0.4,obs-hourly,10.0,obs,8
+2026-11-07,35662,35662,,Karsakbay,,,11.1,synop-sec3,3.1,obs-hourly,5.0,obs,20
+2026-11-07,35699,35699,,Bektauata,,,10.7,synop-sec3,5.2,synop-sec3,9.0,obs,8
+2026-11-07,35700,35700,,Atyrau,,,8.0,synop-sec3,3.6,synop-sec3,6.0,obs,8
+2026-11-07,35701,35701,,Isatai,,,7.7,synop-sec3,1.9,obs-hourly,9.0,obs,8
+2026-11-07,35793,35793,,Moiynty,,,10.3,synop-sec3,1.9,obs-hourly,5.0,obs,24
+2026-11-07,35796,35796,,Balhash,,,7.6,synop-sec3,2.0,synop-sec3,4.0,obs,8
+2026-11-07,35849,35849,,Kazaly,,,12.1,synop-sec3,-0.4,synop-sec3,4.0,obs,8
+2026-11-07,35895,35895,,Koktas,,,7.6,synop-sec3,2.8,synop-sec3,5.0,obs,8
+2026-11-07,35925,35925,,Sam,,,6.1,synop-sec3,-4.0,synop-sec3,5.0,obs,8
+2026-11-07,35927,35927,,Bejneu,,,7.0,synop-sec3,-1.4,synop-sec3,6.0,obs,8
+2026-11-07,35953,35953,,Zhosaly,,,15.4,synop-sec3,1.5,synop-sec3,6.0,obs,8
+2026-11-07,35969,35969,,Zlikha,,,21.0,synop-sec3,7.2,synop-sec3,2.0,obs,8
+2026-11-07,36012,36012,,Scerbakty,,,11.0,synop-sec3,2.8,synop-sec3,15.0,obs,8
+2026-11-07,36015,36015,,Lebjazje,,,10.7,synop-sec3,0.7,synop-sec3,10.0,obs,8
+2026-11-07,36026,36026,,Novonikalaevka,,,9.3,synop-sec3,1.6,obs-hourly,6.0,obs,8
+2026-11-07,36126,36126,,Bajanaul,,,12.6,synop-sec3,4.9,synop-sec3,4.0,obs,8
+2026-11-07,36152,36152,,Semijarka,,,11.6,synop-sec3,1.7,synop-sec3,8.0,obs,8
+2026-11-07,36177,36177,,Semipalatinsk,,,9.8,synop-sec3,-0.6,synop-sec3,6.0,obs,8
+2026-11-07,36197,36197,,Tavria,,,7.0,synop-sec3,-0.3,obs-hourly,5.0,obs,8
+2026-11-07,36208,36208,,Leninogorsk,,,3.4,synop-sec3,-8.2,synop-sec3,3.0,obs,8
+2026-11-07,36341,36341,,Egindybulak,,,11.2,synop-sec3,1.6,obs-hourly,5.0,obs,24
+2026-11-07,36392,36392,,Borodine,,,9.3,synop-sec3,0.0,synop-sec3,17.0,obs,8
+2026-11-07,36394,36394,,Carskaja,,,9.6,synop-sec3,-2.8,synop-sec3,17.0,obs,8
+2026-11-07,36397,36397,,Zhangiztobe,,,9.2,synop-sec3,-1.0,synop-sec3,20.0,obs,8
+2026-11-07,36418,36418,,Samarskoe,,,6.2,synop-sec3,-4.3,synop-sec3,4.0,obs,8
+2026-11-07,36421,36421,,Zyrjanovsk,,,4.9,synop-sec3,-12.4,synop-sec3,1.0,obs,8
+2026-11-07,36428,36428,,Ulken Naryn,,,7.1,synop-sec3,-6.8,synop-sec3,4.0,obs,8
+2026-11-07,36439,36439,,Katon-Karagaj,,,-2.2,synop-sec3,-8.5,synop-sec3,9.0,obs,8
+2026-11-07,36498,36498,,Barshatas,,,9.4,synop-sec3,-1.8,synop-sec3,9.0,obs,8
+2026-11-07,36501,36501,,Karaul,,,10.4,synop-sec3,1.4,synop-sec3,10.0,obs,8
+2026-11-07,36535,36535,,Kokpekty,,,7.5,synop-sec3,-8.6,synop-sec3,5.0,obs,8
+2026-11-07,36619,36619,,Zuz-Agac,,,5.3,synop-sec3,-2.4,synop-sec3,13.0,obs,8
+2026-11-07,36639,36639,,Urzhar,,,10.4,synop-sec3,-8.7,synop-sec3,7.0,obs,8
+2026-11-07,36643,36643,,Aksuat,,,7.9,synop-sec3,-8.0,synop-sec3,4.0,obs,8
+2026-11-07,36665,36665,,Zajsan,,,6.9,synop-sec3,-1.5,synop-sec3,3.0,obs,8
+2026-11-07,36729,36729,,Uc-Aral,,,7.3,synop-sec3,-0.6,synop-sec3,3.0,obs,8
+2026-11-07,36736,36736,,Bahty,,,8.5,synop-sec3,0.3,synop-sec3,15.0,obs,8
+2026-11-07,36777,36777,,Karatal E,,,9.4,synop-sec3,-0.5,synop-sec3,5.0,obs,8
+2026-11-07,36785,36785,,Zhansugurov,,,10.6,synop-sec3,4.4,obs-hourly,10.0,obs,24
+2026-11-07,36786,36786,,Sarkand,,,12.1,synop-sec3,-1.2,synop-sec3,1.0,obs,8
+2026-11-07,36796,36796,,Lepsinsk,,,5.4,synop-sec3,-6.3,synop-sec3,0.0,obs,8
+2026-11-07,36806,36806,,Druzba,,,8.5,synop-sec3,5.4,synop-sec3,23.0,obs,8
+2026-11-07,36819,36819,,Aydarli,,,15.7,synop-sec3,1.0,synop-sec3,17.0,obs,8
+2026-11-07,36821,36821,,Bakanas,,,12.0,synop-sec3,1.9,synop-sec3,4.0,obs,8
+2026-11-07,36839,36839,,Saryozek,,,15.3,synop-sec3,1.3,synop-sec3,2.0,obs,8
+2026-11-07,36843,36843,,Kok-Su,,,15.4,synop-sec3,8.4,synop-sec3,5.0,obs,8
+2026-11-07,36846,36846,,Kugali,,,14.5,synop-sec3,-0.5,synop-sec3,5.0,obs,8
+2026-11-07,36856,36856,,Konyrolen,,,13.5,obs-hourly,-1.5,obs-hourly,3.0,obs,8
+2026-11-07,36859,36859,,Zharkent,,,16.5,synop-sec3,1.0,synop-sec3,1.0,obs,8
+2026-11-07,36870,36870,,Almaty,,,15.4,synop-sec3,6.0,synop-sec3,1.0,obs,8
+2026-11-07,36883,36883,,Iliysky,,,16.7,synop-sec3,4.9,obs-hourly,4.0,obs,8
+2026-11-07,36885,36885,,Issyk,,,15.7,synop-sec3,8.9,synop-sec3,4.0,obs,8
+2026-11-07,36889,36889,,Turgen,,,2.7,synop-sec3,-1.8,synop-sec3,4.0,obs,8
+2026-11-07,36894,36894,,Malibay,,,15.6,synop-sec3,3.5,synop-sec3,7.0,obs,8
+2026-11-07,36905,36905,,Podgornoje,,,10.0,synop-sec3,3.0,synop-sec3,4.0,obs,8
+2026-11-07,36953,36953,,Narynkol,,,14.0,synop-sec3,-7.5,synop-sec3,1.0,obs,8
+2026-11-07,37379,37379,,Poti,,,10.7,synop-sec3,10.3,synop-sec3,3.0,obs,1
+2026-11-07,37395,37395,,Kutaisi,,,13.4,synop-sec3,8.6,synop-sec3,3.0,obs,8
+2026-11-07,37409,37409,,Mta-Sabueti,,,6.4,synop-sec3,1.8,synop-sec3,5.0,obs,8
+2026-11-07,37437,37437,,Duseti,,,3.9,synop-sec3,3.8,synop-sec3,,,1
+2026-11-07,37481,37481,,Kobuleti,,,9.7,synop-sec3,9.6,synop-sec3,2.0,obs,1
+2026-11-07,37514,37514,,Akhaltsikhe,,,8.5,synop-sec3,4.4,synop-sec3,0.0,obs,8
+2026-11-07,37531,37531,,Gori,,,11.0,synop-sec3,5.6,synop-sec3,6.0,obs,8
+2026-11-07,37545,37545,,Tbilisi,,,12.5,synop-sec3,7.0,obs-hourly,8.0,obs,8
+2026-11-07,37609,37609,,Ashotsk,,,3.3,synop-sec3,0.0,synop-sec3,2.0,obs,8
+2026-11-07,37618,37618,,Tashir,,,8.6,synop-sec3,0.0,synop-sec3,4.0,obs,8
+2026-11-07,37621,37621,,Bolnisi,,,11.0,synop-sec3,5.9,synop-sec3,2.0,obs,8
+2026-11-07,37661,37661,,Shaki,,,13.8,synop-sec3,,,1.0,obs,2
+2026-11-07,37675,37675,,Guba,,,7.1,synop-sec3,5.4,synop-sec3,1.0,obs,8
+2026-11-07,37682,37682,,Amasia,,,5.3,synop-sec3,0.0,synop-sec3,2.0,obs,8
+2026-11-07,37699,37699,,Aparan,,,5.2,synop-sec3,0.1,synop-sec3,2.0,obs,8
+2026-11-07,37704,37704,,Vanadzor,,,10.4,synop-sec3,0.2,synop-sec3,2.0,obs,8
+2026-11-07,37711,37711,,Idjevan,,,10.0,synop-sec3,5.5,synop-sec3,1.0,obs,8
+2026-11-07,37717,37717,,Sevan Ozero,,,5.9,synop-sec3,2.4,synop-sec3,4.0,obs,8
+2026-11-07,37729,37729,,Gadabay,,,,,,,2.0,obs,2
+2026-11-07,37735,37735,,Gandja,,,16.9,synop-sec3,9.1,synop-sec3,2.0,obs,8
+2026-11-07,37740,37740,,Qabala,,,14.2,synop-sec3,,,2.0,obs,2
+2026-11-07,37749,37749,,Goychay,,,13.5,synop-sec3,10.5,synop-sec3,2.0,obs,8
+2026-11-07,37756,37756,,Maraza,,,10.7,synop-sec3,6.6,synop-sec3,4.0,obs,8
+2026-11-07,37772,37772,,Talin,,,6.8,synop-sec3,3.2,synop-sec3,5.0,obs,8
+2026-11-07,37785,37785,,Ashtarak,,,11.2,synop-sec3,6.6,synop-sec3,1.0,obs,8
+2026-11-07,37787,37787,,Armavir,,,11.3,synop-sec3,7.0,synop-sec3,1.0,obs,8
+2026-11-07,37792,37792,,Hrazdan,,,6.2,synop-sec3,1.0,synop-sec3,2.0,obs,8
+2026-11-07,37801,37801,,Gavar,,,6.0,synop-sec3,3.0,synop-sec3,4.0,obs,8
+2026-11-07,37815,37815,,Masrik,,,7.4,synop-sec3,3.7,synop-sec3,2.0,obs,8
+2026-11-07,37832,37832,,Barda,,,15.5,synop-sec3,,,1.0,obs,2
+2026-11-07,37851,37851,,Baku (Khurdalan),,,13.8,synop-sec3,,,0.0,obs,2
+2026-11-07,37871,37871,,Artashat,,,13.1,synop-sec3,8.2,synop-sec3,0.0,obs,8
+2026-11-07,37880,37880,,Vorotani Lernantck,,,3.5,synop-sec3,1.5,synop-sec3,11.0,obs,8
+2026-11-07,37882,37882,,Djermuk,,,3.3,synop-sec3,0.9,synop-sec3,1.0,obs,8
+2026-11-07,37897,37897,,Sisian,,,7.8,synop-sec3,3.2,synop-sec3,3.0,obs,8
+2026-11-07,37905,37905,,Beylagan Aerodrome,,,17.6,synop-sec3,,,0.0,obs,2
+2026-11-07,37925,37925,,Neftchala,,,19.7,synop-sec3,,,0.0,obs,2
+2026-11-07,37953,37953,,Goris,,,7.0,synop-sec3,1.3,synop-sec3,1.0,obs,8
+2026-11-07,37958,37958,,Megri,,,14.6,synop-sec3,9.2,synop-sec3,3.0,obs,8
+2026-11-07,37989,37989,,Astara,,,,,,,2.0,obs,2
+2026-11-07,38002,38002,,Tuscikuduk,,,9.5,synop-sec3,1.5,synop-sec3,5.0,obs,8
+2026-11-07,38008,38008,,Tushchibek,,,8.6,synop-sec3,2.0,synop-sec3,5.0,obs,8
+2026-11-07,38023,38023,,Karakapalkija,,,7.0,synop-sec3,-5.3,synop-sec3,5.0,obs,8
+2026-11-07,38051,38051,,Karak,,,14.5,synop-sec3,3.3,synop-sec3,3.0,obs,8
+2026-11-07,38064,38064,,Kyzylorda,,,21.6,synop-sec3,6.8,synop-sec3,5.0,obs,8
+2026-11-07,38069,38069,,Shieli,,,22.5,synop-sec3,10.0,synop-sec3,5.0,obs,8
+2026-11-07,38099,38099,,Furmanovo,,,21.1,synop-sec3,5.6,synop-sec3,2.0,obs,8
+2026-11-07,38108,38108,,Khantau,,,21.5,synop-sec3,10.6,synop-sec3,6.0,obs,8
+2026-11-07,38111,38111,,Sevcenko,,,12.5,synop-sec3,6.4,synop-sec3,10.0,obs,8
+2026-11-07,38141,38141,,Jaslyk,,,8.1,synop-sec3,-5.0,synop-sec3,7.0,obs,8
+2026-11-07,38146,38146,,Mujnak,,,10.0,synop-sec3,-2.0,synop-sec3,6.0,obs,8
+2026-11-07,38149,38149,,Kungrad,,,12.8,synop-sec3,-3.2,synop-sec3,8.0,obs,8
+2026-11-07,38178,38178,,Ak-Bajtal,,,23.4,synop-sec3,7.5,synop-sec3,5.0,obs,8
+2026-11-07,38191,38191,,Ak-Kum,,,21.9,synop-sec3,11.8,synop-sec3,4.0,obs,8
+2026-11-07,38196,38196,,Ashchysai,,,18.9,synop-sec3,11.0,synop-sec3,2.0,obs,8
+2026-11-07,38198,38198,,Turkestan,,,21.8,synop-sec3,12.0,synop-sec3,3.0,obs,8
+2026-11-07,38201,38201,,Culakkurgan,,,21.6,synop-sec3,15.3,synop-sec3,5.0,obs,8
+2026-11-07,38207,38207,,Cajan,,,24.0,synop-sec3,11.0,synop-sec3,2.0,obs,8
+2026-11-07,38222,38222,,Tole Bi,,,22.5,synop-sec3,7.4,synop-sec3,4.0,obs,8
+2026-11-07,38223,38223,,Chokpar,,,15.8,synop-sec3,8.4,synop-sec3,4.0,obs,8
+2026-11-07,38229,38229,,Kurdaj,,,16.8,synop-sec3,1.2,synop-sec3,4.0,obs,8
+2026-11-07,38262,38262,,Chimbaj,,,11.9,synop-sec3,-1.0,synop-sec3,5.0,obs,8
+2026-11-07,38264,38264,,Nukus,,,13.3,synop-sec3,0.8,synop-sec3,6.0,obs,8
+2026-11-07,38313,38313,,Bugun,,,21.9,synop-sec3,10.2,obs-hourly,3.0,obs,8
+2026-11-07,38316,38316,,Arys,,,24.5,synop-sec3,10.0,synop-sec3,1.0,obs,8
+2026-11-07,38318,38318,,Bayyrkum,,,24.9,synop-sec3,12.8,obs-hourly,4.0,obs,8
+2026-11-07,38334,38334,,Aul Turara Ryskulova,,,27.5,synop-sec3,11.8,synop-sec3,3.0,obs,8
+2026-11-07,38339,38339,,Olgaing,,,3.3,synop-sec3,-1.2,synop-sec3,3.0,obs,8
+2026-11-07,38341,38341,,Taraz,,,24.9,synop-sec3,10.2,synop-sec3,4.0,obs,8
+2026-11-07,38343,38343,,Kulan,,,23.3,synop-sec3,7.7,synop-sec3,2.0,obs,8
+2026-11-07,38388,38388,,Ekezhe,,,14.1,synop-sec3,3.1,synop-sec3,4.0,obs,8
+2026-11-07,38392,38392,,Dashkhovuz,,,17.7,synop-sec3,4.2,synop-sec3,7.0,obs,8
+2026-11-07,38394,38394,,Gurlen,,,18.6,synop-sec3,3.6,synop-sec3,5.0,obs,8
+2026-11-07,38396,38396,,Urgench,,,20.0,synop-sec3,3.9,synop-sec3,6.0,obs,8
+2026-11-07,38403,38403,,Buzaubaj,,,23.7,synop-sec3,7.6,synop-sec3,4.0,obs,8
+2026-11-07,38427,38427,,Mashikuduk,,,26.0,synop-sec3,14.8,synop-sec3,4.0,obs,8
+2026-11-07,38439,38439,,Shardara,,,22.5,synop-sec3,14.0,synop-sec3,8.0,obs,8
+2026-11-07,38452,38452,,Karatas,,,26.0,synop-sec3,12.7,synop-sec3,6.0,obs,8
+2026-11-07,38457,,,,,,,,,,3.1,obs,5
+2026-11-07,38462,38462,,Pskem,,,14.1,synop-sec3,6.2,synop-sec3,2.0,obs,8
+2026-11-07,38475,,,,,,,,,,2.1,obs,5
+2026-11-07,38507,38507,,Turkmenbashi,,,14.7,synop-sec3,8.0,synop-sec3,6.0,obs,8
+2026-11-07,38511,38511,,Chagyl,,,11.9,synop-sec3,7.3,synop-sec3,5.0,obs,8
+2026-11-07,38545,38545,,Darganata,,,23.9,synop-sec3,8.0,synop-sec3,3.0,obs,8
+2026-11-07,38551,38551,,Dzangeldy,,,25.0,synop-sec3,14.5,synop-sec3,4.0,obs,8
+2026-11-07,38553,38553,,Ayakagitma,,,24.6,synop-sec3,13.0,synop-sec3,6.0,obs,8
+2026-11-07,38565,38565,,Nurata,,,26.3,synop-sec3,15.2,synop-sec3,12.0,obs,7
+2026-11-07,38567,,,,,,,,,,8.2,obs,5
+2026-11-07,38582,38582,,Zapadny Arnasay,,,26.5,synop-sec3,12.4,synop-sec3,7.0,obs,8
+2026-11-07,38583,38583,,Syr-Dar'Ja,,,26.5,synop-sec3,10.3,synop-sec3,6.0,obs,8
+2026-11-07,38589,38589,,Jangier,,,23.0,synop-sec3,16.6,synop-sec3,11.0,obs,8
+2026-11-07,38598,38598,,Kajrakkumskoe,,,18.9,synop-sec3,13.6,synop-sec3,7.0,obs,8
+2026-11-07,38599,38599,,Khudjant,,,19.8,synop-sec3,12.2,synop-sec3,8.0,obs,8
+2026-11-07,38606,38606,,Kokand,,,19.7,synop-sec3,8.5,synop-sec3,2.0,obs,8
+2026-11-07,38611,,,,,,,,,,2.1,obs,5
+2026-11-07,38618,,,,,,,,,,2.1,obs,5
+2026-11-07,38647,38647,,Gazandzhyk,,,16.7,synop-sec3,10.4,synop-sec3,9.0,obs,8
+2026-11-07,38656,38656,,Erbent,,,19.6,synop-sec3,9.0,synop-sec3,4.0,obs,8
+2026-11-07,38683,38683,,Buhara,,,28.4,synop-sec3,14.1,synop-sec3,7.0,obs,8
+2026-11-07,38687,38687,,Chardzhev,,,29.2,synop-sec3,13.3,synop-sec3,7.0,obs,8
+2026-11-07,38696,,,,,,,,,,4.1,obs,5
+2026-11-07,38699,38699,,Shahrisabz,,,26.1,synop-sec3,14.3,obs-hourly,5.0,obs,8
+2026-11-07,38705,38705,,Pendzhikent,,,21.9,synop-sec3,11.1,synop-sec3,5.0,obs,8
+2026-11-07,38708,38708,,Farab,,,12.8,synop-sec3,5.2,obs-hourly,2.0,obs,8
+2026-11-07,38711,38711,,Bahmal,,,20.9,synop-sec3,9.2,synop-sec3,4.0,obs,8
+2026-11-07,38713,38713,,Ura-Tyube,,,20.0,synop-sec3,11.5,synop-sec3,2.0,obs,8
+2026-11-07,38715,38715,,Shahristanskij Pereval,,,4.7,synop-sec3,-2.9,synop-sec3,8.0,obs,8
+2026-11-07,38718,38718,,Iskanderkul,,,11.2,synop-sec3,3.8,synop-sec3,4.0,obs,8
+2026-11-07,38719,38719,,Anzqbskij Pereval,,,-4.0,synop-sec3,-15.0,synop-sec3,5.0,obs,8
+2026-11-07,38725,38725,,Madrushkat,,,12.5,synop-sec3,5.0,synop-sec3,6.0,obs,8
+2026-11-07,38734,38734,,Dehavz,,,7.3,synop-sec3,,,6.0,obs,8
+2026-11-07,38744,38744,,Lahsh,,,12.4,synop-sec3,1.0,synop-sec3,0.0,obs,8
+2026-11-07,38750,38750,,Esenguly,,,22.2,synop-sec3,12.8,synop-sec3,3.0,obs,8
+2026-11-07,38763,38763,,Gyzylarbat,,,16.5,synop-sec3,11.4,synop-sec3,6.0,obs,8
+2026-11-07,38774,38774,,Bakherden,,,18.3,synop-sec3,11.9,synop-sec3,3.0,obs,8
+2026-11-07,38799,38799,,Uchadzhy,,,30.6,synop-sec3,10.0,synop-sec3,5.0,obs,8
+2026-11-07,38806,38806,,Byrdalyk,,,26.4,synop-sec3,14.0,synop-sec3,6.0,obs,8
+2026-11-07,38812,38812,,Karshi,,,28.7,synop-sec3,15.8,synop-sec3,9.0,obs,8
+2026-11-07,38815,38815,,Guzar,,,26.5,synop-sec3,15.5,obs-hourly,5.0,obs,8
+2026-11-07,38816,38816,,Minchukur,,,11.1,synop-sec3,5.5,synop-sec3,2.0,obs,8
+2026-11-07,38818,38818,,Akrabat,,,16.6,synop-sec3,10.6,synop-sec3,7.0,obs,8
+2026-11-07,38827,38827,,Baysun,,,22.6,synop-sec3,11.8,synop-sec3,2.0,obs,8
+2026-11-07,38828,38828,,Shurchi,,,25.8,synop-sec3,16.6,synop-sec3,4.0,obs,8
+2026-11-07,38829,38829,,Denau,,,24.8,synop-sec3,17.2,obs-hourly,6.0,obs,8
+2026-11-07,38838,38838,,Isambaj,,,26.5,synop-sec3,17.0,synop-sec3,8.0,obs,8
+2026-11-07,38844,38844,,Sanglok,,,14.6,synop-sec3,1.9,synop-sec3,5.0,obs,8
+2026-11-07,38846,38846,,Hovaling,,,20.9,synop-sec3,12.8,synop-sec3,4.0,obs,8
+2026-11-07,38847,38847,,Dangara,,,25.2,synop-sec3,16.9,synop-sec3,4.0,obs,8
+2026-11-07,38851,38851,,Rasht,,,16.9,synop-sec3,8.5,synop-sec3,0.0,obs,8
+2026-11-07,38856,38856,,Darvaz,,,17.8,synop-sec3,9.1,synop-sec3,0.0,obs,8
+2026-11-07,38869,38869,,Ihrt,,,4.9,synop-sec3,-4.7,synop-sec3,1.0,obs,8
+2026-11-07,38875,38875,,Karakul,,,0.8,synop-sec3,-10.8,synop-sec3,8.0,obs,8
+2026-11-07,38878,38878,,Murgab,,,4.8,synop-sec3,-12.0,synop-sec3,4.0,obs,8
+2026-11-07,38886,38886,,Tedzhen,,,24.9,synop-sec3,10.2,synop-sec3,4.0,obs,8
+2026-11-07,38895,38895,,Bajramaly,,,30.2,synop-sec3,10.0,synop-sec3,4.0,obs,8
+2026-11-07,38915,38915,,Carsanga,,,27.2,synop-sec3,13.4,synop-sec3,5.0,obs,8
+2026-11-07,38921,38921,,Shirabad,,,26.8,synop-sec3,16.5,obs-hourly,4.0,obs,8
+2026-11-07,38927,,,,,,,,,,5.1,obs,5
+2026-11-07,38933,38933,,Kurgan-Tyube,,,26.0,synop-sec3,16.0,synop-sec3,4.0,obs,8
+2026-11-07,38944,38944,,Parkhar,,,27.0,synop-sec3,17.3,synop-sec3,4.0,obs,8
+2026-11-07,38947,38947,,Pyandj,,,27.7,synop-sec3,14.6,synop-sec3,2.0,obs,8
+2026-11-07,38951,38951,,Rushan,,,15.0,synop-sec3,2.8,synop-sec3,1.0,obs,8
+2026-11-07,38954,38954,,Khorog,,,13.8,synop-sec3,1.0,synop-sec3,2.0,obs,8
+2026-11-07,38957,38957,,Ishkashim,,,12.6,synop-sec3,-1.3,synop-sec3,0.0,obs,8
+2026-11-07,38974,38974,,Saragt,,,28.9,synop-sec3,11.9,synop-sec3,3.0,obs,8
+2026-11-07,38987,38987,,Gyshgy,,,29.0,synop-sec3,10.4,synop-sec3,3.0,obs,8
+2026-11-07,40022,40022,,Lattakia,,,21.8,synop-sec3,,,,,3
+2026-11-07,40030,40030,,Hama,,,19.4,synop-sec3,,,4.0,obs,3
+2026-11-07,40055,40055,,Homs,,,22.0,synop-sec3,,,6.0,obs,3
+2026-11-07,40066,40066,,Safita,,,20.2,synop-sec3,,,0.0,obs,3
+2026-11-07,40067,40067,,Sweida,,,18.0,synop-sec3,,,2.0,obs,3
+2026-11-07,40076,40076,,Al Qunaytirah,,,,,,,2.0,obs,3
+2026-11-07,40296,40296,,Ghor Safi,,,,,,,1.5,obs,6
+2026-11-07,40405,40405,,Gassim,,,34.0,synop-sec3,23.6,synop-sec3,6.2,obs,8
+2026-11-07,40417,40417,,K.F.I.A. (King Fahad Int. Airport) Damma,,,36.5,synop-sec3,22.8,synop-sec3,7.2,obs,8
+2026-11-07,40582,,,,,,,,,,4.1,obs,2
+2026-11-07,40602,40602,,Rabiah,,,,,,,5.0,obs,1
+2026-11-07,40627,40627,,Al Kaem,,,,,,,9.0,obs,1
+2026-11-07,40629,40629,,Anah,,,,,,,2.0,obs,1
+2026-11-07,40632,40632,,Tuz,,,,,,,3.0,obs,2
+2026-11-07,40633,40633,,Tikrit,,,,,,,3.0,obs,3
+2026-11-07,40634,40634,,Hadithah,,,,,,,4.0,obs,1
+2026-11-07,40637,40637,,Khanaqin,,,,,,,2.0,obs,3
+2026-11-07,40638,40638,,Al Khalis,,,,,,,8.0,obs,3
+2026-11-07,40642,40642,,Rutbah,,,,,,,4.0,obs,1
+2026-11-07,40645,40645,,Ramadi,,,,,,,2.0,obs,3
+2026-11-07,40646,40646,,Heet,,,,,,,4.0,obs,2
+2026-11-07,40655,40655,,Ainaltamer,,,,,,,3.0,obs,1
+2026-11-07,40656,40656,,Kerbela,,,,,,,2.0,obs,3
+2026-11-07,40657,40657,,Hella,,,,,,,2.0,obs,3
+2026-11-07,40660,40660,,Azizyah,,,,,,,2.0,obs,3
+2026-11-07,40662,40662,,Badrah,,,,,,,3.0,obs,1
+2026-11-07,40665,40665,,Kut-Al-Hai,,,,,,,3.0,obs,3
+2026-11-07,40672,40672,,Diwaniya,,,,,,,3.0,obs,3
+2026-11-07,40674,40674,,Samawa,,,,,,,3.0,obs,3
+2026-11-07,40675,40675,,Rafaei,,,,,,,4.0,obs,3
+2026-11-07,40676,40676,,Nasiriya,,,,,,,2.0,obs,3
+2026-11-07,40680,40680,,Amarah,,,,,,,3.0,obs,3
+2026-11-07,40690,40690,,Basrah Airport,,,,,,,6.0,obs,3
+2026-11-07,40691,40691,,Al-Fao,,,,,,,2.0,obs,2
+2026-11-07,40700,40700,,Pars Abad Moghan,0.7,synop-7RRRR,18.0,synop-sec3,9.3,synop-sec3,3.0,obs,20
+2026-11-07,40701,40701,,Makko,3.9,synop-7RRRR,8.6,synop-sec3,4.5,synop-sec3,2.0,obs,24
+2026-11-07,40704,40704,,Ahar,0.5,synop-7RRRR,12.2,synop-sec3,6.3,synop-sec3,5.0,obs,24
+2026-11-07,40708,40708,,Ardebil,0.2,synop-7RRRR,11.0,synop-sec3,4.6,synop-sec3,12.0,obs,22
+2026-11-07,40710,40710,,Sarab,2.5,synop-7RRRR,14.3,synop-sec3,7.3,synop-sec3,6.0,obs,24
+2026-11-07,40716,40716,,Meyaneh,3.3,synop-7RRRR,21.0,synop-sec3,10.0,synop-sec3,4.0,obs,24
+2026-11-07,40718,40718,,Anzali,18.0,synop-7RRRR,15.6,synop-sec3,14.4,synop-sec3,6.0,obs,24
+2026-11-07,40721,40721,,Maraveh-Tappeh,0.1,synop-7RRRR,20.0,synop-sec3,14.4,synop-sec3,7.0,obs,22
+2026-11-07,40726,40726,,Mohabad,8.5,synop-7RRRR,17.8,synop-sec3,9.2,synop-sec3,11.0,obs,24
+2026-11-07,40734,40734,,Noshahr,0.0,synop-7RRRR,21.8,synop-sec3,14.7,synop-sec3,6.0,obs,24
+2026-11-07,40736,40736,,Babulsar,11.5,synop-7RRRR,21.9,synop-sec3,16.0,synop-sec3,2.0,obs,24
+2026-11-07,40737,40737,,Gharakhil,2.1,synop-7RRRR,21.0,synop-sec3,15.2,synop-sec3,5.0,obs,24
+2026-11-07,40739,40739,,Shahrud,0.0,synop-7RRRR,19.9,synop-sec3,11.0,synop-sec3,5.0,obs,24
+2026-11-07,40740,40740,,Ghuchan,0.0,synop-7RRRR,21.9,synop-sec3,6.6,synop-sec3,6.0,obs,24
+2026-11-07,40741,40741,,Sarakhs,0.0,synop-7RRRR,30.5,synop-sec3,11.4,synop-sec3,6.0,obs,24
+2026-11-07,40746,40746,,Kashafrud,1.8,synop-7RRRR,23.6,synop-sec3,9.4,synop-sec3,9.0,obs,19
+2026-11-07,40755,40755,,Varamin,39.1,synop-7RRRR,10.4,synop-sec3,3.3,synop-sec3,7.0,obs,24
+2026-11-07,40756,40756,,Garmsar,2.4,synop-7RRRR,15.8,synop-sec3,6.3,synop-sec3,9.0,obs,24
+2026-11-07,40763,40763,,Kashmar,0.0,synop-7RRRR,23.8,synop-sec3,14.1,synop-sec3,3.0,obs,24
+2026-11-07,40768,40768,,Hamedan,10.0,synop-7RRRR,17.4,synop-sec3,7.5,synop-sec3,5.0,obs,9
+2026-11-07,40770,40770,,Ghom/Qom,10.1,synop-7RRRR,24.0,synop-sec3,12.5,synop-sec3,7.0,obs,24
+2026-11-07,40780,40780,,Ilam,12.7,synop-7RRRR,19.5,synop-sec3,10.6,synop-sec3,4.0,obs,8
+2026-11-07,40782,40782,,Khorram Abad,18.6,synop-7RRRR,20.1,synop-sec3,11.6,synop-sec3,7.0,obs,8
+2026-11-07,40783,40783,,Ali-Goodarz,58.7,synop-7RRRR,13.3,synop-sec3,7.7,synop-sec3,11.0,obs,22
+2026-11-07,40789,40789,,Khor,0.0,synop-7RRRR,28.7,synop-sec3,15.7,synop-sec3,6.0,obs,24
+2026-11-07,40792,40792,,Ferdous,0.0,synop-7RRRR,24.3,synop-sec3,13.4,synop-sec3,5.0,obs,24
+2026-11-07,40794,40794,,Safi-Abad Dezful,5.5,synop-7RRRR,29.0,synop-sec3,23.5,synop-sec3,8.0,obs,10
+2026-11-07,40827,40827,,Nehbandan,0.0,synop-7RRRR,25.1,synop-sec3,10.8,synop-sec3,3.0,obs,22
+2026-11-07,40832,40832,,Abamusa Island,0.0,synop-7RRRR,33.2,synop-sec3,26.2,synop-sec3,7.0,obs,8
+2026-11-07,40836,40836,,Yasoge,7.2,synop-7RRRR,18.9,synop-sec3,7.9,synop-sec3,6.0,obs,24
+2026-11-07,40851,40851,,Sirjan,0.0,synop-7RRRR,24.4,synop-sec3,5.9,obs-hourly,3.0,obs,21
+2026-11-07,40853,40853,,Baft,0.0,synop-7RRRR,19.9,synop-sec3,7.0,synop-sec3,4.0,obs,24
+2026-11-07,40877,40877,,Kahnuj,0.0,synop-7RRRR,32.5,synop-sec3,20.9,synop-sec3,5.0,obs,24
+2026-11-07,40878,40878,,Saravan,0.0,synop-7RRRR,29.2,synop-sec3,13.2,synop-sec3,7.0,obs,22
+2026-11-07,40882,40882,,Kish Island,0.0,synop-7RRRR,32.2,synop-sec3,25.9,obs-hourly,6.0,obs,15
+2026-11-07,40898,40898,,Chahbahar,,,31.0,synop-sec3,24.4,synop-sec3,4.0,obs,12
+2026-11-07,41031,41031,,Mina,,,36.0,synop-sec3,24.5,synop-sec3,3.6,obs,8
+2026-11-07,41160,41160,,Ai Ruwais,,,35.8,synop-sec3,23.2,synop-sec3,5.7,obs,8
+2026-11-07,41162,41162,,Al Shehaimiya,,,35.7,synop-sec3,24.8,synop-sec3,8.7,obs,8
+2026-11-07,41164,41164,,Al Guwayriyah,,,35.9,synop-sec3,23.5,synop-sec3,8.2,obs,8
+2026-11-07,41167,41167,,Dukhan,,,34.9,synop-sec3,25.6,synop-sec3,6.7,obs,8
+2026-11-07,41168,41168,,Doha Port,,,34.2,synop-sec3,28.9,synop-sec3,6.7,obs,8
+2026-11-07,41171,41171,,Qatar University,,,35.4,synop-sec3,29.0,synop-sec3,4.1,obs,8
+2026-11-07,41173,41173,,Al Wakrah,,,32.5,synop-sec3,30.2,synop-sec3,6.7,obs,8
+2026-11-07,41175,41175,,Al Karana,,,35.9,synop-sec3,24.3,synop-sec3,5.7,obs,8
+2026-11-07,41176,41176,,Umm Said,,,33.8,synop-sec3,30.4,synop-sec3,5.1,obs,8
+2026-11-07,41177,41177,,Turayna,,,35.0,synop-sec3,24.3,synop-sec3,5.7,obs,8
+2026-11-07,41178,41178,,Abu Samra,,,37.7,synop-sec3,21.7,synop-sec3,6.2,obs,8
+2026-11-07,41240,41240,,Khasab Port,,,32.9,synop-sec3,-84.4,synop-sec3,5.7,obs,23
+2026-11-07,41241,41241,,Khasab Airport,,,34.4,synop-sec3,26.7,synop-sec3,6.2,obs,24
+2026-11-07,41242,41242,,Diba,,,32.0,synop-sec3,23.9,obs-hourly,3.1,obs,23
+2026-11-07,41249,41249,,Qumaira,,,32.9,synop-sec3,38.8,synop-sec3,4.6,obs,23
+2026-11-07,41250,41250,,Sunaynah,,,35.5,synop-sec3,-34.5,synop-sec3,6.2,obs,23
+2026-11-07,41253,41253,,Rustaq,,,34.0,synop-sec3,23.9,obs-hourly,3.6,obs,23
+2026-11-07,41255,41255,,Nizwa,,,34.2,synop-sec3,-97.4,synop-sec3,3.1,obs,23
+2026-11-07,41256,41256,OOMS,Muscat/Seeb Intl,,,32.6,synop-sec3,24.0,synop-sec3,4.1,obs,52
+2026-11-07,41257,41257,,Samail,,,33.7,synop-sec3,-48.9,synop-sec3,4.6,obs,23
+2026-11-07,41258,41258,,Mina Sultan Qaboos,,,30.5,synop-sec3,-90.6,synop-sec3,4.6,obs,24
+2026-11-07,41259,41259,,Jabal Shams,,,12.3,synop-sec3,6.9,obs-hourly,4.1,obs,23
+2026-11-07,41263,41263,,Bahla,,,33.6,synop-sec3,-31.0,synop-sec3,6.7,obs,23
+2026-11-07,41265,41265,,Ibra,,,,,0.0,synop-sec3,4.1,obs,23
+2026-11-07,41267,41267,,Qalhat,,,31.2,synop-sec3,20.3,synop-sec3,3.1,obs,23
+2026-11-07,41270,41270,,Ras Al Hadd,,,29.2,synop-sec3,22.0,obs-hourly,4.6,obs,23
+2026-11-07,41272,41272,,Suwaiq,,,31.8,synop-sec3,24.3,obs-hourly,4.1,obs,23
+2026-11-07,41274,41274,,Ghaba Central/Pri,,,31.8,synop-sec3,-85.7,synop-sec3,4.1,obs,23
+2026-11-07,41275,41275,,Qarn Alam,,,34.6,synop-sec3,-39.8,synop-sec3,5.7,obs,23
+2026-11-07,41276,41276,,Umzamaim,,,34.4,synop-sec3,21.9,obs-hourly,5.7,obs,23
+2026-11-07,41280,41280,,Al Amerat,,,34.3,synop-sec3,-88.9,synop-sec3,3.6,obs,23
+2026-11-07,41287,41287,,Joba,,,34.9,synop-sec3,20.9,obs-hourly,0.0,obs,24
+2026-11-07,41290,41290,,Duqm,,,32.1,obs-hourly,-86.9,synop-sec3,2.6,obs,20
+2026-11-07,41292,41292,,Al Mudhaibi,,,34.6,synop-sec3,22.1,obs-hourly,5.7,obs,23
+2026-11-07,41293,41293,,Bidiya,,,34.1,synop-sec3,0.0,synop-sec3,7.2,obs,23
+2026-11-07,41295,41295,,Yaaloni,,,34.6,synop-sec3,0.0,synop-sec3,5.7,obs,23
+2026-11-07,41301,41301,,Haima,,,34.8,synop-sec3,-54.2,synop-sec3,6.2,obs,23
+2026-11-07,41315,41315,,Qairoon Hairiti,,,27.5,synop-sec3,20.8,obs-hourly,5.7,obs,23
+2026-11-07,41437,41437,OYAT,Ataq Arpt,,,28,obs-hourly,25,obs-hourly,6.7,obs,13
+2026-11-07,41452,41452,OYIB,Ibb,,,,,,,3.1,obs,2
+2026-11-07,41480,41480,OYAA,Aden Intl,,,32,obs-hourly,27,obs-hourly,9.3,obs,29
+2026-11-07,41506,41506,,Chitral,,,20.5,synop-sec3,5.8,synop-sec3,9.3,obs,8
+2026-11-07,41515,41515,,Drosh,,,19.7,synop-sec3,7.4,synop-sec3,0.0,obs,8
+2026-11-07,41518,41518,,Bunji,,,23.9,synop-sec3,8.9,synop-sec3,1.0,obs,8
+2026-11-07,41519,41519,,Chillas,,,25.0,synop-sec3,14.0,synop-sec3,1.0,obs,8
+2026-11-07,41523,41523,,Saidu Sharif,,,25.5,synop-sec3,8.0,synop-sec3,2.1,obs,8
+2026-11-07,41529,41529,,Peshawar,,,31.0,synop-sec3,12.6,synop-sec3,1.0,obs,8
+2026-11-07,41535,41535,,Kakul,,,22.4,synop-sec3,8.2,synop-sec3,1.0,obs,8
+2026-11-07,41536,41536,,Balakot,,,26.0,synop-sec3,8.5,synop-sec3,0.0,obs,8
+2026-11-07,41560,41560,,Parachinar,,,22.0,synop-sec3,7.5,synop-sec3,2.1,obs,8
+2026-11-07,41565,41565,,Cherat,,,23.5,synop-sec3,13.0,synop-sec3,3.1,obs,8
+2026-11-07,41573,41573,,Murree,,,19.8,synop-sec3,6.7,synop-sec3,3.1,obs,8
+2026-11-07,41598,41598,,Jhelum,,,30.7,synop-sec3,13.5,synop-sec3,4.1,obs,8
+2026-11-07,41630,41630,,Faisalabad,,,30.2,synop-sec3,16.0,synop-sec3,2.1,obs,8
+2026-11-07,41678,41678,,Bahawalnagar,,,32.5,synop-sec3,17.7,synop-sec3,0.0,obs,8
+2026-11-07,41696,41696,,Kalat,,,22.0,synop-sec3,4.0,synop-sec3,1.0,obs,8
+2026-11-07,41710,41710,,Nokkundi,,,32.5,synop-sec3,,,2.1,obs,8
+2026-11-07,41712,41712,,Dal Bandin,,,31.5,synop-sec3,15.5,synop-sec3,1.0,obs,8
+2026-11-07,41718,41718,,Khanpur,,,33.0,synop-sec3,17.5,synop-sec3,2.1,obs,8
+2026-11-07,41744,41744,,Khuzdar,,,27.0,synop-sec3,12.5,synop-sec3,0.0,obs,8
+2026-11-07,41768,41768,,Chhor,,,38.0,synop-sec3,17.5,synop-sec3,1.0,obs,8
+2026-11-07,LLBG,40180,LLBG,Ben Gurion,,,25,obs-hourly,17,obs-hourly,6.7,obs,48
+2026-11-07,LLER,,LLER,Eilat/Ramone Arpt,,,27,obs-hourly,21,obs-hourly,8.2,obs,24
+2026-11-07,LLHA,40155,LLHA,Haifa,,,24,obs-hourly,18,obs-hourly,5.1,obs,13
+2026-11-07,LLIB,,LLIB,Mahanaim I Ben Yaakov,,,22,obs-hourly,17,obs-hourly,3.1,obs,10
+2026-11-07,LTAB,17131,LTAB,Guvercinlik,,,11.3,synop-sec3,,,3.6,obs,7
+2026-11-07,LTAC,17128,LTAC,Esenboga,,,10.7,synop-sec3,1,obs-hourly,5.1,obs,53
+2026-11-07,LTAD,17129,LTAD,Etimesgut,,,11.6,synop-sec3,,,4.6,obs,7
+2026-11-07,LTAF,17352,LTAF,Adana,,,22.9,synop-sec3,12,obs-hourly,4.6,obs,53
+2026-11-07,LTAG,17350,LTAG,Incirlik Ab,,,22.5,synop-sec3,12,obs-hourly,4.6,obs,55
+2026-11-07,LTAH,17190,LTAH,Afyon,,,7.9,synop-sec3,2.8,obs-hourly,2.6,obs,22
+2026-11-07,LTAI,17300,LTAI,Antalya,,,23.0,synop-sec3,15,obs-hourly,11.3,obs,53
+2026-11-07,LTAK,17370,LTAK,Iskenderun,,,22.7,synop-sec3,15.6,obs-hourly,1.5,obs,22
+2026-11-07,LTAL,17074,LTAL,Kastamonu,,,8.2,synop-sec3,2,obs-hourly,3.1,obs,28
+2026-11-07,LTAN,17244,LTAN,Konya,,,10.3,synop-sec3,3,obs-hourly,7.2,obs,30
+2026-11-07,LTAO,17197,LTAO,Tulga,,,10.2,synop-sec3,,,2.1,obs,7
+2026-11-07,LTAP,17082,LTAP,Merzifon,,,11.8,synop-sec3,4,obs-hourly,5.7,obs,30
+2026-11-07,LTAY,,LTAY,Cardak,,,12,obs-hourly,3,obs-hourly,3.6,obs,23
+2026-11-07,LTAZ,17194,LTAZ,Kapadokya,,,11,obs-hourly,6,obs-hourly,4.6,obs,46
+2026-11-07,LTBA,17060,LTBA,Ataturk,,,13.3,synop-sec3,8,obs-hourly,7.2,obs,54
+2026-11-07,LTBE,17116,LTBE,Bursa,,,13.1,synop-sec3,5.2,obs-hourly,4.6,obs,22
+2026-11-07,LTBF,17150,LTBF,Balikesir,,,13.7,synop-sec3,4,obs-hourly,8.7,obs,30
+2026-11-07,LTBG,17115,LTBG,Bandirma,,,13.0,synop-sec3,,,7.2,obs,7
+2026-11-07,LTBH,17112,LTBH,Canakkale,,,13.5,synop-sec3,3,obs-hourly,7.2,obs,45
+2026-11-07,LTBI,17124,LTBI,Eskisehir,,,8.1,synop-sec3,,,4.1,obs,7
+2026-11-07,LTBJ,17219,LTBJ,Adnan Menderes,,,16.1,synop-sec3,8.7,obs-hourly,11.8,obs,53
+2026-11-07,LTBL,17218,LTBL,Cigli,,,17.2,synop-sec3,,,10.8,obs,7
+2026-11-07,LTBM,17240,LTBM,Isparta,,,15.3,synop-sec3,5.8,obs-hourly,4.1,obs,22
+2026-11-07,LTBP,17119,LTBP,Yalova,,,14.6,synop-sec3,10.0,obs-hourly,4.6,obs,22
+2026-11-07,LTBQ,,LTBQ,Topel Arpt),,,12,obs-hourly,5,obs-hourly,3.6,obs,27
+2026-11-07,LTBR,17118,LTBR,Yenisehir,,,11.6,synop-sec3,4,obs-hourly,3.1,obs,53
+2026-11-07,LTBS,17295,LTBS,Dalaman,,,22.1,synop-sec3,13,obs-hourly,8.7,obs,53
+2026-11-07,LTBT,17184,LTBT,Akhisar,,,15.2,synop-sec3,4.9,obs-hourly,8.2,obs,22
+2026-11-07,LTBU,17054,LTBU,Corlu,,,12,obs-hourly,4,obs-hourly,6.7,obs,46
+2026-11-07,LTBV,17290,LTBV,Imsik,,,19.2,synop-sec3,13.0,obs-hourly,6.2,obs,22
+2026-11-07,LTBY,,LTBY,Eskisehir/Polatkan Arpt,,,8,obs-hourly,0,obs-hourly,5.1,obs,23
+2026-11-07,LTCA,17202,LTCA,Elazig,,,11.0,synop-sec3,9,obs-hourly,2.1,obs,33
+2026-11-07,LTCB,,LTCB,Ordu/Giresun Arpt,,,13,obs-hourly,11,obs-hourly,6.2,obs,23
+2026-11-07,LTCC,17280,LTCC,Diyarbakir,,,12.8,synop-sec3,9,obs-hourly,3.6,obs,54
+2026-11-07,LTCD,17092,LTCD,Erzincan,,,9.7,synop-sec3,5,obs-hourly,2.6,obs,30
+2026-11-07,LTCE,17096,LTCE,Erzurum,,,7.7,synop-sec3,0,obs-hourly,4.6,obs,55
+2026-11-07,LTCG,17038,LTCG,Trabzon,,,14.0,synop-sec3,11,obs-hourly,6.2,obs,53
+2026-11-07,LTCI,17170,LTCI,Van,,,10.2,synop-sec3,6,obs-hourly,6.2,obs,36
+2026-11-07,LTCJ,17282,LTCJ,Batman,,,13.6,synop-sec3,10.4,obs-hourly,5.7,obs,76
+2026-11-07,LTCK,,LTCK,Muş Arpt,,,8,obs-hourly,6,obs-hourly,5.1,obs,20
+2026-11-07,LTCL,,LTCL,Siirt,,,12,obs-hourly,11,obs-hourly,4.1,obs,8
+2026-11-07,LTCM,,LTCM,Sinop Arpt,,,,,,,5.7,obs,2
+2026-11-07,LTCN,17255,LTCN,Kahramanmaras,,,15,obs-hourly,12,obs-hourly,2.6,obs,23
+2026-11-07,LTCP,17265,LTCP,Adiyaman,,,12.5,synop-sec3,10.2,obs-hourly,4.6,obs,32
+2026-11-07,LTCR,17275,LTCR,Mardin,,,13.0,synop-sec3,9.2,obs-hourly,6.2,obs,39
+2026-11-07,LTCS,17271,LTCS,Gap/Sanliurfa,,,13.0,synop-sec3,9,obs-hourly,7.7,obs,53
+2026-11-07,LTCT,,LTCT,Igdir Airport,,,11,obs-hourly,7,obs-hourly,3.1,obs,22
+2026-11-07,LTCU,17203,LTCU,Bingol,,,11.9,synop-sec3,6.4,obs-hourly,1.0,obs,22
+2026-11-07,LTCV,,LTCV,Sirnak Arpt,,,16,obs-hourly,12,obs-hourly,6.2,obs,23
+2026-11-07,LTCW,,LTCW,Yüksekova Arpt,,,7,obs-hourly,6,obs-hourly,5.1,obs,9
+2026-11-07,LTDA,,LTDA,Hatay,,,18,obs-hourly,12,obs-hourly,6.2,obs,23
+2026-11-07,LTDB,,LTDB,Tarsus/Çukurova Intl,,,22,obs-hourly,10,obs-hourly,4.6,obs,46
+2026-11-07,LTFB,17232,LTFB,Kusadasi,,,17.5,synop-sec3,9.3,obs-hourly,4.6,obs,30
+2026-11-07,LTFC,17241,LTFC,Suleyman Demirel,,,13.6,synop-sec3,3.9,obs-hourly,10.8,obs,53
+2026-11-07,LTFE,17291,LTFE,Milas Bodrum,,,20.3,synop-sec3,9,obs-hourly,4.6,obs,53
+2026-11-07,LTFG,,LTFG,Gazipasa Arpt,,,22,obs-hourly,12,obs-hourly,4.1,obs,23
+2026-11-07,LTFH,17031,LTFH,Carsamba,,,13.2,synop-sec3,8,obs-hourly,6.2,obs,30
+2026-11-07,LTFJ,17063,LTFJ,Sabiha Gokcen,,,13.4,synop-sec3,7,obs-hourly,6.7,obs,53
+2026-11-07,LTFK,,LTFK,Gokceada Arpt,,,,,,,6.2,obs,7
+2026-11-07,LTFM,,LTFM,Istanbul Arpt,,,11,obs-hourly,8,obs-hourly,9.3,obs,46
+2026-11-07,LTFO,,LTFO,Rize-Artvin Arpt,,,14,obs-hourly,12,obs-hourly,5.1,obs,23
+2026-11-07,OBBI,41150,OBBI,Bahrain Intl,,,35.5,synop-sec3,29.1,synop-sec3,7.2,obs,52
+2026-11-07,OEAB,41112,OEAB,Abha,,,23.8,synop-sec3,11.1,synop-sec3,5.1,obs,32
+2026-11-07,OEAH,40420,OEAH,Al Ahsa,,,37.8,synop-sec3,19.9,synop-sec3,6.2,obs,32
+2026-11-07,OEAO,40401,OEAO,Prince Abdulmajeed Bin Abdulaziz Airport / Alula Intl,,,33.7,synop-sec3,19.9,synop-sec3,8.2,obs,32
+2026-11-07,OEBA,41055,OEBA,Al Baha / King Saud Bin Abdulaziz,,,27.9,synop-sec3,17.0,synop-sec3,5.1,obs,32
+2026-11-07,OEBH,41084,OEBH,Bisha,,,32.5,synop-sec3,17.7,synop-sec3,6.7,obs,32
+2026-11-07,OEDF,,OEDF,Dammam/King Fahd Intl,,,37,obs-hourly,23,obs-hourly,7.7,obs,24
+2026-11-07,OEDM,40414,OEDM,Prince Salman Bin Abdulaziz / Al Dawadmi,,,31,obs-hourly,21,obs-hourly,10.3,obs,24
+2026-11-07,OEDR,40416,OEDR,King Abdulaziz Ab,,,36,obs-hourly,24,obs-hourly,8.2,obs,32
+2026-11-07,OEDW,40435,OEDW,Al-Dawadami,,,31.0,synop-sec3,20.8,synop-sec3,8.2,obs,8
+2026-11-07,OEGN,41140,OEGN,King Abdullah Bin Abdulaziz,,,33.8,synop-sec3,27.6,synop-sec3,5.1,obs,32
+2026-11-07,OEGS,,OEGS,Qassim Arpt,,,34,obs-hourly,24,obs-hourly,6.7,obs,25
+2026-11-07,OEGT,40360,OEGT,Guriat,,,26.2,synop-sec3,15.1,synop-sec3,7.2,obs,32
+2026-11-07,OEHL,40394,OEHL,Hail,,,29.8,synop-sec3,18.4,synop-sec3,10.3,obs,32
+2026-11-07,OEJN,41024,OEJN,King Abdulaziz Intl,,,35.4,synop-sec3,28.1,synop-sec3,6.2,obs,32
+2026-11-07,OEKJ,,OEKJ,Al Kharj/Sultan,,,34,obs-hourly,22,obs-hourly,9.3,obs,24
+2026-11-07,OEKM,41114,OEKM,King Khaled Ab,,,25.3,synop-sec3,13.5,synop-sec3,4.1,obs,18
+2026-11-07,OEMA,40430,OEMA,Prince Mohammad Bin Abdulaziz,,,34.4,synop-sec3,24.3,synop-sec3,6.2,obs,32
+2026-11-07,OENG,41128,OENG,Nejran,,,31.0,synop-sec3,17.5,synop-sec3,4.1,obs,18
+2026-11-07,OENN,,OENN,Neom Bay Arpt,,,29,obs-hourly,21,obs-hourly,6.2,obs,8
+2026-11-07,OEPA,40373,OEPA,Al Qaisumah Intl,,,35.5,synop-sec3,24.0,synop-sec3,11.3,obs,18
+2026-11-07,OEPS,,OEPS,Al-Kharj/Sultan Arpt,,,33,obs-hourly,22,obs-hourly,13.4,obs,21
+2026-11-07,OERF,40362,OERF,Rafha,,,28.8,synop-sec3,20.7,synop-sec3,7.7,obs,19
+2026-11-07,OERK,40437,OERK,King Khaled Intl,,,32.5,synop-sec3,23.3,synop-sec3,6.7,obs,32
+2026-11-07,OERR,40357,OERR,Arar,,,22.0,synop-sec3,16.2,synop-sec3,6.2,obs,24
+2026-11-07,OESH,41136,OESH,Sharurah,,,33.0,synop-sec3,22.0,synop-sec3,5.7,obs,18
+2026-11-07,OESK,40361,OESK,Al Jouf,,,26.6,synop-sec3,14.1,synop-sec3,13.9,obs,23
+2026-11-07,OETB,40375,OETB,Tabuk / Prince Sultan Bin Abdulaziz,,,28.0,synop-sec3,15.6,synop-sec3,7.2,obs,18
+2026-11-07,OETF,41036,OETF,Taif,,,28.0,synop-sec3,19.0,synop-sec3,6.7,obs,18
+2026-11-07,OETR,40356,OETR,Turaif,,,22.9,synop-sec3,12.0,synop-sec3,5.1,obs,18
+2026-11-07,OEWD,41061,OEWD,Wadi Al Dawasir,,,34.2,synop-sec3,20.0,synop-sec3,9.8,obs,18
+2026-11-07,OEWJ,40400,OEWJ,Wejh,,,29.2,synop-sec3,23.2,synop-sec3,6.7,obs,19
+2026-11-07,OEYN,40439,OEYN,Yenbo / Prince Abdulmohsin Bin Abdulaziz,,,34.2,synop-sec3,24.6,synop-sec3,6.2,obs,19
+2026-11-07,OIAA,40831,OIAA,Abadan,0.0,synop-7RRRR,35.5,synop-sec3,28.1,synop-sec3,13.9,obs,34
+2026-11-07,OIAG,40833,OIAG,Aghajari,0.0,synop-7RRRR,33.2,synop-sec3,24.8,synop-sec3,10.8,obs,35
+2026-11-07,OIAH,40835,OIAH,Gachsaran,0.0,synop-7RRRR,29.2,synop-sec3,15.0,synop-sec3,11.8,obs,49
+2026-11-07,OIAI,40812,OIAI,Shahid Asyaee,0.0,synop-7RRRR,28.1,synop-sec3,23.2,synop-sec3,6.2,obs,46
+2026-11-07,OIAM,,OIAM,Mahshahr,,,33,obs-hourly,26,obs-hourly,7.7,obs,23
+2026-11-07,OIAW,40811,OIAW,Ahwaz,0.0,synop-7RRRR,31.6,synop-sec3,26.1,synop-sec3,11.8,obs,50
+2026-11-07,OIBB,40858,OIBB,Bushehr,0.0,synop-7RRRR,33.3,synop-sec3,24.2,synop-sec3,9.3,obs,50
+2026-11-07,OIBJ,,OIBJ,Jam,,,31,obs-hourly,18,obs-hourly,4.1,obs,22
+2026-11-07,OIBK,,OIBK,Kish Island Arpt,,,32,obs-hourly,26,obs-hourly,5.7,obs,23
+2026-11-07,OIBL,40883,OIBL,Bandar Lengeh,0.0,synop-7RRRR,31.5,synop-sec3,23.6,synop-sec3,2.0,obs,24
+2026-11-07,OIBP,,OIBP,Persian Gulf Airport,,,35,obs-hourly,21,obs-hourly,5.1,obs,19
+2026-11-07,OICC,40766,OICC,Shahid Ashrafi Esfahani,19.0,synop-7RRRR,21.4,synop-sec3,11.5,synop-sec3,9.8,obs,47
+2026-11-07,OICI,,OICI,Ilan Arpt,,,19,obs-hourly,11,obs-hourly,4.1,obs,29
+2026-11-07,OICJ,,OICJ,Boroujerd,,,17,obs-hourly,10,obs-hourly,7.7,obs,18
+2026-11-07,OICK,,OICK,Khorram Abad Arpt,,,20,obs-hourly,12,obs-hourly,13.9,obs,26
+2026-11-07,OICS,40747,OICS,Sanandaj,7.6,synop-7RRRR,19.2,synop-sec3,10.4,synop-sec3,7.2,obs,32
+2026-11-07,OIFK,40785,OIFK,Kashan,1.7,synop-7RRRR,24.9,synop-sec3,14.4,synop-sec3,8.2,obs,48
+2026-11-07,OIFM,40800,OIFM,Esfahan Shahid Beheshti Intl,0.3,synop-7RRRR,17.1,synop-sec3,8.5,synop-sec3,8.2,obs,64
+2026-11-07,OIFS,40798,OIFS,Shahre Kord,5.0,synop-7RRRR,11.7,synop-sec3,7.7,synop-sec3,11.8,obs,32
+2026-11-07,OIGG,40719,OIGG,Rasht / Sardar E Jangal,9.5,synop-7RRRR,15.4,synop-sec3,12.8,synop-sec3,6.2,obs,47
+2026-11-07,OIGK,,OIGK,Kermanshah,,,14,obs-hourly,8,obs-hourly,8.7,obs,11
+2026-11-07,OIHH,,OIHH,Hamadan Arpt,,,17,obs-hourly,8,obs-hourly,5.1,obs,24
+2026-11-07,OIHM,,OIHM,Malayer,,,16,obs-hourly,9,obs-hourly,4.6,obs,22
+2026-11-07,OIHR,40769,OIHR,Arak,29.6,synop-7RRRR,17.1,synop-sec3,8.3,synop-sec3,19.0,obs,37
+2026-11-07,OIIE,40730,OIIE,Imam Khomeini Intl,3.1,synop-7RRRR,17.9,synop-sec3,9.1,synop-sec3,8.7,obs,66
+2026-11-07,OIII,40754,OIII,Mehrabad Intl,14.0,synop-7RRRR,21.2,synop-sec3,13.4,synop-sec3,7.2,obs,51
+2026-11-07,OIIK,40731,OIIK,Ghazvin,10.1,synop-7RRRR,20.1,synop-sec3,11.2,synop-sec3,12.9,obs,45
+2026-11-07,OIIP,,OIIP,Payam,,,20,obs-hourly,11,obs-hourly,6.2,obs,24
+2026-11-07,OIIS,40757,OIIS,Semnan,,,22.2,synop-sec3,14.0,synop-sec3,7.0,obs,24
+2026-11-07,OIKB,40875,OIKB,Bandar Abbas Intl,0.0,synop-7RRRR,32.2,synop-sec3,24.6,synop-sec3,5.1,obs,49
+2026-11-07,OIKK,40841,OIKK,Kerman,0.0,synop-7RRRR,24.6,synop-sec3,7.7,synop-sec3,5.1,obs,33
+2026-11-07,OIKM,40854,OIKM,Bam,0.0,synop-7RRRR,30.9,synop-sec3,18.8,synop-sec3,6.2,obs,29
+2026-11-07,OIKQ,,OIKQ,Dayrestan / Gheshm,,,32,obs-hourly,26,obs-hourly,6.2,obs,11
+2026-11-07,OIKR,,OIKR,Rafsanjan,,,,,,,2.1,obs,4
+2026-11-07,OIMB,40809,OIMB,Birjand,0.0,synop-7RRRR,24.0,synop-sec3,8.0,synop-sec3,7.2,obs,32
+2026-11-07,OIMH,40762,OIMH,Torbat-Heydarieh,0.0,synop-7RRRR,20.5,synop-sec3,8.5,synop-sec3,4.0,obs,24
+2026-11-07,OIMJ,,OIMJ,Shahroud Arpt,,,21,obs-hourly,11,obs-hourly,9.8,obs,13
+2026-11-07,OIMM,40745,OIMM,Mashhad Intl / Shahid Hashemi Nejad Intl,,,24.4,synop-sec3,11.3,synop-sec3,5.1,obs,56
+2026-11-07,OIMN,40723,OIMN,Bojnord,,,20.2,synop-sec3,7.4,synop-sec3,9.3,obs,32
+2026-11-07,OIMS,40743,OIMS,Sabzevar,0.0,synop-7RRRR,25.4,synop-sec3,13.7,synop-sec3,11.8,obs,37
+2026-11-07,OIMT,40791,OIMT,Tabas,0.0,synop-7RRRR,30.2,synop-sec3,18.5,synop-sec3,2.0,obs,24
+2026-11-07,OINB,,OINB,Babolsar,,,22,obs-hourly,16,obs-hourly,2.1,obs,14
+2026-11-07,OINE,,OINE,Kalaleh,,,22,obs-hourly,12,obs-hourly,5.1,obs,19
+2026-11-07,OING,40738,OING,Gorgan,0.0,synop-7RRRR,22.9,synop-sec3,13.1,synop-sec3,7.2,obs,32
+2026-11-07,OINK,40735,OINK,Gonbad Ghabus,6.8,synop-7RRRR,15.3,synop-sec3,8.6,synop-sec3,10.0,obs,42
+2026-11-07,OINN,,OINN,Noshahr Arpt,,,20,obs-hourly,15,obs-hourly,10.8,obs,24
+2026-11-07,OINR,40732,OINR,Ramsar,2.3,synop-7RRRR,19.5,synop-sec3,16.5,synop-sec3,13.9,obs,46
+2026-11-07,OINZ,,OINZ,Sari Dasht E Naz,,,21,obs-hourly,14,obs-hourly,6.7,obs,9
+2026-11-07,OISA,40818,OISA,Abadeh,1.4,synop-7RRRR,18.5,synop-sec3,8.7,synop-sec3,14.9,obs,45
+2026-11-07,OISF,40859,OISF,Fasa,0.0,synop-7RRRR,26.7,synop-sec3,8.9,synop-sec3,5.1,obs,32
+2026-11-07,OISL,,OISL,Lar,,,32,obs-hourly,15,obs-hourly,3.1,obs,22
+2026-11-07,OISS,40848,OISS,Shiraz Shahid Dastghaib Intl,0.0,synop-7RRRR,24.2,synop-sec3,7.6,synop-sec3,5.1,obs,55
+2026-11-07,OISY,,OISY,Yasouj Arpt,,,18,obs-hourly,9,obs-hourly,6.2,obs,24
+2026-11-07,OITK,40703,OITK,Khoy,0.6,synop-7RRRR,13.7,synop-sec3,6.6,synop-sec3,12.9,obs,26
+2026-11-07,OITL,,OITL,Ardabil Intl,,,13,obs-hourly,4,obs-hourly,15.9,obs,29
+2026-11-07,OITM,40713,OITM,Maragheh,2.0,synop-7RRRR,18.3,synop-sec3,9.2,synop-sec3,4.1,obs,39
+2026-11-07,OITP,,OITP,Parsabad Moghan Arpt,,,17,obs-hourly,10,obs-hourly,3.1,obs,19
+2026-11-07,OITR,40712,OITR,Uromiyeh,0.5,synop-7RRRR,16.6,synop-sec3,2.6,synop-sec3,5.1,obs,39
+2026-11-07,OITS,40727,OITS,Saghez,6.5,synop-7RRRR,17.3,synop-sec3,6.6,synop-sec3,5.0,obs,24
+2026-11-07,OITT,40706,OITT,Tabriz Intl,2.7,synop-7RRRR,13.5,synop-sec3,8.9,synop-sec3,4.0,obs,56
+2026-11-07,OITZ,40729,OITZ,Zanjan,0.1,synop-7RRRR,17.1,synop-sec3,9.8,synop-sec3,7.2,obs,37
+2026-11-07,OIYY,40821,OIYY,Yazd Shahid Sadooghi,0.0,synop-7RRRR,27.1,synop-sec3,14.8,synop-sec3,10.0,obs,43
+2026-11-07,OIZB,40829,OIZB,Zabol,0.0,synop-7RRRR,28.9,synop-sec3,12.5,synop-sec3,4.1,obs,35
+2026-11-07,OIZH,40856,OIZH,Zahedan Intl,0.8,synop-7RRRR,26.4,synop-sec3,9.8,synop-sec3,4.0,obs,40
+2026-11-07,OIZJ,40893,OIZJ,Jask,0.0,synop-7RRRR,29.2,synop-sec3,25.6,synop-sec3,4.0,obs,24
+2026-11-07,OJAI,40272,OJAI,Queen Alia Intl,4.5,synop-7RRRR,23.0,synop-sec3,11.5,synop-sec3,5.1,obs,8
+2026-11-07,OJAM,40270,OJAM,Marka Intl,2.0,synop-7RRRR,23.4,synop-sec3,13.2,synop-sec3,5.1,obs,8
+2026-11-07,OJAQ,40340,OJAQ,Aqaba King Hussein Intl,,,28.8,synop-sec3,20.5,synop-sec3,7.2,obs,8
+2026-11-07,OJBD,40255,OJBD,Irbid (Met),,,,,,,0.0,obs,8
+2026-11-07,OJHF,40260,OJHF,Prince Hasan,,,24.0,synop-sec3,,,4.1,obs,8
+2026-11-07,OJMF,40265,OJMF,King Hussein,0.9,synop-7RRRR,23.5,synop-sec3,12.4,synop-sec3,5.1,obs,8
+2026-11-07,OJMN,40310,OJMN,Ma'An,,,,,,,0.0,obs,7
+2026-11-07,OKAS,,OKAS,Ali Al Salem Ab,,,37.1,obs-hourly,26.5,obs-hourly,15.4,obs,24
+2026-11-07,OMAA,41217,OMAA,Abu Dhabi Intl / Zayed Intl,,,37.0,synop-sec3,24.6,synop-sec3,5.1,obs,56
+2026-11-07,OMAD,41216,OMAD,Al Bateen Executive,,,37.0,synop-sec3,25.8,synop-sec3,4.6,obs,55
+2026-11-07,OMAL,41218,OMAL,Al Ain Intl,,,35.3,synop-sec3,24.4,synop-sec3,6.7,obs,56
+2026-11-07,OMDB,41194,OMDB,Dubai Intl,,,36.5,synop-sec3,26.2,synop-sec3,6.7,obs,55
+2026-11-07,OMDW,,OMDW,Dubai/Al Maktoum Intl,,,37,obs-hourly,23,obs-hourly,6.2,obs,47
+2026-11-07,OMFJ,41198,OMFJ,Fujairah Intl,,,31.2,synop-sec3,26.1,synop-sec3,4.1,obs,62
+2026-11-07,OMRK,41184,OMRK,Ras Al Khaimah Intl,,,35.9,synop-sec3,20.9,synop-sec3,5.7,obs,52
+2026-11-07,OMSJ,41196,OMSJ,Sharjah Intl,,,36.2,synop-sec3,21.7,synop-sec3,5.7,obs,55
+2026-11-07,OOBR,41244,OOBR,Buraimi (Aut),,,34.7,synop-sec3,25.2,obs-hourly,6.7,obs,24
+2026-11-07,OODQ,,OODQ,Duqm Intl,,,29,obs-hourly,25,obs-hourly,5.7,obs,23
+2026-11-07,OOFD,41262,OOFD,Fahud (Aut),,,34.3,synop-sec3,-40.7,synop-sec3,4.1,obs,23
+2026-11-07,OOMA,41288,OOMA,Masirah,,,30.7,synop-sec3,-75.3,synop-sec3,5.1,obs,23
+2026-11-07,OOSA,41316,OOSA,Salalah,,,31.6,synop-sec3,27.7,synop-sec3,4.1,obs,49
+2026-11-07,OOSR,41268,OOSR,Sur,,,33.9,synop-sec3,-96.7,synop-sec3,6.2,obs,24
+2026-11-07,OOTH,41314,OOTH,Thumrait,,,33.1,synop-sec3,20.8,synop-sec3,6.7,obs,8
+2026-11-07,OPDI,41624,OPDI,D I Khan,,,31.5,synop-sec3,17.5,synop-sec3,1.0,obs,8
+2026-11-07,OPFA,,OPFA,Faisalabad Intl,,,30,obs-hourly,17,obs-hourly,2.1,obs,48
+2026-11-07,OPGD,41757,OPGD,Gwadar,,,30.5,synop-sec3,17.5,synop-sec3,8.2,obs,8
+2026-11-07,OPGT,41516,OPGT,Gilgit,,,22.0,synop-sec3,3.0,synop-sec3,2.1,obs,8
+2026-11-07,OPGW,,OPGW,New Gwadar Intl,,,30,obs-hourly,18,obs-hourly,8.2,obs,46
+2026-11-07,OPIS,,OPIS,Islamabad/Gandhara Intl,,,26,obs-hourly,12,obs-hourly,8.2,obs,48
+2026-11-07,OPJA,41715,OPJA,Shahbaz Ab,,,31.5,synop-sec3,19.5,synop-sec3,1.0,obs,8
+2026-11-07,OPJI,41756,OPJI,Jiwani,,,30.5,synop-sec3,19.0,synop-sec3,3.1,obs,8
+2026-11-07,OPKC,41780,OPKC,Jinnah Intl,,,37.3,synop-sec3,20.9,synop-sec3,5.1,obs,56
+2026-11-07,OPKD,41764,OPKD,Hyderabad Airport,,,36.7,synop-sec3,23.1,synop-sec3,3.1,obs,8
+2026-11-07,OPLA,41641,OPLA,Allama Iqbal Intl,,,30,obs-hourly,17,obs-hourly,3.1,obs,48
+2026-11-07,OPLH,41640,OPLH,Lahore City,,,30.5,synop-sec3,17.5,synop-sec3,2.1,obs,8
+2026-11-07,OPMT,41675,OPMT,Multan Intl,,,31.2,synop-sec3,19.5,synop-sec3,2.1,obs,56
+2026-11-07,OPNH,41749,OPNH,Nawabshah,,,38.0,synop-sec3,17.5,synop-sec3,5.1,obs,8
+2026-11-07,OPPG,41739,OPPG,Panjgur,,,30.0,synop-sec3,16.5,synop-sec3,4.1,obs,8
+2026-11-07,OPPI,41759,OPPI,Pasni,,,34.0,synop-sec3,18.0,synop-sec3,1.0,obs,8
+2026-11-07,OPPS,,OPPS,Peshawar/Khan Intl,,,29,obs-hourly,14,obs-hourly,2.1,obs,47
+2026-11-07,OPQT,41660,OPQT,Quetta,,,22.0,synop-sec3,7.5,synop-sec3,8.2,obs,8
+2026-11-07,OPRN,41571,OPRN,Chaklala,,,27.5,synop-sec3,13.5,synop-sec3,8.2,obs,8
+2026-11-07,OPSB,41697,OPSB,Sibi,,,35.0,synop-sec3,20.0,synop-sec3,0.0,obs,8
+2026-11-07,OPSD,41517,OPSD,Skardu,,,17.4,synop-sec3,1.1,synop-sec3,0.0,obs,8
+2026-11-07,OPST,41599,OPST,Sialkot,,,29,obs-hourly,15,obs-hourly,5.1,obs,48
+2026-11-07,OPXG,41600,OPXG,Sialkot City,,,28.5,synop-sec3,14.3,synop-sec3,1.0,obs,8
+2026-11-07,OPXK,41785,OPXK,Badin,,,35.5,synop-sec3,20.5,synop-sec3,1.0,obs,8
+2026-11-07,OPXL,41685,OPXL,Bar Khan,,,29.0,synop-sec3,13.5,synop-sec3,1.0,obs,8
+2026-11-07,OPXM,41700,OPXM,Bahawalpur City,,,31.2,synop-sec3,18.7,synop-sec3,2.1,obs,8
+2026-11-07,OPXO,41508,OPXO,Dir,,,25.0,synop-sec3,4.0,synop-sec3,1.0,obs,8
+2026-11-07,OPXV,41746,OPXV,Padidan,,,36.5,synop-sec3,18.5,synop-sec3,2.1,obs,8
+2026-11-07,OPXX,41725,OPXX,Rohri,,,33.5,synop-sec3,21.0,synop-sec3,2.1,obs,8
+2026-11-07,OPZB,41620,OPZB,Zhob,,,25.5,synop-sec3,11.0,synop-sec3,3.1,obs,8
+2026-11-07,ORBI,40650,ORBI,Baghdad Intl Airport,,,26,obs-hourly,19,obs-hourly,12.9,obs,12
+2026-11-07,ORBM,40608,ORBM,Mosul,,,,,,,4.0,obs,3
+2026-11-07,ORER,,ORER,Erbil Intl,,,23,obs-hourly,14,obs-hourly,6.2,obs,10
+2026-11-07,ORKK,40621,ORKK,Kirkuk Ab,,,,,,,3.0,obs,3
+2026-11-07,ORMM,40689,ORMM,Basrah Intl,,,,,,,10.3,obs,6
+2026-11-07,ORNI,40670,ORNI,Najaf,,,,,,,5.1,obs,8
+2026-11-07,ORSJ,,ORSJ,Talabani Intl,,,19,obs-hourly,12,obs-hourly,5.7,obs,11
+2026-11-07,ORUB,40664,ORUB,Kut,,,,,,,4.0,obs,3
+2026-11-07,OSAP,40007,OSAP,Aleppo Intl,,,18.0,synop-sec3,14,obs-hourly,3.1,obs,25
+2026-11-07,OSDI,40080,OSDI,Damascus Intl,,,21.8,synop-sec3,13,obs-hourly,8.7,obs,25
+2026-11-07,OSDZ,40045,OSDZ,Deir Zzor,,,22.0,synop-sec3,14,obs-hourly,20.6,obs,25
+2026-11-07,OTBD,41170,OTBD,Doha Intl,,,34.9,synop-sec3,28.8,synop-sec3,7.7,obs,56
+2026-11-07,OTBH,,OTBH,Al Udeid Ab,,,35.5,obs-hourly,26.8,obs-hourly,9.3,obs,22
+2026-11-07,OTHH,,OTHH,Doha / Hamad Intl,,,33,obs-hourly,30,obs-hourly,7.7,obs,24
+2026-11-07,OYRN,,OYRN,Mukalla/Ryan Arpt,,,32,obs-hourly,26,obs-hourly,7.2,obs,24
+2026-11-07,OYSY,,OYSY,Sayun Arpt,,,33,obs-hourly,18,obs-hourly,4.1,obs,13
+2026-11-07,UAAA,36872,UAAA,Almaty,,,17,obs-hourly,3,obs-hourly,4.1,obs,51
+2026-11-07,UAAH,,UAAH,Balkhash Arpt,,,8,obs-hourly,3,obs-hourly,7.2,obs,25
+2026-11-07,UAAT,,UAAT,Taldykorgan Arpt,,,19,obs-hourly,0,obs-hourly,8.2,obs,22
+2026-11-07,UACC,35188,UACC,Astana Intl,,,13.5,synop-sec3,1.0,synop-sec3,14.9,obs,62
+2026-11-07,UACK,,UACK,Kokshetau Airport,,,11,obs-hourly,-3,obs-hourly,14.9,obs,26
+2026-11-07,UACP,28676,UACP,Petropavlovsk,,,10.7,synop-sec3,-2.2,synop-sec3,16.0,obs,31
+2026-11-07,UADD,,UADD,Taraz,,,24,obs-hourly,11,obs-hourly,7.2,obs,48
+2026-11-07,UAII,38328,UAII,Shymkent,,,25.6,synop-sec3,11.3,synop-sec3,9.8,obs,57
+2026-11-07,UAIT,,UAIT,Turkistan Arpt,,,22,obs-hourly,12,obs-hourly,6.2,obs,48
+2026-11-07,UAKD,35671,UAKD,Zhezkazgan,,,14.0,synop-sec3,6.3,synop-sec3,6.2,obs,42
+2026-11-07,UAKK,35394,UAKK,Karaganda,,,13.6,synop-sec3,5.0,synop-sec3,18.0,obs,59
+2026-11-07,UAOO,38062,UAOO,Kyzylorda,,,21.8,synop-sec3,6.6,synop-sec3,5.1,obs,52
+2026-11-07,UARR,35108,UARR,Uralsk,,,3.6,synop-sec3,2.6,synop-sec3,8.7,obs,60
+2026-11-07,UASK,,UASK,Ust Kamenogorsk,,,10,obs-hourly,-6,obs-hourly,8.2,obs,43
+2026-11-07,UASP,36003,UASP,Pavlodar,,,13.1,synop-sec3,1.1,synop-sec3,8.7,obs,52
+2026-11-07,UASS,,UASS,Semey Arpt,,,9,obs-hourly,-1,obs-hourly,17.0,obs,35
+2026-11-07,UATA,35746,UATA,Aralsk,,,7.9,synop-sec3,-5.1,synop-sec3,4.0,obs,8
+2026-11-07,UATE,38001,UATE,Aktau,,,9.7,synop-sec3,6.8,synop-sec3,7.2,obs,56
+2026-11-07,UATG,,UATG,Atyrau,,,7,obs-hourly,1,obs-hourly,9.8,obs,48
+2026-11-07,UATT,35229,UATT,Aktyubinsk / Aktobe,,,3.5,synop-sec3,1.1,synop-sec3,9.8,obs,56
+2026-11-07,UAUU,28952,UAUU,Kostanay,,,6.2,synop-sec3,-0.3,synop-sec3,19.0,obs,63
+2026-11-07,UBBB,37864,UBBB,Heydar Aliyev,,,14.5,synop-sec3,11.3,obs-hourly,4.1,obs,56
+2026-11-07,UBBF,37907,UBBF,Fuzuli,,,15,obs-hourly,8,obs-hourly,4.1,obs,48
+2026-11-07,UBBG,,UBBG,Gyanca Intl,,,15,obs-hourly,9,obs-hourly,7.2,obs,48
+2026-11-07,UBBL,37985,UBBL,Lankaran,,,16,obs-hourly,12.6,obs-hourly,3.6,obs,31
+2026-11-07,UBBN,,UBBN,Nakhchivan Arpt,,,12,obs-hourly,9,obs-hourly,4.1,obs,48
+2026-11-07,UBBQ,,UBBQ,Gabala,,,12,obs-hourly,9,obs-hourly,5.1,obs,25
+2026-11-07,UBBY,37575,UBBY,Zakatala,,,14.8,synop-sec3,7.3,synop-sec3,4.1,obs,31
+2026-11-07,UBBZ,,UBBZ,Zangilan Intl,,,14,obs-hourly,8,obs-hourly,3.1,obs,48
+2026-11-07,UBEE,,UBEE,Yevlakh Arpt,,,17,obs-hourly,11,obs-hourly,5.7,obs,18
+2026-11-07,UBLC,,UBLC,Lachin Intl,,,6,obs-hourly,2,obs-hourly,5.1,obs,52
+2026-11-07,UBTT,,UBTT,Zabrat Arpt,,,15,obs-hourly,11,obs-hourly,3.1,obs,12
+2026-11-07,UDSG,,UDSG,Gyumri/Shirak Intl,,,7,obs-hourly,2,obs-hourly,3.1,obs,49
+2026-11-07,UDYZ,,UDYZ,Zvartnots,,,12,obs-hourly,8,obs-hourly,2.1,obs,48
+2026-11-07,UGAM,,UGAM,Ambrolauri Arpt,,,9,obs-hourly,4,obs-hourly,3.6,obs,48
+2026-11-07,UGKO,,UGKO,Kopitnari,,,13,obs-hourly,8,obs-hourly,3.1,obs,48
+2026-11-07,UGMM,37541,UGMM,Muhrani,,,11.8,synop-sec3,5.6,synop-sec3,,,8
+2026-11-07,UGMS,,UGMS,Mestia,,,5,obs-hourly,0,obs-hourly,2.1,obs,48
+2026-11-07,UGSB,37484,UGSB,Batumi,,,15,obs-hourly,11,obs-hourly,5.7,obs,48
+2026-11-07,UGTB,,UGTB,Tbilisi Intl,,,12,obs-hourly,7,obs-hourly,8.7,obs,48
+2026-11-07,UTAA,38880,UTAA,Ashgabat,,,20.8,synop-sec3,11.6,synop-sec3,6.0,obs,32
+2026-11-07,UTAE,38911,UTAE,Kerki Intl,,,25.8,synop-sec3,13.6,synop-sec3,10.3,obs,32
+2026-11-07,UTAK,,UTAK,Turkmenbashi,,,15,obs-hourly,8,obs-hourly,7.2,obs,24
+2026-11-07,UTAM,,UTAM,Mary,,,30,obs-hourly,10,obs-hourly,10.3,obs,24
+2026-11-07,UTAN,,UTAN,Balkanabat Intl,,,19,obs-hourly,10,obs-hourly,5.1,obs,24
+2026-11-07,UTAT,,UTAT,Dashoguz,,,17,obs-hourly,4,obs-hourly,7.2,obs,24
+2026-11-07,UTAV,,UTAV,Türkmenabat Arpt,,,30,obs-hourly,10,obs-hourly,7.2,obs,24
+2026-11-07,UTDD,38836,UTDD,Dushanbe,,,24.8,synop-sec3,15.0,synop-sec3,9.8,obs,56
+2026-11-07,UTDK,,UTDK,Kulob Arpt,,,27,obs-hourly,16,obs-hourly,10.8,obs,48
+2026-11-07,UTDL,,UTDL,Khujand Arpt,,,19,obs-hourly,12,obs-hourly,14.9,obs,48
+2026-11-07,UTDT,,UTDT,Qurghonteppa Intl,,,27,obs-hourly,16,obs-hourly,8.2,obs,48
+2026-11-07,UTED,38579,UTED,Dzizak,,,27.4,synop-sec3,16.4,synop-sec3,4.0,obs,8
+2026-11-07,UTFA,38475,UTFA,Andizhan Airport,,,19.3,synop-sec3,5.8,synop-sec3,2.0,obs,8
+2026-11-07,UTFF,38618,UTFF,Fergana Airport,,,19.7,synop-sec3,7.0,synop-sec3,1.0,obs,8
+2026-11-07,UTFN,38611,UTFN,Namangan,,,18.5,synop-sec3,8.0,synop-sec3,3.0,obs,8
+2026-11-07,UTSA,38567,UTSA,Navoi,,,26.5,synop-sec3,14.3,synop-sec3,15.0,obs,8
+2026-11-07,UTSM,38413,UTSM,Tamdy-Bulak,,,22.8,synop-sec3,12.1,synop-sec3,3.0,obs,8
+2026-11-07,UTSS,38696,UTSS,Samarkand,,,25.2,synop-sec3,12.8,synop-sec3,3.0,obs,8
+2026-11-07,UTST,38927,UTST,Termez,,,28.6,synop-sec3,17.3,synop-sec3,8.0,obs,8
+2026-11-07,UTTT,38457,UTTT,Yuzhny / Tashkent Islam Karimov Intl,,,26.9,synop-sec3,14.7,synop-sec3,3.0,obs,8
+2026-11-07,UZNN,,UZNN,Nukus Arpt,,,13,obs-hourly,1,obs-hourly,8.2,obs,48
+2026-11-07,UZNU,,UZNU,Urgench Arpt,,,20,obs-hourly,4,obs-hourly,7.2,obs,48
+2026-11-07,UZSB,,UZSB,Bukhara Arpt,,,28,obs-hourly,14,obs-hourly,7.2,obs,48
+2026-11-07,UZSK,,UZSK,Karshi Arpt,,,29,obs-hourly,15,obs-hourly,10.3,obs,48
+2026-11-07,UZTP,,UZTP,Tashkent-Khumo Intl,,,27,obs-hourly,16,obs-hourly,6.2,obs,47
