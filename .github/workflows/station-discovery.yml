@@ -1,0 +1,27 @@
+name: station-discovery
+# r194: گزارش کشف/تطبیق ایستگاه‌ها (حالت REVIEW). هیچ‌چیز در stations.json یا دیتابیس تولید تغییر نمی‌کند؛ فقط data/obs/discovery/* نوشته می‌شود.
+on:
+  schedule:
+    - cron: "11 5 * * 2"
+  workflow_dispatch: {}
+permissions:
+  contents: write
+concurrency:
+  group: station-discovery
+  cancel-in-progress: false
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: discovery (atlas + ISD + AWC)
+        run: python station_discovery/discovery.py --registry data/obs/stations.json --atlas obs_extra_stations.csv --sources atlas,isd_awc --countries IR,IZ,AF,PK,TX,UZ,TI,AJ,AM,GG,TU,SA,AE,MU,QA,KU,BA,KZ,SY,IS,JO,YE
+      - name: commit report
+        run: |
+          git config user.name obs-bot; git config user.email obs-bot@users.noreply.github.com
+          git add data/obs/discovery; git commit -m "obs: station discovery report" || exit 0
+          for i in 1 2 3; do git pull --rebase -q && git push && break || sleep 5; done
