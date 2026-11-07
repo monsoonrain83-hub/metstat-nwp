@@ -99,6 +99,14 @@ def manual(db, path="obs_extra_stations.csv", conflicts_out="data/obs/station_co
     if conf:
         os.makedirs(os.path.dirname(conflicts_out) or ".", exist_ok=True); json.dump(conf, open(conflicts_out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     print(f"manual: added {add}, enriched {enr}, isd-wmo replaced {rep}, conflicts {len(conf)}"); return add
+def exclude(db, path="obs_exclude_stations.csv"):
+    """r194: فهرست حذف ماندگار (ستون‌ها: id,reason). تطبیق فقط با کلید ردیف یا ICAO؛ هرگز با WMO یا نام. چون stations.json هر بار بازسازی می‌شود،
+    ویرایش دستی آن ماندگار نیست و ردیف‌های منسوخ دوباره برمی‌گشتند."""
+    if not os.path.exists(path): return 0
+    ex = {(r.get("id") or "").strip() for r in csv.DictReader(open(path, encoding="utf-8-sig")) if (r.get("id") or "").strip()}
+    gone = [k for k, v in db.items() if k in ex or (v.get("icao") and v["icao"] in ex)]
+    for k in gone: del db[k]
+    print("excluded:", len(gone)); return len(gone)
 def metar_active(db):
     ids = sorted({v["icao"] for v in db.values() if v.get("icao")})
     seen = {}
@@ -120,7 +128,7 @@ def synop_active(db):
         time.sleep(2.5)   # be polite to OGIMET
 def main():
     global_start = time.time()
-    db = isd(); print("ISD rows", len(db)); awc(db); manual(db)
+    db = isd(); print("ISD rows", len(db)); awc(db); manual(db); exclude(db)
     if not db: sys.exit("no station source reachable - nothing written (no fake data)")
     seen_w = {}                                    # r193: یک WMO فقط روی یک ردیف بماند (ردیف دارای ICAO/AWC ارجح است)
     for k, v in sorted(db.items(), key=lambda kv: (not kv[1].get("icao"), kv[0])):
