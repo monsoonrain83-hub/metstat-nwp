@@ -1,132 +1,130 @@
 ﻿id,name,issue,detail
-17188,Uşak Arpt,registry_inactive_flag,17188
-345810,Urda,registry_inactive_flag,34581
-350670,Esil',registry_inactive_flag,35067
-354490,Nura,registry_inactive_flag,35449
-355320,Mugodzarskaja,registry_inactive_flag,35532
-356870,Karazhal,registry_inactive_flag,35687
-357050,Approximate Locale,registry_inactive_flag,35705
-358160,Oporny,registry_inactive_flag,35816
-367730,Matai,registry_inactive_flag,36773
-368170,Anarkhay,registry_inactive_flag,36817
-368370,Iliysk,registry_inactive_flag,36837
-368710,Karasaysky,registry_inactive_flag,36871
-368910,Cilik,registry_inactive_flag,36891
-368970,Assi,registry_inactive_flag,36897
-373090,Oni,registry_inactive_flag,37309
-376770,Khaltan,registry_inactive_flag,37677
-377470,Evlakh Airport,registry_inactive_flag,37747
-377590,Shamakhy,registry_inactive_flag,37759
-377810,Aragac H/M,registry_inactive_flag,37781
-378440,Kurdamir,registry_inactive_flag,37844
-378630,Gyandzha,registry_inactive_flag,37863
-379140,Imishly,registry_inactive_flag,37914
-379590,Kapan,registry_inactive_flag,37959
-379720,Bilasuvar,registry_inactive_flag,37972
-379780,Gyoytapa,registry_inactive_flag,37978
-380490,Cirik-Rabat,registry_inactive_flag,38049
-382320,Akkuduk,registry_inactive_flag,38232
-382610,Ak-Depe,registry_inactive_flag,38261
-382670,Keneurgench,registry_inactive_flag,38267
-383010,Kyzylkum,registry_inactive_flag,38301
-383380,Blinkovo,registry_inactive_flag,38338
-383670,Karabogazkel,registry_inactive_flag,38367
-383830,Shasenem,registry_inactive_flag,38383
-385290,Deverze,registry_inactive_flag,38529
-386020,Dzarbulak,registry_inactive_flag,38602
-386090,Isfara,registry_inactive_flag,38609
-386300,Nebit-Dag,registry_inactive_flag,38630
-386340,Nebitdag,registry_inactive_flag,38634
-386370,Ogryda,registry_inactive_flag,38637
-386650,Akmolla,registry_inactive_flag,38665
-387550,Bygdaili,registry_inactive_flag,38755
-387590,Gyzyletrek,registry_inactive_flag,38759
-387670,Garryqala,registry_inactive_flag,38767
-388040,Repatek,registry_inactive_flag,38804
-388400,Nurek,registry_inactive_flag,38840
-388420,Bustonabad-In-Tajik,registry_inactive_flag,38842
-388810,Gaudan-In-Turkmen,registry_inactive_flag,38881
-388850,Kaka,registry_inactive_flag,38885
-389300,Ajvadz,registry_inactive_flag,38930
-389320,Gandzhina,registry_inactive_flag,38932
-389430,Kulyab,registry_inactive_flag,38943
-389660,Sajmak,registry_inactive_flag,38966
-389890,Tagtabazar,registry_inactive_flag,38989
-400050,Jarablus,registry_inactive_flag,40005
-400160,Hassakah,registry_inactive_flag,40016
-400390,Raqqa,registry_inactive_flag,40039
-402260,Jenin,registry_inactive_flag,40226
-402560,Wadi Rayan,registry_inactive_flag,40256
-402680,Salt,registry_inactive_flag,40268
-402750,Qatraneh,registry_inactive_flag,40275
-402850,Deir Alla,registry_inactive_flag,40285
-402920,Er Rabbah,registry_inactive_flag,40292
-403050,Jafer,registry_inactive_flag,40305
-404150,Dammam (King Fahd Int. Airport),registry_inactive_flag,40415
-404180,Al-Qatif-Gosp-3,registry_inactive_flag,40418
-405500,Abdaly,registry_inactive_flag,40550
-405510,Mitribah,registry_inactive_flag,40551
-405530,Sabriyah,registry_inactive_flag,40553
-405680,Bubyan Island,registry_inactive_flag,40568
-405700,Salmy,registry_inactive_flag,40570
-405730,Abraque Mazraa,registry_inactive_flag,40573
-405800,Rabyah,registry_inactive_flag,40580
-405810,Kuwait City,registry_inactive_flag,40581
-405850,Salmiyah,registry_inactive_flag,40585
-405860,Jahra,registry_inactive_flag,40586
-405870,Sulaibiya,registry_inactive_flag,40587
-405900,Managish,registry_inactive_flag,40590
-405920,Wafra,registry_inactive_flag,40592
-405940,Nuwasib,registry_inactive_flag,40594
-406040,Sinjar,registry_inactive_flag,40604
-406050,Zakho,registry_inactive_flag,40605
-406060,Duhook,registry_inactive_flag,40606
-406070,Aqrah,registry_inactive_flag,40607
-406090,Tel Abta,registry_inactive_flag,40609
-406100,Baaj,registry_inactive_flag,40610
-406110,Sallahdeen,registry_inactive_flag,40611
-406160,Erbeel,registry_inactive_flag,40616
-406200,Halabcha,registry_inactive_flag,40620
-406220,Chem-Chamal,registry_inactive_flag,40622
-406230,Sulymaniyah,registry_inactive_flag,40623
-406580,Nukheb,registry_inactive_flag,40658
-407670,Nowjeh,registry_inactive_flag,40767
-408020,Esfahan/Khatami,registry_inactive_flag,40802
-408300,Omidieh,registry_inactive_flag,40830
-408690,Farsi Island,registry_inactive_flag,40869
-40904,Faizabad Arpt,registry_inactive_flag,40904
-409300,North-Salang,registry_inactive_flag,40930
-40932,Jabul-Saraj,registry_inactive_flag,40932
-40957,Shindand,registry_inactive_flag,40957
-40974,Farah,registry_inactive_flag,40974
-409880,Bust,registry_inactive_flag,40988
-40990,Kandahar Intl,registry_inactive_flag,40990
-409960,Deshoo,registry_inactive_flag,40996
-41006,Muwaih,registry_inactive_flag,41006
-410300,Makkah,registry_inactive_flag,41030
-410320,Arafat,registry_inactive_flag,41032
-411610,Al Khor Airport,registry_inactive_flag,41161
-412520,Ibri,registry_inactive_flag,41252
-412660,Ibra,registry_inactive_flag,41266
-41341,Abs Arpt,registry_inactive_flag,41341
-41391,Hajjah,registry_inactive_flag,41391
-41434,Dhamar,registry_inactive_flag,41434
-415070,Met Observatory Timergara / Dir Lower,registry_inactive_flag,41507
-415100,Kalam,registry_inactive_flag,41510
-415200,Astore,registry_inactive_flag,41520
-415300,Peshawar,registry_inactive_flag,41530
-415320,Muzaffar Abad,registry_inactive_flag,41532
-415640,Kohat,registry_inactive_flag,41564
-415770,Islamabad City,registry_inactive_flag,41577
-415930,Sargodha,registry_inactive_flag,41593
-416360,Jhang,registry_inactive_flag,41636
-416720,Rafiqui,registry_inactive_flag,41672
-417010,Bahawalpur,registry_inactive_flag,41701
-41716,Rahim Yar Khan/Zayed Arpt,registry_inactive_flag,41716
+17188,Uşak Arpt,wmo_not_reporting,17188
+345810,Urda,wmo_not_reporting,34581
+350670,Esil',wmo_not_reporting,35067
+354490,Nura,wmo_not_reporting,35449
+355320,Mugodzarskaja,wmo_not_reporting,35532
+356870,Karazhal,wmo_not_reporting,35687
+357050,Approximate Locale,wmo_not_reporting,35705
+358160,Oporny,wmo_not_reporting,35816
+367730,Matai,wmo_not_reporting,36773
+368170,Anarkhay,wmo_not_reporting,36817
+368370,Iliysk,wmo_not_reporting,36837
+368710,Karasaysky,wmo_not_reporting,36871
+368910,Cilik,wmo_not_reporting,36891
+368970,Assi,wmo_not_reporting,36897
+373090,Oni,wmo_not_reporting,37309
+376770,Khaltan,wmo_not_reporting,37677
+377470,Evlakh Airport,wmo_not_reporting,37747
+377590,Shamakhy,wmo_not_reporting,37759
+377810,Aragac H/M,wmo_not_reporting,37781
+378440,Kurdamir,wmo_not_reporting,37844
+378630,Gyandzha,wmo_not_reporting,37863
+379140,Imishly,wmo_not_reporting,37914
+379590,Kapan,wmo_not_reporting,37959
+379720,Bilasuvar,wmo_not_reporting,37972
+379780,Gyoytapa,wmo_not_reporting,37978
+380490,Cirik-Rabat,wmo_not_reporting,38049
+382320,Akkuduk,wmo_not_reporting,38232
+382610,Ak-Depe,wmo_not_reporting,38261
+382670,Keneurgench,wmo_not_reporting,38267
+383010,Kyzylkum,wmo_not_reporting,38301
+383380,Blinkovo,wmo_not_reporting,38338
+383670,Karabogazkel,wmo_not_reporting,38367
+383830,Shasenem,wmo_not_reporting,38383
+385290,Deverze,wmo_not_reporting,38529
+386020,Dzarbulak,wmo_not_reporting,38602
+386090,Isfara,wmo_not_reporting,38609
+386300,Nebit-Dag,wmo_not_reporting,38630
+386340,Nebitdag,wmo_not_reporting,38634
+386370,Ogryda,wmo_not_reporting,38637
+386650,Akmolla,wmo_not_reporting,38665
+387550,Bygdaili,wmo_not_reporting,38755
+387590,Gyzyletrek,wmo_not_reporting,38759
+387670,Garryqala,wmo_not_reporting,38767
+388040,Repatek,wmo_not_reporting,38804
+388400,Nurek,wmo_not_reporting,38840
+388420,Bustonabad-In-Tajik,wmo_not_reporting,38842
+388810,Gaudan-In-Turkmen,wmo_not_reporting,38881
+388850,Kaka,wmo_not_reporting,38885
+389300,Ajvadz,wmo_not_reporting,38930
+389320,Gandzhina,wmo_not_reporting,38932
+389430,Kulyab,wmo_not_reporting,38943
+389660,Sajmak,wmo_not_reporting,38966
+389890,Tagtabazar,wmo_not_reporting,38989
+400050,Jarablus,wmo_not_reporting,40005
+400160,Hassakah,wmo_not_reporting,40016
+400390,Raqqa,wmo_not_reporting,40039
+402260,Jenin,wmo_not_reporting,40226
+402560,Wadi Rayan,wmo_not_reporting,40256
+402680,Salt,wmo_not_reporting,40268
+402750,Qatraneh,wmo_not_reporting,40275
+402850,Deir Alla,wmo_not_reporting,40285
+402920,Er Rabbah,wmo_not_reporting,40292
+403050,Jafer,wmo_not_reporting,40305
+404150,Dammam (King Fahd Int. Airport),wmo_not_reporting,40415
+404180,Al-Qatif-Gosp-3,wmo_not_reporting,40418
+405500,Abdaly,wmo_not_reporting,40550
+405510,Mitribah,wmo_not_reporting,40551
+405530,Sabriyah,wmo_not_reporting,40553
+405680,Bubyan Island,wmo_not_reporting,40568
+405700,Salmy,wmo_not_reporting,40570
+405730,Abraque Mazraa,wmo_not_reporting,40573
+405800,Rabyah,wmo_not_reporting,40580
+405810,Kuwait City,wmo_not_reporting,40581
+405850,Salmiyah,wmo_not_reporting,40585
+405860,Jahra,wmo_not_reporting,40586
+405870,Sulaibiya,wmo_not_reporting,40587
+405900,Managish,wmo_not_reporting,40590
+405920,Wafra,wmo_not_reporting,40592
+405940,Nuwasib,wmo_not_reporting,40594
+406040,Sinjar,wmo_not_reporting,40604
+406050,Zakho,wmo_not_reporting,40605
+406060,Duhook,wmo_not_reporting,40606
+406070,Aqrah,wmo_not_reporting,40607
+406090,Tel Abta,wmo_not_reporting,40609
+406100,Baaj,wmo_not_reporting,40610
+406110,Sallahdeen,wmo_not_reporting,40611
+406160,Erbeel,wmo_not_reporting,40616
+406200,Halabcha,wmo_not_reporting,40620
+406220,Chem-Chamal,wmo_not_reporting,40622
+406230,Sulymaniyah,wmo_not_reporting,40623
+406580,Nukheb,wmo_not_reporting,40658
+407670,Nowjeh,wmo_not_reporting,40767
+408020,Esfahan/Khatami,wmo_not_reporting,40802
+408300,Omidieh,wmo_not_reporting,40830
+408690,Farsi Island,wmo_not_reporting,40869
+40904,Faizabad Arpt,wmo_not_reporting,40904
+409300,North-Salang,wmo_not_reporting,40930
+40932,Jabul-Saraj,wmo_not_reporting,40932
+40957,Shindand,wmo_not_reporting,40957
+40974,Farah,wmo_not_reporting,40974
+409880,Bust,wmo_not_reporting,40988
+40990,Kandahar Intl,wmo_not_reporting,40990
+409960,Deshoo,wmo_not_reporting,40996
+41006,Muwaih,wmo_not_reporting,41006
+410300,Makkah,wmo_not_reporting,41030
+410320,Arafat,wmo_not_reporting,41032
+411610,Al Khor Airport,wmo_not_reporting,41161
+412520,Ibri,wmo_not_reporting,41252
+412660,Ibra,wmo_not_reporting,41266
+41341,Abs Arpt,wmo_not_reporting,41341
+41391,Hajjah,wmo_not_reporting,41391
+41434,Dhamar,wmo_not_reporting,41434
+415070,Met Observatory Timergara / Dir Lower,wmo_not_reporting,41507
+415100,Kalam,wmo_not_reporting,41510
+415200,Astore,wmo_not_reporting,41520
+415300,Peshawar,wmo_not_reporting,41530
+415320,Muzaffar Abad,wmo_not_reporting,41532
+415640,Kohat,wmo_not_reporting,41564
+415770,Islamabad City,wmo_not_reporting,41577
+416360,Jhang,wmo_not_reporting,41636
+416720,Rafiqui,wmo_not_reporting,41672
+41716,Rahim Yar Khan/Zayed Arpt,wmo_not_reporting,41716
 AZUH,Nakhchivan Intl,icao_without_wmo,AZUH
 LLBS,Beer-Sheva Arpt,icao_without_wmo,LLBS
 LLER,Eilat/Ramone Arpt,icao_without_wmo,LLER
-LLHA,Haifa,registry_inactive_flag,40155
+LLHA,Haifa,wmo_not_reporting,40155
 LLHZ,Herzelia Airport,icao_without_wmo,LLHZ
 LLIB,Mahanaim I Ben Yaakov,icao_without_wmo,LLIB
 LLJR,Jerusalem/Atarot,icao_without_wmo,LLJR
@@ -136,13 +134,12 @@ LTAQ,Samsun Arpt,icao_without_wmo,LTAQ
 LTAV,Sivrihisar,icao_without_wmo,LTAV
 LTAY,Cardak,icao_without_wmo,LTAY
 LTBK,Gaziemir,icao_without_wmo,LTBK
-LTBN,Kutahya(Tafb),registry_inactive_flag,17117
+LTBN,Kutahya(Tafb),wmo_not_reporting,17117
 LTBQ,Topel Arpt),icao_without_wmo,LTBQ
 LTBX,Samandira,icao_without_wmo,LTBX
 LTBY,Eskisehir/Polatkan Arpt,icao_without_wmo,LTBY
 LTBZ,Zafer Arpt,icao_without_wmo,LTBZ
 LTCB,Ordu/Giresun Arpt,icao_without_wmo,LTCB
-LTCH,Şanlıurfa,icao_without_wmo,LTCH
 LTCK,Muş Arpt,icao_without_wmo,LTCK
 LTCL,Siirt,icao_without_wmo,LTCL
 LTCM,Sinop Arpt,icao_without_wmo,LTCM
@@ -156,16 +153,16 @@ LTFG,Gazipasa Arpt,icao_without_wmo,LTFG
 LTFK,Gokceada Arpt,icao_without_wmo,LTFK
 LTFM,Istanbul Arpt,icao_without_wmo,LTFM
 LTFO,Rize-Artvin Arpt,icao_without_wmo,LTFO
-OABN,Bamyan,registry_inactive_flag,40945
-OAGN,Ghazni,registry_inactive_flag,40968
-OAHR,Herat / Khwaja Abdullah Ansari Intl,registry_inactive_flag,40938
+OABN,Bamyan,wmo_not_reporting,40945
+OAGN,Ghazni,wmo_not_reporting,40968
+OAHR,Herat / Khwaja Abdullah Ansari Intl,wmo_not_reporting,40938
 OAIX,Bagram,icao_without_wmo,OAIX
-OAJL,Jalalabad,registry_inactive_flag,40954
-OAKB,Kabul Intl,registry_inactive_flag,40948
-OAMS,Mazar I Sharif / Mawlana Jalaluddin Muhammad Balkhi,registry_inactive_flag,40911
-OAQN,Qala I Naw,registry_inactive_flag,40937
+OAJL,Jalalabad,wmo_not_reporting,40954
+OAKB,Kabul Intl,wmo_not_reporting,40948
+OAMS,Mazar I Sharif / Mawlana Jalaluddin Muhammad Balkhi,wmo_not_reporting,40911
+OAQN,Qala I Naw,wmo_not_reporting,40937
 OASG,Shebirghan,icao_without_wmo,OASG
-OAUZ,Kunduz,registry_inactive_flag,40913
+OAUZ,Kunduz,wmo_not_reporting,40913
 OAZB,Zebak,icao_without_wmo,OAZB
 OAZG,Zaranj,icao_without_wmo,OAZG
 OEDF,Dammam/King Fahd Intl,icao_without_wmo,OEDF
@@ -176,7 +173,7 @@ OEKJ,Al Kharj/Sultan,icao_without_wmo,OEKJ
 OEMK,Makkah/Mecca Arpt,icao_without_wmo,OEMK
 OENN,Neom Bay Arpt,icao_without_wmo,OENN
 OEPS,Al-Kharj/Sultan Arpt,icao_without_wmo,OEPS
-OERY,King Salman Ab,registry_inactive_flag,40438
+OERY,King Salman Ab,wmo_not_reporting,40438
 OIAD,Dezful,icao_without_wmo,OIAD
 OIAM,Mahshahr,icao_without_wmo,OIAM
 OIBA,Abumusa Isl Arpt,icao_without_wmo,OIBA
@@ -216,7 +213,7 @@ OITP,Parsabad Moghan Arpt,icao_without_wmo,OITP
 OITU,Maku,icao_without_wmo,OITU
 OIZC,Chah-Bahar Arpt,icao_without_wmo,OIZC
 OIZK,Khash,icao_without_wmo,OIZK
-OJHR,H4,registry_inactive_flag,40250
+OJHR,H4,wmo_not_reporting,40250
 OKAJ,Ahmed Al Jaber Ab,icao_without_wmo,OKAJ
 OKAS,Ali Al Salem Ab,icao_without_wmo,OKAS
 OMAB,Buhasa,icao_without_wmo,OMAB
@@ -237,19 +234,18 @@ OPDG,Dera Ghazi Khan Intl,icao_without_wmo,OPDG
 OPFA,Faisalabad Intl,icao_without_wmo,OPFA
 OPGW,New Gwadar Intl,icao_without_wmo,OPGW
 OPIS,Islamabad/Gandhara Intl,icao_without_wmo,OPIS
-OPMI,Mianwali,registry_inactive_flag,41592
-OPMR,Masroor,registry_inactive_flag,41781
+OPMI,Mianwali,wmo_not_reporting,41592
+OPMR,Masroor,wmo_not_reporting,41781
 OPPS,Peshawar/Khan Intl,icao_without_wmo,OPPS
-OPRS,Risalpur,registry_inactive_flag,41533
+OPRS,Risalpur,wmo_not_reporting,41533
 OPSK,Sukkur Arpt,icao_without_wmo,OPSK
-OPXB,Gupis,registry_inactive_flag,41504
+OPXB,Gupis,wmo_not_reporting,41504
 OPXH,Layyah,icao_without_wmo,OPXH
-OPXQ,Larkana,registry_inactive_flag,41748
+OPXQ,Larkana,wmo_not_reporting,41748
 OPXR,M O Mithi,icao_without_wmo,OPXR
-OPXS,Malam Jabba,registry_inactive_flag,41525
-OPXY,Sukrand Agromet Observatory,registry_inactive_flag,41745
+OPXS,Malam Jabba,wmo_not_reporting,41525
+OPXY,Sukrand Agromet Observatory,wmo_not_reporting,41745
 ORAA,Al Asad Arpt,icao_without_wmo,ORAA
-ORAQ,Al Qaim,icao_without_wmo,ORAQ
 ORBB,Baghdad,icao_without_wmo,ORBB
 ORBD,Balad,icao_without_wmo,ORBD
 ORBR,Bashur,icao_without_wmo,ORBR
@@ -261,8 +257,8 @@ ORSH,Tikrit/Al Sahra,icao_without_wmo,ORSH
 ORSJ,Talabani Intl,icao_without_wmo,ORSJ
 ORSU,Sulaymaniyah Intl,icao_without_wmo,ORSU
 ORTL,Tallil/Ali,icao_without_wmo,ORTL
-OSKL,Kamishly,registry_inactive_flag,40001
-OSLK,Bassel Al Assad Intl,registry_inactive_flag,40025
+OSKL,Kamishly,wmo_not_reporting,40001
+OSLK,Bassel Al Assad Intl,wmo_not_reporting,40025
 OSPR,Palmyra,icao_without_wmo,OSPR
 OTBH,Al Udeid Ab,icao_without_wmo,OTBH
 OTHH,Doha / Hamad Intl,icao_without_wmo,OTHH
@@ -288,7 +284,6 @@ UAIT,Turkistan Arpt,icao_without_wmo,UAIT
 UASK,Ust Kamenogorsk,icao_without_wmo,UASK
 UASS,Semey Arpt,icao_without_wmo,UASS
 UATG,Atyrau,icao_without_wmo,UATG
-UB15,Nakhchivan,icao_without_wmo,UB15
 UBBG,Gyanca Intl,icao_without_wmo,UBBG
 UBBN,Nakhchivan Arpt,icao_without_wmo,UBBN
 UBBQ,Gabala,icao_without_wmo,UBBQ
@@ -299,7 +294,7 @@ UBTT,Zabrat Arpt,icao_without_wmo,UBTT
 UDSG,Gyumri/Shirak Intl,icao_without_wmo,UDSG
 UDYZ,Zvartnots,icao_without_wmo,UDYZ
 UGAM,Ambrolauri Arpt,icao_without_wmo,UGAM
-UGGG,Tbilisi / Lochini Airport,registry_inactive_flag,37549
+UGGG,Tbilisi / Lochini Airport,wmo_not_reporting,37549
 UGKO,Kopitnari,icao_without_wmo,UGKO
 UGMS,Mestia,icao_without_wmo,UGMS
 UGTB,Tbilisi Intl,icao_without_wmo,UGTB
@@ -312,8 +307,6 @@ UTDK,Kulob Arpt,icao_without_wmo,UTDK
 UTDL,Khujand Arpt,icao_without_wmo,UTDL
 UTDT,Qurghonteppa Intl,icao_without_wmo,UTDT
 UTNN,Nukus / Karakalpakstan,icao_without_wmo,UTNN
-UTNU,Urgench,icao_without_wmo,UTNU
-UTSB,Bukhara,icao_without_wmo,UTSB
 UTSH,Shahrisabz,icao_without_wmo,UTSH
 UTSK,Karshi Khanabad,icao_without_wmo,UTSK
 UTSN,Zarafshan,icao_without_wmo,UTSN

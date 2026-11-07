@@ -1,26 +1,50 @@
 {
-  "generated_utc": "2026-11-07T05:49:42+00:00",
+  "generated_utc": "2026-11-07T08:13:20+00:00",
   "mode": "REVIEW",
-  "registry_stations_with_coordinates": 1037,
-  "registry_active_flag_count": 774,
+  "registry_count": 1028,
+  "registry_active_count": 774,
   "sources_requested": [
     "atlas",
     "isd_awc"
   ],
-  "source_rows": 1029,
+  "countries_filter": [
+    "AE",
+    "AF",
+    "AJ",
+    "AM",
+    "BA",
+    "GG",
+    "IR",
+    "IS",
+    "IZ",
+    "JO",
+    "KU",
+    "KZ",
+    "MU",
+    "PK",
+    "QA",
+    "SA",
+    "SY",
+    "TI",
+    "TU",
+    "TX",
+    "UZ",
+    "YE"
+  ],
+  "source_rows": 896,
   "status_counts": {
-    "match": 1004,
-    "possible_duplicate": 25
+    "match": 866,
+    "exact_duplicate_suppressed": 30
   },
-  "high_confidence_new_candidates": 0,
+  "visible_candidate_rows": 0,
+  "exact_coordinate_duplicates_suppressed": 30,
+  "new_candidate_high_confidence": 0,
   "approved_exported": 0,
-  "registry_issues": {
-    "registry_inactive_flag": 146,
-    "icao_without_wmo": 178
+  "registry_issue_counts": {
+    "wmo_not_reporting": 144,
+    "icao_without_wmo": 173
   },
-  "iran_provinces_with_atlas_data": 0,
-  "countries_in_coverage": 30,
   "limits": [
-    "atlas: فایل Atlas وجود ندارد: obs_extra_stations.csv"
+    "atlas: فایل اختیاری وجود ندارد؛ ادامه با سایر منابع: obs_extra_stations.csv"
   ]
 }
