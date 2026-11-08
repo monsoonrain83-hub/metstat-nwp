@@ -1,9 +1,9 @@
 {
- "time": "2026-11-08T13:49Z",
+ "time": "2026-11-08T14:52Z",
  "states": {
-  "Iran": 0,
+  "Iran": 54,
   "Iraq": 0,
-  "Turkey": 0,
+  "Turkey": 82,
   "Azerbaijan": 0,
   "Armenia": 0,
   "Georgia": 0,
@@ -23,8 +23,8 @@
   "Jordan": 0,
   "Yemen": 0
  },
- "metar": 96,
- "synop": 43,
+ "metar": 328,
+ "synop": 179,
  "synop_unmatched": 8114,
  "unmatched_wmo": {
   "40702": 49,
@@ -328,6 +328,5 @@
   "41431": 17,
   "41466": 17,
   "41477": 17
- },
- "fallback_per_block": true
+ }
 }
