@@ -1,0 +1,62 @@
+name: apply-bundle
+# هر فایل bundle_*.zip که در ریشهٔ مخزن آپلود شود: باز می‌شود، فایل‌ها جایگزین می‌شوند، zip حذف و commit می‌شود.
+# امن‌سازی: مسیر مطلق/".."/پوشهٔ .github و .git رد می‌شود؛ فقط پسوندهای مجاز؛ بعد از باز کردن، سینتکس .py و obs_test.py بررسی می‌شود و
+# اگر خطایی بود هیچ commitی انجام نمی‌شود (zip می‌ماند). فایل RUN_AFTER.txt داخل zip = فهرست workflowهایی که بعد از commit اجرا شوند.
+on:
+  push:
+    branches: [main]
+    paths: ["bundle_*.zip"]
+  workflow_dispatch: {}
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: apply-bundle
+  cancel-in-progress: false
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: extract bundles
+        run: |
+          shopt -s nullglob
+          ls bundle_*.zip >/dev/null 2>&1 || { echo "no bundle"; exit 0; }
+          python - <<'PY'
+          import glob, os, sys, zipfile
+          OK = {".py", ".csv", ".json", ".md", ".txt", ".yml", ".yaml", ".php"}
+          bad = 0; files = []
+          for z in sorted(glob.glob("bundle_*.zip")):
+              with zipfile.ZipFile(z) as zf:
+                  for i in zf.infolist():
+                      n = i.filename
+                      if n.endswith("/"): continue
+                      parts = n.replace("\\", "/").split("/")
+                      if n.startswith("/") or ".." in parts or parts[0] in (".git", ".github") or os.path.splitext(n)[1].lower() not in OK or i.file_size > 30 * 1024 * 1024:
+                          print("REJECT", n); bad += 1; continue
+                      os.makedirs(os.path.dirname(n) or ".", exist_ok=True); open(n, "wb").write(zf.read(i)); files.append(n)
+          print("extracted", len(files), "files:", *files, sep="\n  ")
+          if bad: print("rejected", bad, "entries (they were NOT written)")
+          open("/tmp/applied.txt", "w").write("\n".join(files))
+          PY
+      - name: validate (syntax + obs tests)
+        run: |
+          shopt -s nullglob
+          for f in $(grep -E '\.py$' /tmp/applied.txt 2>/dev/null); do python -m py_compile "$f" || { echo "SYNTAX ERROR in $f — nothing committed"; exit 1; }; done
+          [ -f obs_test.py ] && python obs_test.py || true
+      - name: commit and push
+        run: |
+          shopt -s nullglob
+          [ -s /tmp/applied.txt ] || { echo "nothing applied"; exit 0; }
+          RA=""; [ -f RUN_AFTER.txt ] && RA="$(cat RUN_AFTER.txt)" && rm -f RUN_AFTER.txt
+          git rm -q --ignore-unmatch bundle_*.zip
+          git config user.name apply-bot; git config user.email apply-bot@users.noreply.github.com
+          git add -A; git commit -m "apply bundle ($(wc -l < /tmp/applied.txt) files)" || exit 0
+          for i in 1 2 3; do git pull --rebase -q && git push && break || sleep 5; done
+          for wf in $RA; do echo "$wf" | grep -Eq '^[a-z0-9_.-]+\.yml$' && gh workflow run "$wf" --ref main && echo "dispatched $wf"; done
+        env:
+          GH_TOKEN: ${{ github.token }}
