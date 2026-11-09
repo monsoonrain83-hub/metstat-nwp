@@ -1,9 +1,9 @@
 {
- "time": "2026-11-09T18:55Z",
+ "time": "2026-11-09T19:52Z",
  "states": {
-  "Iran": 0,
+  "Iran": 51,
   "Iraq": 0,
-  "Turkey": 0,
+  "Turkey": 81,
   "Azerbaijan": 0,
   "Armenia": 0,
   "Georgia": 0,
@@ -12,20 +12,20 @@
   "Tajikistan": 0,
   "Afghanistan": -1,
   "Pakistan": 0,
-  "Saudi_Arabia": 0,
-  "Oman": 0,
+  "Saudi_Arabia": 1,
+  "Oman": 36,
   "United_Arab_Emirates": 0,
   "Qatar": 0,
   "Kuwait": 0,
   "Bahrain": 0,
-  "Kazakhstan": 0,
+  "Kazakhstan": 7,
   "Syria": 0,
   "Jordan": 0,
   "Yemen": 0
  },
- "metar": 2,
- "synop": 0,
- "synop_unmatched": 8011,
+ "metar": 288,
+ "synop": 176,
+ "synop_unmatched": 8010,
  "unmatched_wmo": {
   "40702": 48,
   "40709": 49,
@@ -53,12 +53,12 @@
   "40777": 16,
   "40778": 45,
   "40779": 49,
-  "40781": 44,
+  "40781": 45,
   "40787": 49,
   "40788": 49,
-  "40793": 39,
+  "40793": 38,
   "40796": 49,
-  "40797": 39,
+  "40797": 38,
   "40799": 49,
   "40801": 49,
   "40806": 49,
@@ -328,6 +328,5 @@
   "41431": 17,
   "41466": 17,
   "41477": 17
- },
- "fallback_per_block": true
+ }
 }
