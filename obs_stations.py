@@ -49,6 +49,7 @@ def awc(db):
                 lat=s.get("lat"), lon=s.get("lon"), elev=s.get("elev"), src=[])
         e = db[k]; e["icao"] = e["icao"] or icao; e["wmo"] = e["wmo"] or wmo
         e["country"] = s.get("country"); e["state"] = s.get("state") or None; e["src"].append("awc")
+CONFLICTS = []   # r196: همان فهرست در stations.json هم ذخیره می‌شود (obs-stations.yml فقط stations.json را commit می‌کند)
 def manual(db, path="obs_extra_stations.csv", conflicts_out="data/obs/station_conflicts.json"):
     """r193: ایستگاه‌های ایران از پایگاه اطلس سایت (فرم رسمی IRIMO) — ستون‌ها: wmo,name_en,name_fa,lat,lon,elev,country_fips,province,source.
     قواعد (هیچ تطبیقی بر پایهٔ شباهت نام انجام نمی‌شود؛ فقط شمارهٔ WMO + فاصلهٔ مختصات):
@@ -96,6 +97,7 @@ def manual(db, path="obs_extra_stations.csv", conflicts_out="data/obs/station_co
             enr += 1; continue
         el = r.get("elev"); k = w if w not in db else w + "_a"
         db[k] = dict(wmo=w, icao=None, name_en=(r.get("name_en") or "").strip(), name_fa=fa, country_fips=cc, lat=la, lon=lo, elev=float(el) if el not in (None, "") else None, src=["manual"], province=prov); byw[w] = k; add += 1
+    CONFLICTS[:] = conf
     if conf:
         os.makedirs(os.path.dirname(conflicts_out) or ".", exist_ok=True); json.dump(conf, open(conflicts_out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     print(f"manual: added {add}, enriched {enr}, isd-wmo replaced {rep}, conflicts {len(conf)}"); return add
@@ -151,7 +153,7 @@ def main():
         v["id"] = cand; used.add(cand); rows.append(v)
     os.makedirs("data/obs", exist_ok=True)
     json.dump(dict(generated=dt.datetime.utcnow().isoformat() + "Z", n=len(rows), n_active=sum(r["active"] for r in rows),
-        sources=["NOAA ISD history", "AWC station cache", "AWC METAR 24h", "OGIMET SYNOP 48h"], stations=rows),
+        sources=["NOAA ISD history", "AWC station cache", "AWC METAR 24h", "OGIMET SYNOP 48h"], conflicts=CONFLICTS, stations=rows),
         open("data/obs/stations.json", "w"), ensure_ascii=False, separators=(",", ":"))
     print(len(rows), "stations,", sum(r["active"] for r in rows), "active")
 if __name__ == "__main__": main()

@@ -5,7 +5,7 @@
 این اسکریپت فقط نتیجه را چاپ می‌کند:  TRIGGER <workflow.yml> | DEAD <مدل> | ORPHAN <مدل> | OK/INFO
 اجرا:  python fresh_check.py --manifest URL_یا_فایل  [--now 2026-11-05T07:00]
 """
-import argparse, json, sys, urllib.request
+import argparse, json, os, sys, urllib.request
 from datetime import datetime, timezone, timedelta
 
 H = 1; D = 24
@@ -17,9 +17,10 @@ RULES = [
     ('wk.yml',         ['ecwk'],                           5 * D),      # EC46 هفته‌ای دو بار (دوشنبه/پنجشنبه) به‌روز می‌شود
     ('wk.yml',         ['iri'],                            45 * D),     # ماهانه
     ('nwp-extra.yml',  ['nmme', 'cfsv2', 'nasa', 'gfdl'],  45 * D),     # NMME ماهانه (حدود روز ۸–۱۰)
+    ('seas5.yml',      ['ecmwfseas', 'ecmwfseass'],        40 * D),     # SEAS5 ماهانه (حدود روز ۵؛ r194)
 ]
 DEAD_AFTER = 120 * D                                                     # قدیمی‌تر از این = منبع احتمالاً متوقف شده
-ORPHAN = ['cfsvtwo', 'cfsvtwos', 'nmmes', 'nasas', 'ecmwfs', 'ecmwfseas', 'ecmwfseass']   # تولیدکننده‌شان در مخزن نیست
+ORPHAN = ['cfsvtwo', 'cfsvtwos', 'nmmes', 'nasas', 'ecmwfs']   # تولیدکننده‌شان در مخزن نیست
 
 def load(src):
     if src.startswith('http'):
@@ -32,13 +33,31 @@ def age_h(run, now):
     except Exception: return None
     return (now - t).total_seconds() / 3600
 
+def obs_age(path, now):
+    """سن فایل رصد از فیلد generated (مثل 2026-11-04T16:21Z یا با ثانیه). خطا ← None"""
+    try:
+        g = json.load(open(path, encoding='utf-8'))['generated'].replace('Z', '')
+        t = datetime.fromisoformat(g[:19]).replace(tzinfo=timezone.utc)
+        return (now - t).total_seconds() / 3600
+    except Exception: return None
+
+# r194: رصد ایستگاه‌ها (از خود checkout مخزن؛ بدون شبکه). obs-ingest ساعتی است، obs-stations هفتگی.
+OBS_RULES = [('data/obs/latest.json', 'obs-ingest.yml', 3 * H), ('data/obs/stations.json', 'obs-stations.yml', 10 * D)]
+
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument('--manifest', required=True); ap.add_argument('--now')
     a = ap.parse_args()
     now = datetime.fromisoformat(a.now).replace(tzinfo=timezone.utc) if a.now else datetime.now(timezone.utc)
+    obs_trig = []
+    for path, wf, lim in OBS_RULES:
+        if not os.path.exists(path): print(f'INFO {path}: در checkout نیست'); continue
+        ah = obs_age(path, now)
+        if ah is None: print(f'INFO {path}: فیلد generated نامعتبر'); continue
+        st = 'STALE' if ah > lim else 'OK'; print(f'{st} {path} سن={ah:.1f}ساعت سقف={lim:.0f}ساعت → {wf}')
+        if st == 'STALE' and wf not in obs_trig: obs_trig.append(wf)
     try: M = load(a.manifest)['models']
     except Exception as e:
-        print(f'INFO manifest خوانده نشد ({type(e).__name__}: {e}) — هیچ اجرایی راه‌اندازی نمی‌شود'); return 0
+        print(f'INFO manifest خوانده نشد ({type(e).__name__}: {e}) — workflowهای مدل راه‌اندازی نمی‌شوند'); [print('TRIGGER', wf) for wf in obs_trig]; return 0
     trig = []
     for wf, keys, lim in RULES:
         for k in keys:
@@ -54,7 +73,7 @@ def main():
         elif k not in sum([r[1] for r in RULES], []) and M[k].get('info', {}).get('tclass') != 'daily':
             ah = age_h(M[k].get('run'), now)
             if ah and ah > DEAD_AFTER: print(f'DEAD {k} {ah / 24:.0f} روز')
-    for wf in trig: print('TRIGGER', wf)
+    for wf in obs_trig + trig: print('TRIGGER', wf)
     return 0
 
 if __name__ == '__main__': sys.exit(main())
