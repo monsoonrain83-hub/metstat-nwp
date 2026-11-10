@@ -1,50 +1,21 @@
 {
-  "generated_utc": "2026-11-07T08:13:20+00:00",
-  "mode": "REVIEW",
-  "registry_count": 1028,
-  "registry_active_count": 774,
-  "sources_requested": [
-    "atlas",
-    "isd_awc"
-  ],
-  "countries_filter": [
-    "AE",
-    "AF",
-    "AJ",
-    "AM",
-    "BA",
-    "GG",
-    "IR",
-    "IS",
-    "IZ",
-    "JO",
-    "KU",
-    "KZ",
-    "MU",
-    "PK",
-    "QA",
-    "SA",
-    "SY",
-    "TI",
-    "TU",
-    "TX",
-    "UZ",
-    "YE"
-  ],
-  "source_rows": 896,
-  "status_counts": {
-    "match": 866,
-    "exact_duplicate_suppressed": 30
-  },
-  "visible_candidate_rows": 0,
-  "exact_coordinate_duplicates_suppressed": 30,
-  "new_candidate_high_confidence": 0,
-  "approved_exported": 0,
-  "registry_issue_counts": {
-    "wmo_not_reporting": 144,
-    "icao_without_wmo": 173
-  },
-  "limits": [
-    "atlas: فایل اختیاری وجود ندارد؛ ادامه با سایر منابع: obs_extra_stations.csv"
-  ]
+ "generated": "2026-11-10T13:27:02+00:00",
+ "mode": "REVIEW",
+ "registry_n": 1028,
+ "registry_active": 774,
+ "sources": "atlas,isd_awc",
+ "source_rows": 1295,
+ "status": {
+  "match": 1077,
+  "new_candidate": 161,
+  "coord_conflict": 15,
+  "possible_duplicate": 42
+ },
+ "high_confidence_new": 161,
+ "approved_exported": 0,
+ "registry_issues": {
+  "wmo_not_reporting": 144,
+  "icao_without_wmo": 173
+ },
+ "limits": []
 }

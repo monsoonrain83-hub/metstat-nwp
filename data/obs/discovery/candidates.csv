@@ -1,1 +1,219 @@
-﻿status,confidence,source,wmo,icao,name_en,name_fa,lat,lon,elev,country_fips,province,network_type,registry_id,registry_name,km,decision
+﻿status,confidence,source,wmo,icao,name_en,name_fa,lat,lon,elev,province,registry_id,registry_name,km,decision
+coord_conflict,high,atlas,40703,,KHOY,خوی,38.55,44.9667,1103.0,آذربایجان غربی,OITK,Khoy,13.7,pending
+coord_conflict,high,atlas,40712,,OROOMIEH,ارومیه,37.5333,45.0833,1315.9,آذربایجان غربی,OITR,Uromiyeh,15.0,pending
+coord_conflict,high,atlas,40713,,MARAGHEH,مراغه,37.4,46.2667,1477.7,آذربایجان شرقی,OITM,Maragheh,10.4,pending
+coord_conflict,high,atlas,40729,,ZANJAN,زنجان,36.6833,48.4833,1663.0,زنجان,OITZ,Zanjan,15.0,pending
+coord_conflict,high,atlas,40730,,KHORRAMDAREH,خرمدره,36.1833,49.1833,1575.0,زنجان,OIIE,Imam Khomeini Intl,197.0,pending
+coord_conflict,high,atlas,40735,,SIAHBISHEH,سیاه بیشه - م,36.25,51.3,1855.4,مازندران,OINK,Gonbad Ghabus,356.3,pending
+coord_conflict,high,atlas,40738,,GORGAN,گرگان - گ,36.85,54.2667,13.3,گلستان,OING,Gorgan,13.6,pending
+coord_conflict,high,atlas,40743,,SABZEVAR,سبزوار,36.2,57.7167,977.6,خراسان رضوی,OIMS,Sabzevar,11.5,pending
+coord_conflict,high,atlas,40746,,NEYSHABOOR,نیشابور,36.2667,58.8,1213.0,خراسان رضوی,40746,Kashafrud,185.3,pending
+coord_conflict,high,atlas,40755,,ABALI,آبعلی (ت),35.75,51.8833,2465.2,تهران,40755,Varamin,48.0,pending
+coord_conflict,high,atlas,40756,,FIROUZKOOH,فیروزکوه (ت),35.75,52.783,1975.6,تهران,40756,Garmsar,78.7,pending
+coord_conflict,high,atlas,40785,,KASHAN,کاشان,33.9833,51.45,982.3,اصفهان,OIFK,Kashan,15.3,pending
+coord_conflict,high,atlas,40800,,ESFAHAN,اصفهان (ازن سنجی),32.6167,51.6667,1550.4,اصفهان,OIFM,Esfahan Shahid Beheshti Intl,23.6,pending
+coord_conflict,high,atlas,40832,,BANDAR MAHSHAHR,ماهشهر,30.5456,49.1592,6.2,خوزستان,40832,Abamusa Island,773.2,pending
+coord_conflict,high,atlas,40869,,NEIRIZE EARS,نیریز,29.2,54.3333,1632.0,فارس,408690,Farsi Island,427.2,pending
+possible_duplicate,high,atlas,40753,,DOUSHAN TAPPEH,دوشان‌تپه,35.7,51.3333,1209.2,تهران,OIII,Mehrabad Intl,2.2,pending
+possible_duplicate,high,atlas,40777,,FOROUDGAH EMAM,فرودگاه امام خمینی,35.4167,51.1667,990.2,تهران,OIIE,Imam Khomeini Intl,1.3,pending
+possible_duplicate,high,atlas,40778,,GONABAD,گناباد,34.35,58.6833,1056.0,خراسان رضوی,OIMD,Gonabad,0.3,pending
+possible_duplicate,high,atlas,40788,,Sari,ساری,36.6367,53.195,17.0,مازندران,OINZ,Sari Dasht E Naz,0.1,pending
+possible_duplicate,high,atlas,40870,,KHASH,خاش,28.2167,61.2,1394.0,سیستان و بلوچستان,OIZK,Khash,0.0,pending
+possible_duplicate,high,atlas,40876,,MINAB,میناب,27.1069,57.0833,29.6,هرمزگان,OIKO,Minab,2.2,pending
+possible_duplicate,high,atlas,40881,,JAZIREH LAVAN,جزیره لاوان,26.8,53.3833,22.2,هرمزگان,OIBV,Lavan Island,2.9,pending
+possible_duplicate,high,atlas,40897,,KENARAK CHAHBAHAR,کنارک,25.4333,60.3742,12.0,سیستان و بلوچستان,OIZC,Chah-Bahar Arpt,1.6,pending
+possible_duplicate,high,atlas,88107,,ARDEBIL FOROUDGAH,فرودگاه اردبیل,38.3333,48.4,1314.4,اردبیل,OITL,Ardabil Intl,2.2,pending
+possible_duplicate,high,atlas,99567,,KANGAN JAM,کنگان جم,27.8167,52.3667,655.0,بوشهر,OIBJ,Jam,1.5,pending
+possible_duplicate,low,isd,,,Izmit,,40.767,29.9,76.0,,170661,Izmit,0.0,pending
+possible_duplicate,low,isd,,,Javlenka,,54.4,68.4,115.0,,287751,Javlenka,0.0,pending
+possible_duplicate,low,isd,,,Chkalovo,,53.6,70.5,164.9,,288841,Chkalovo,0.0,pending
+possible_duplicate,low,isd,,,Janibek,,49.4,46.8,28.0,,344731,Janibek,0.0,pending
+possible_duplicate,low,isd,,,Aksai,,51.16,52.998,62.8,,351171,Aksai,0.0,pending
+possible_duplicate,low,isd,,UB15,Nakhchivan,,39.189,45.458,872.6,,UBBN,Nakhchivan Arpt,0.0,pending
+possible_duplicate,low,isd,,UTSB,Bukhara,,39.775,64.483,228.9,,UZSB,Bukhara Arpt,0.0,pending
+possible_duplicate,low,isd,,,Baikadam,,43.8,69.9,336.0,,382021,Baikadam,0.0,pending
+possible_duplicate,low,isd,,,Merke,,42.9,73.2,702.0,,383511,Merke,0.0,pending
+possible_duplicate,low,isd,,UTNU,Urgench,,41.584,60.642,97.5,,UZNU,Urgench Arpt,0.0,pending
+possible_duplicate,low,isd,,,Sedom,,31.031,35.392,-388.0,,401921,Sedom,0.0,pending
+possible_duplicate,low,isd,,,Erbil Intl,,36.233,43.967,408.7,,406356,Erbil Intl,0.0,pending
+possible_duplicate,low,isd,,,Kish Island,,26.517,53.983,31.0,,407802,Kish Island,0.0,pending
+possible_duplicate,low,isd,,,Sirri Island,,25.9,54.533,13.0,,407803,Sirri Island,0.0,pending
+possible_duplicate,low,isd,,,Ilam,,33.583,46.4,1368.0,,407804,Ilam,0.0,pending
+possible_duplicate,low,isd,,,Khoram Abad,,33.433,48.283,1184.0,,40782,Khorram Abad,0.0,pending
+possible_duplicate,low,isd,,,Hamadan,,34.867,48.55,1801.0,,407806,Hamadan,0.0,pending
+possible_duplicate,low,isd,,,Sarakhs,,36.5,61.067,295.0,,407809,Sarakhs,0.0,pending
+possible_duplicate,low,isd,,,Babulsar,,36.717,52.65,-21.0,,40736,Babulsar,0.0,pending
+possible_duplicate,low,isd,,,Noshahr,,36.65,51.467,-19.0,,407822,Noshahr,0.0,pending
+possible_duplicate,low,isd,,,Yasouj,,30.683,51.55,1871.0,,407824,Yasouj,0.0,pending
+possible_duplicate,low,isd,,,Ardabil,,38.317,48.417,1348.0,,407825,Ardabil,0.0,pending
+possible_duplicate,low,isd,,,Abumusa Island,,25.867,55.033,7.0,,408351,Abumusa Island,0.0,pending
+possible_duplicate,low,isd,,,Al Maktoum Intl Airport,,24.886,55.172,18.9,,411945,Al Maktoum Intl Airport,0.0,pending
+possible_duplicate,low,isd,,,Rafo Adam,,22.5,57.383,327.4,,412645,Rafo Adam,0.0,pending
+possible_duplicate,low,isd,,,Turbat Intl,,25.983,63.033,152.0,,415195,Turbat Intl,0.0,pending
+possible_duplicate,low,isd,,,Chitral,,35.883,71.8,1494.0,,415205,Chitral,0.0,pending
+possible_duplicate,low,isd,,,Saidu Sharif,,34.817,72.35,970.0,,415235,Saidu Sharif,0.0,pending
+possible_duplicate,low,awc,,LTCH,Şanlıurfa,,37.133,38.767,550,,17270,Sanliurfa,0.0,pending
+possible_duplicate,low,awc,,ORAQ,Al Qaim,,34.383,41.017,180,,40627,Al Kaem,0.0,pending
+possible_duplicate,low,isd,41593,,Sargodha,,32.05,72.667,187.0,,OPSR,Sargodha,0.0,pending
+possible_duplicate,low,isd,41701,,Bahawalpur,,29.4,71.783,117.0,,OPXM,Bahawalpur City,0.0,pending
+new_candidate,high,atlas,40702,,JOLFA,جلفا,38.94,45.63,736.0,آذربایجان شرقی,,,,pending
+new_candidate,high,atlas,40705,,MESHKINSHAHR,مشکین شهر,38.3833,47.6667,1568.5,اردبیل,,,,pending
+new_candidate,high,atlas,40707,,SAHAND,سهند,37.9333,46.1167,1641.0,آذربایجان شرقی,,,,pending
+new_candidate,high,atlas,40709,,ASTARA,آستارا,38.4167,48.8667,-18.0,گیلان,,,,pending
+new_candidate,high,atlas,40711,,KALEIBAR,کلیبر,38.8667,47.0167,1180.0,آذربایجان شرقی,,,,pending
+new_candidate,high,atlas,40714,,GERMI,گرمی,39.051,48.057,722.8,اردبیل,,,,pending
+new_candidate,high,atlas,40715,,MAH NESHAN,ماه نشان,36.7667,47.6667,1282.0,زنجان,,,,pending
+new_candidate,high,atlas,40717,,KHALKHAL,خلخال,37.6333,48.5167,1796.0,اردبیل,,,,pending
+new_candidate,high,atlas,40720,,MANJIL,منجیل,36.7333,49.4,333.0,گیلان,,,,pending
+new_candidate,high,atlas,40722,,SALMAS,سلماس,38.2167,44.85,1337.0,آذربایجان غربی,,,,pending
+new_candidate,high,atlas,40724,,PIRANSHAHR,پیرانشهر,36.6667,45.1333,1455.0,آذربایجان غربی,,,,pending
+new_candidate,high,atlas,40725,,SARDASHT,سردشت,36.15,45.5,1670.0,آذربایجان غربی,,,,pending
+new_candidate,high,atlas,40728,,TAKAB,تکاب,36.3833,47.1167,1765.0,آذربایجان غربی,,,,pending
+new_candidate,high,atlas,40733,,KHODABANDEH,خدابنده,36.1167,48.5833,1887.0,زنجان,,,,pending
+new_candidate,high,atlas,40742,,BIARJAMAND,بیارجمند,36.05,55.8333,1106.2,سمنان,,,,pending
+new_candidate,high,atlas,40744,,GOLMAKAN,گلمکان,36.4833,59.2833,1176.0,خراسان رضوی,,,,pending
+new_candidate,high,atlas,40748,,BIJAR,بیجار,35.8833,47.6167,1883.4,کردستان,,,,pending
+new_candidate,high,atlas,40749,,ZARINEH OBATO,زرینه اوباتو,36.0667,46.9167,2142.6,کردستان,,,,pending
+new_candidate,high,atlas,40750,,MARIVAN,مریوان,35.5167,46.2,1286.8,کردستان,,,,pending
+new_candidate,high,atlas,40751,,SHOMALETEHRAN,اقدسیه (شمال تهران),35.7833,51.6167,1548.2,تهران,,,,pending
+new_candidate,high,atlas,40752,,KARAJ,کرج (ت),35.8056,50.9523,1292.0,البرز,,,,pending
+new_candidate,high,atlas,40758,,Garmsar,گرمسار,35.2429,52.3595,,سمنان,,,,pending
+new_candidate,high,atlas,40760,,KIASAR,کیاسر - م,36.2333,53.5333,1294.3,مازندران,,,,pending
+new_candidate,high,atlas,40764,,RAVANSAR,روانسر,34.7167,46.65,1379.7,کرمانشاه,,,,pending
+new_candidate,high,atlas,40765,,SAR POLZOHAB,سرپل ذهاب,34.45,45.8667,545.0,کرمانشاه,,,,pending
+new_candidate,high,atlas,40771,,KANGAVAR,کنگاور,34.5,47.9833,1468.0,کرمانشاه,,,,pending
+new_candidate,high,atlas,40772,,GHORVEH,قروه,35.1667,47.8,1906.0,کردستان,,,,pending
+new_candidate,high,atlas,40773,,NORABADE LORESTAN,نور آباد,34.05,48.0,1859.1,لرستان,,,,pending
+new_candidate,high,atlas,40774,,BROUJERD,بروجرد,33.9167,48.75,1629.0,لرستان,,,,pending
+new_candidate,high,atlas,40775,,MALAYER,ملایر,34.25,48.85,1777.8,همدان,,,,pending
+new_candidate,high,atlas,40776,,ALESHTAR,الشتر,33.8167,48.25,1567.2,لرستان,,,,pending
+new_candidate,high,atlas,40779,,ESLAMABADGHARB,اسلام آباد غرب,34.1167,46.4667,1348.8,کرمانشاه,,,,pending
+new_candidate,high,atlas,40781,,MEHRAN,مهران,33.115,46.176,154.8,ایلام,,,,pending
+new_candidate,high,atlas,40786,,POLDOKHTAR,پلدختر,33.15,47.7167,713.5,لرستان,,,,pending
+new_candidate,high,atlas,40787,,DARAN,داران,32.9667,50.3667,2290.0,اصفهان,,,,pending
+new_candidate,high,atlas,40790,,ROBAT POSHTBADAM,رباط پشت بادام,33.0333,55.55,1188.0,یزد,,,,pending
+new_candidate,high,atlas,40793,,GHAEN,قاین,33.7167,59.1667,1432.0,خراسان جنوبی,,,,pending
+new_candidate,high,atlas,40795,,DEZFUL,دزفول,32.3997,48.3832,143.0,خوزستان,,,,pending
+new_candidate,high,atlas,40796,,DEHLORAN,دهلران,32.6833,47.2667,232.0,ایلام,,,,pending
+new_candidate,high,atlas,40797,,KOOHRANG,کوهرنگ,32.4333,50.1167,2285.0,چهارمحال و بختیاری,,,,pending
+new_candidate,high,atlas,40799,,ARDESTAN,اردستان,33.3833,52.3833,1252.4,اصفهان,,,,pending
+new_candidate,high,atlas,40801,,NAEIN,نائین,32.85,53.0833,1549.0,اصفهان,,,,pending
+new_candidate,high,atlas,40803,,KABOOTARABAD,کبوترآباد,32.5167,51.85,1545.0,اصفهان,,,,pending
+new_candidate,high,atlas,40805,,JIRANDEH,جیرنده,36.708,49.802,1581.2,گیلان,,,,pending
+new_candidate,high,atlas,40806,,TORBATE JAM,تربت جام,35.25,60.5833,950.4,خراسان رضوی,,,,pending
+new_candidate,high,atlas,40810,,BOSTAN,بستان,31.7122,48.005,7.8,خوزستان,,,,pending
+new_candidate,high,atlas,40813,,RAMHORMOZ,رامهرمز,31.2667,49.6,150.5,خوزستان,,,,pending
+new_candidate,high,atlas,40814,,LORDEGAN,لردگان,31.5167,50.8167,1580.0,چهارمحال و بختیاری,,,,pending
+new_candidate,high,atlas,40815,,SHAHREZA,شهرضا,31.9833,51.8333,1845.2,اصفهان,,,,pending
+new_candidate,high,atlas,40816,,GARIZ,گاریز,31.311,54.097,2009.0,یزد,,,,pending
+new_candidate,high,atlas,40820,,BAFGH,بافق,31.6,55.4333,991.4,یزد,,,,pending
+new_candidate,high,atlas,40825,,FARIMAN,کلات‌ رحمان,35.65,59.833,1472.1,خراسان رضوی,,,,pending
+new_candidate,high,atlas,40828,,EGHLIDE FARS,اقلید,30.9,52.6333,2312.3,فارس,,,,pending
+new_candidate,high,atlas,40834,,BEHBAHAN,بهبهان,30.6,50.2333,313.0,خوزستان,,,,pending
+new_candidate,high,atlas,40839,,ANAR,انار,30.8833,55.275,1408.8,کرمان,,,,pending
+new_candidate,high,atlas,40840,,MARVAST,مروست,30.5,54.25,1546.6,یزد,,,,pending
+new_candidate,high,atlas,40842,,Darrehshahr,دره‌شهر,33.137,47.408,628.2,ایلام,,,,pending
+new_candidate,high,atlas,40843,,SHAHDAD,شهداد,30.4167,57.7,508.8,کرمان,,,,pending
+new_candidate,high,atlas,40844,,SAD DOROUDZAN,سددرودزن,30.1833,52.45,1652.0,فارس,,,,pending
+new_candidate,high,atlas,40846,,BANDAR DAYLAM,بندر دیلم,30.05,50.1667,3.9,بوشهر,,,,pending
+new_candidate,high,atlas,40847,,ZARGHAN,زرقان,29.7831,52.7167,1596.0,فارس,,,,pending
+new_candidate,high,atlas,40849,,SHAHR BABAK,شهربابک,30.1,55.1333,1834.1,کرمان,,,,pending
+new_candidate,high,atlas,40857,,BUSHEHR (COASTAL),بوشهر دریایی,28.9019,50.8189,8.4,بوشهر,,,,pending
+new_candidate,high,atlas,40861,,Kazerun,کازرون,29.6072,51.665,,فارس,,,,pending
+new_candidate,high,atlas,40862,,HASANABADE DARAB,حسن اباد داراب,28.7833,54.2833,1098.2,فارس,,,,pending
+new_candidate,high,atlas,40863,,HAJIABAD HORMOZGAN,حاجی‌آباد (هرمزگان),28.3143,55.9136,930.4,هرمزگان,,,,pending
+new_candidate,high,atlas,40866,,MIANDEH JIROFT,جیرفت,28.5833,57.8,601.0,کرمان,,,,pending
+new_candidate,high,atlas,40873,,LAR,لار فارس,27.6774,54.3288,792.0,فارس,,,,pending
+new_candidate,high,atlas,40880,,JAZIREH GHESHM,قشم,26.9333,56.0917,6.0,هرمزگان,,,,pending
+new_candidate,high,atlas,40886,,TOYSERKAN,تویسرکان‌غرب‌,34.55,48.43,1787.2,همدان,,,,pending
+new_candidate,high,atlas,40895,,NIKSHAHR,نیکشهر,26.2333,60.2,440.6,سیستان و بلوچستان,,,,pending
+new_candidate,high,atlas,88113,,Kalaleh (Airport),کلاله,37.367,55.4834,157.0,گلستان,,,,pending
+new_candidate,high,atlas,88118,,ZANJAN,زنجان,36.66,48.522,1658.6,زنجان,,,,pending
+new_candidate,high,atlas,99200,,MARAND,مرند,38.4667,45.7667,1550.0,آذربایجان شرقی,,,,pending
+new_candidate,high,atlas,99202,,BILEH SAVAR,بیله سوار,39.365,48.319,102.5,اردبیل,,,,pending
+new_candidate,high,atlas,99203,,Poldasht,پلدشت,39.32,45.07,783.8,آذربایجان غربی,,,,pending
+new_candidate,high,atlas,99209,,CHALDORAN,چالدران,39.06,44.41,1901.2,آذربایجان غربی,,,,pending
+new_candidate,high,atlas,99214,,GHARAHZIAHADIN,قره ضیاالدین,38.91,45.008,1176.9,آذربایجان غربی,,,,pending
+new_candidate,high,atlas,99231,,SAREYN,سرعین,38.147,48.081,1672.1,اردبیل,,,,pending
+new_candidate,high,atlas,99232,,NAMIN,نمین,38.42,48.491,1457.2,اردبیل,,,,pending
+new_candidate,high,atlas,99233,,NIR,نیر,38.037,48.025,1595.1,اردبیل,,,,pending
+new_candidate,high,atlas,99234,,Tabriz (Sharq),تبریز (شرق),38.055,46.338,1495.6,آذربایجان شرقی,,,,pending
+new_candidate,high,atlas,99237,,Minudasht,مینودشت,37.37,55.63,312.9,گلستان,,,,pending
+new_candidate,high,atlas,99239,,BONAB,بناب,37.3333,46.0667,1290.0,آذربایجان شرقی,,,,pending
+new_candidate,high,atlas,99240,,GONBADE KAWOOS,گنبدکاووس,37.25,55.1667,37.2,گلستان,,,,pending
+new_candidate,high,atlas,99241,,Gorgan (Hashemabad),گرگان (هاشم‌آباد),36.85,54.267,-3.3,گلستان,,,,pending
+new_candidate,high,atlas,99242,,Bandar-E-Torkaman,بندر ترکمن,36.91,54.05,-27.2,گلستان,,,,pending
+new_candidate,high,atlas,99246,,KAHRIZ,کهریز,37.8833,45.1667,1325.0,آذربایجان غربی,,,,pending
+new_candidate,high,atlas,99248,,BOSTANABAD,بستان‌آباد,37.852,46.844,1750.1,آذربایجان شرقی,,,,pending
+new_candidate,high,atlas,99249,,TALESH,تالش,37.839,48.897,22.0,گیلان,,,,pending
+new_candidate,high,atlas,99262,,Maneh-Va-Samalqan,مانه و سملقان,37.565,56.945,762.3,خراسان شمالی,,,,pending
+new_candidate,high,atlas,99268,,Kiyashahr,کیاشهر,37.417,49.883,-25.7,گیلان,,,,pending
+new_candidate,high,atlas,99271,,Inchehborun,اینچه‌برون,37.45,54.72,5.5,گلستان,,,,pending
+new_candidate,high,atlas,99272,,Rasht (Agricultulal),رشت (کشاورزی),37.203,49.645,22.5,گیلان,,,,pending
+new_candidate,high,atlas,99276,,LAHIJAN,لاهیجان,37.194,50.016,30.6,گیلان,,,,pending
+new_candidate,high,atlas,99278,,NAGHADEH,نقده,36.946,45.413,1305.3,آذربایجان غربی,,,,pending
+new_candidate,high,atlas,99280,,BANEH,بانه,36.0,45.9,1600.0,کردستان,,,,pending
+new_candidate,high,atlas,99281,,Masuleh,ماسوله,37.15,48.983,1116.9,گیلان,,,,pending
+new_candidate,high,atlas,99282,,Rudsar,رودسر,37.125,50.325,-23.3,گیلان,,,,pending
+new_candidate,high,atlas,99283,,Charoymaq,چاراویماق,37.13,46.97,1949.9,آذربایجان شرقی,,,,pending
+new_candidate,high,atlas,99287,,ESFARAYEN,اسفراین,37.05,57.483,1200.8,خراسان شمالی,,,,pending
+new_candidate,high,atlas,99288,,Oshnavyeh,اشنویه,37.06,45.14,1417.9,آذربایجان غربی,,,,pending
+new_candidate,high,atlas,99292,,MIANDOAB,میاندوآب‌,36.967,46.05,1291.5,آذربایجان غربی,,,,pending
+new_candidate,high,atlas,99295,,JAJARM,جاجرم,36.95,56.333,984.0,خراسان شمالی,,,,pending
+new_candidate,high,atlas,99298,,ABBAR,آب بر - طارم,36.93,48.94,608.9,زنجان,,,,pending
+new_candidate,high,atlas,99299,,Galugah,گلوگاه,36.738,53.837,-3.9,مازندران,,,,pending
+new_candidate,high,atlas,99300,,Aliabad-E-Katul,علی‌آباد کتول,36.91,54.91,177.4,گلستان,,,,pending
+new_candidate,high,atlas,99302,,Deylaman,دیلمان,36.886,49.91,1448.2,گیلان,,,,pending
+new_candidate,high,atlas,99304,,Bandar-E-Gaz,بندر گز,36.767,53.95,-9.6,گلستان,,,,pending
+new_candidate,high,atlas,99306,,Bandar-E-Amirabad,بندر امیرآباد,36.856,53.386,-21.6,مازندران,,,,pending
+new_candidate,high,atlas,99309,,AMOL,آمل - م,36.4667,52.3833,23.7,مازندران,,,,pending
+new_candidate,high,atlas,99310,,AVAJ,آوج (ق),35.5667,49.2167,2034.9,قزوین,,,,pending
+new_candidate,high,atlas,99314,,SHAHINDEZH,شاهین‌دژ,36.6667,46.7333,1393.7,آذربایجان غربی,,,,pending
+new_candidate,high,atlas,99317,,Rudbar,رودبار,27.15,55.07,932.8,هرمزگان,,,,pending
+new_candidate,high,atlas,99320,,CHITGAR,چیتگر (ت),35.7333,51.1667,1305.2,تهران,,,,pending
+new_candidate,high,atlas,99331,,JEOPHYSICS TEHRAN,ژئوفیزیک (ت),35.7333,51.3833,1418.6,تهران,,,,pending
+new_candidate,high,atlas,99332,,BOOKAN,بوکان,36.53,46.23,1381.7,آذربایجان غربی,,,,pending
+new_candidate,high,atlas,99334,,khirabad,خیرآباد,36.5308,48.7594,1762.4,زنجان,,,,pending
+new_candidate,high,atlas,99335,,Garmab,گرماب,35.849,48.211,1565.8,زنجان,,,,pending
+new_candidate,high,atlas,99348,,Kojur,کجور,36.39,51.729,1527.4,مازندران,,,,pending
+new_candidate,high,atlas,99357,,BALADEH,بلده‌نور,36.198,51.801,2095.7,مازندران,,,,pending
+new_candidate,high,atlas,99360,,POLSEFID,پل سفید - م,36.104,53.062,630.0,مازندران,,,,pending
+new_candidate,high,atlas,99361,,ALASHT,آلاشت - م,36.071,52.843,1798.7,مازندران,,,,pending
+new_candidate,high,atlas,99372,,SAVEH,ساوه,35.05,50.3333,1108.0,مرکزی,,,,pending
+new_candidate,high,atlas,99382,,Hezarkaniyan,هزارکانیان,35.765,46.812,1927.3,کردستان,,,,pending
+new_candidate,high,atlas,99384,,NAHAVAND,نهاوند,34.15,48.4167,1680.9,همدان,,,,pending
+new_candidate,high,atlas,99396,,HASHTGERD,هشتگرد,36.0,50.75,1613.0,البرز,,,,pending
+new_candidate,high,atlas,99401,,Sarayan,سرایان,33.86,58.52,1450.0,خراسان جنوبی,,,,pending
+new_candidate,high,atlas,99402,,Hajiabad (South Khorasan),حاجی‌آباد (خراسان جنوبی),33.63,59.92,1570.5,خراسان جنوبی,,,,pending
+new_candidate,high,atlas,99407,,BOSHROOYEH,بشرویه,33.9,57.45,885.0,خراسان جنوبی,,,,pending
+new_candidate,high,atlas,99409,,TAFRESH,تفرش,34.6833,50.0167,1978.7,مرکزی,,,,pending
+new_candidate,high,atlas,99417,,GOLPAIGAN,گلپایگان,33.4667,50.2833,1870.0,اصفهان,,,,pending
+new_candidate,high,atlas,99421,,NATANZ,نطنز,33.5333,51.9,1684.9,اصفهان,,,,pending
+new_candidate,high,atlas,99425,,KAMYARAN,کامیاران,34.788,46.894,1416.0,کردستان,,,,pending
+new_candidate,high,atlas,99433,,EIVAN GHARB,ایوان,33.8333,46.3167,1170.0,ایلام,,,,pending
+new_candidate,high,atlas,99437,,KHOOR BIRJAND,خوربیرجند,32.9333,58.4333,1117.4,خراسان جنوبی,,,,pending
+new_candidate,high,atlas,99438,,KOUHDASHT,کوهدشت,33.5167,47.65,1197.8,لرستان,,,,pending
+new_candidate,high,atlas,99444,,DOROUD,دورود,33.5167,49.0,1522.2,لرستان,,,,pending
+new_candidate,high,atlas,99445,,AZNA,ازنا,33.45,49.4167,1871.9,لرستان,,,,pending
+new_candidate,high,atlas,99446,,SHOSHTAR,شوشتر,32.05,48.8333,67.0,خوزستان,,,,pending
+new_candidate,high,atlas,99447,,MEIMEH,میمه,33.4333,51.1667,1980.0,اصفهان,,,,pending
+new_candidate,high,atlas,99455,,IZEH,ایذه,31.8488,49.8606,767.0,خوزستان,,,,pending
+new_candidate,high,atlas,99459,,BOROOJEN,بروجن,31.95,51.3,2197.0,چهارمحال و بختیاری,,,,pending
+new_candidate,high,atlas,99493,,HOSEINIEH,حسینیه,32.6667,48.2667,361.6,خوزستان,,,,pending
+new_candidate,high,atlas,99502,,RAFSANJAN,رفسنجان,30.3833,55.9333,1580.9,کرمان,,,,pending
+new_candidate,high,atlas,99511,,Meybod,میبد,32.21,53.98,1119.7,یزد,,,,pending
+new_candidate,high,atlas,99516,,EIZADKHAST,ایزدخواست,31.5317,52.1228,2183.8,فارس,,,,pending
+new_candidate,high,atlas,99527,,DEHDEZ,دهدز,31.7125,50.274,1468.2,خوزستان,,,,pending
+new_candidate,high,atlas,99528,,MEHRIZ,مهریز,31.593,54.437,1488.1,یزد,,,,pending
+new_candidate,high,atlas,99536,,Dehsalam,ده‌سلم,31.2,59.3333,819.9,خراسان جنوبی,,,,pending
+new_candidate,high,atlas,99537,,HENDIJAN,هندیجان,30.2664,49.7199,3.0,خوزستان,,,,pending
+new_candidate,high,atlas,99549,,ZARAND,زرند,30.8,56.5667,1670.0,کرمان,,,,pending
+new_candidate,high,atlas,99550,,Jiroft,جیرفت,28.7,57.7667,711.7,کرمان,,,,pending
+new_candidate,high,atlas,99561,,BAVANAT,بوانات,30.4667,53.6667,2237.6,فارس,,,,pending
+new_candidate,high,atlas,99574,,HARAT,خاتم - تاج آباد هرات,30.0833,54.0667,1600.0,یزد,,,,pending
+new_candidate,high,atlas,99575,,TAKHTE JAMSHID,تخت جمشید,29.9331,52.8997,1606.9,فارس,,,,pending
+new_candidate,high,atlas,99583,,FOROUDGAH LAMERD,لامرد,27.3,53.1167,411.0,فارس,,,,pending
+new_candidate,high,atlas,99623,,ZAHAK,زهک,30.9,61.6833,495.0,سیستان و بلوچستان,,,,pending
+new_candidate,high,atlas,99650,,RASK,راسک,26.2252,61.4,391.2,سیستان و بلوچستان,,,,pending
+new_candidate,high,atlas,99656,,ROUDAN,رودان,27.4592,57.1856,218.7,هرمزگان,,,,pending
+new_candidate,high,atlas,99675,,GHESHM (COASTAL),قشم,26.9486,56.2736,12.8,هرمزگان,,,,pending
