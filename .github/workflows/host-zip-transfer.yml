@@ -28,7 +28,7 @@ jobs:
           set -euo pipefail
           test -f host.zip
           test "$(stat -c '%s' host.zip)" = "5229888"
-          echo "469c13217e278aa5b441fe371d9abd89c19c3494  host.zip" | sha1sum --check -
+          test "$(git hash-object host.zip)" = "469c13217e278aa5b441fe371d9abd89c19c3494"
 
       - name: Upload archive as a short-lived artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
