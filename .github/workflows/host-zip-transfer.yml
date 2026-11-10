@@ -1,11 +1,10 @@
 name: Temporary host ZIP transfer
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - security-hardening-review
-    paths:
-      - .github/workflows/host-zip-transfer.yml
 
 permissions:
   contents: read
