@@ -28,15 +28,15 @@ FA = {'ecmwf': 'اروپا (ECMWF)', 'gfs': 'آمریکا (GFS)', 'icon': 'آل�
       'ukmo': 'بریتانیا (UKMO)'}
 EN = {'ecmwf': 'ECMWF', 'gfs': 'GFS', 'icon': 'ICON', 'gem': 'GEM', 'ukmo': 'UKMO'}
 
-# فصل سرد: ۵ آبان تا ۳۱ اردیبهشت — فصل گرم: ۱ خرداد تا ۴ آبان
+# وزن‌های عمومی بازبینی‌شده؛ فصل سرد ۱۰۰٪ و فصل گرم ۱۰۰٪.
+# سرد: ۵ آبان تا ۲۹ اردیبهشت؛ گرم: ۳۰ اردیبهشت تا ۴ آبان.
 BASE = {
-    ('cold', 'general'):    {'ecmwf': 40, 'gfs': 30, 'icon': 10, 'gem': 10, 'ukmo': 5},
-    ('cold', 'convection'): {'gfs': 45, 'ecmwf': 30, 'icon': 10, 'gem': 10},
-    ('warm', 'general'):    {'gem': 45, 'gfs': 25, 'ecmwf': 15, 'icon': 10, 'ukmo': 5},
-    ('warm', 'convection'): {'gfs': 45, 'gem': 30, 'icon': 10, 'ecmwf': 10},
+    ('cold', 'general'): {'ecmwf': 45, 'gfs': 30, 'gem': 10, 'icon': 10, 'ukmo': 5},
+    ('cold', 'convection'): {'ecmwf': 45, 'gfs': 30, 'gem': 10, 'icon': 10, 'ukmo': 5},
+    ('warm', 'general'): {'gem': 45, 'gfs': 25, 'ecmwf': 15, 'icon': 10, 'ukmo': 5},
+    ('warm', 'convection'): {'gem': 45, 'gfs': 25, 'ecmwf': 15, 'icon': 10, 'ukmo': 5},
 }
 
-# گروه پارامتر → دستهٔ وزن. (باد و دما: همهٔ سال با وزن‌های عمومی فصل سرد.)
 GROUPS = ('precip', 'snow', 'temp', 'humidity', 'convection', 'wind', 'pressure', 'sigwx')
 GROUP_FA = {'precip': 'بارش', 'snow': 'برف', 'temp': 'دما', 'humidity': 'رطوبت', 'convection': 'همرفت',
             'wind': 'باد', 'pressure': 'فشار و ترازهای بالا', 'sigwx': 'هوای مهم'}
@@ -59,20 +59,48 @@ def jalali_from_gregorian(gy, gm, gd):
 def season(d):
     """'warm' برای ۱ خرداد…۴ آبان، وگرنه 'cold' (۵ آبان…۳۱ اردیبهشت). d: date یا datetime (UTC)."""
     _, m, dd = jalali_from_gregorian(d.year, d.month, d.day)
-    return 'warm' if (3, 1) <= (m, dd) <= (8, 4) else 'cold'
+    return 'warm' if (2, 30) <= (m, dd) <= (8, 4) else 'cold'
 
 
-ALL_YEAR_COLD = ('wind', 'temp')     # باد و دما: همهٔ سال با وزن‌های فصل سرد (دستور کاربر)
+ALL_YEAR_COLD = ()     # باد و دما از وزن فصل مربوط استفاده می‌کنند.
 
 
 def base_weights(group, d):
     s = 'cold' if group in ALL_YEAR_COLD else season(d); return dict(BASE[(s, WEIGHT_CLASS[group])]), s
 
 
-def weights(group, d, available):
+
+# Parameter-specific percentages apply in both seasons. Five model slots.
+def _specific_weights(group, pid=None, secondary=False):
+    def split(primary):
+        rest = (100.0 - sum(primary.values())) / (5 - len(primary))
+        return {m: primary.get(m, rest) for m in MM_MODELS}
+    if pid in ('cape', 'cin'):
+        return {'ecmwf': 50, 'gfs': 20, 'icon': 20, 'gem': 5, 'ukmo': 5}
+    if pid == 'gdi':
+        return {'gfs': 60, 'ecmwf': 40}
+    if group == 'convection':
+        return split({'gfs': 50, 'ecmwf': 25})
+    if pid == 'pw':
+        return split({'ecmwf': 50, 'gfs': 25})
+    if pid == 'tmin':
+        return split({'ecmwf': 40, 'gfs': 25, 'gem': 20})
+    if pid == 'tmax':
+        return split({'gfs': 50, 'ecmwf': 25})
+    if pid in ('t2m', 'tanom', 'tanom5', 'tanom10'):
+        return split({'ecmwf': 50})
+    if group == 'wind':
+        return split({'ecmwf': 70})
+    if secondary:
+        return split({'ecmwf': 50})
+    return None
+
+
+def weights(group, d, available, pid=None, secondary=False):
     """وزن نهایی مدل‌ها (جمع = ۱). available: مدل‌هایی که این پارامتر/گام را دارند و فیلدشان آماده است.
     خروجی: (dict مدل→وزن, فصل, مدل‌های حذف‌شده از وزن پایه)."""
     base, s = base_weights(group, d)
+    base = _specific_weights(group, pid, secondary) or base
     av = [m for m in pick_sources(available) if m in base and m not in EXCLUDED]
     tot = float(sum(base[m] for m in av))
     if tot <= 0: return {}, s, sorted(base)
