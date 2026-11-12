@@ -149,7 +149,11 @@ for _p, (_k, _sck, _u, _en, _fa) in SEC_IDX.items():
 for _h, (_fa, _en, _sck, _mm) in secondary.PRODUCTS.items():
     for _w, _wfa, _wen in secondary.WINS:
         PARAMS[f'{_h}{_w}'] = dict(kind='sec', haz=_h, win=_w, sc=_sck, models=(I_CV if _mm == 'ecg' else ALL), unit='', en=f'{_en} — {_wen}', fa=f'{_fa} — {_wfa}')
-for _p in [x[0] for x in PR_WIN] + [x[0] for x in SN_WIN] + ['refl', 'sigwx', 'rh', 'gust']:
+# Ensure ECMWF HRES 9km can publish a direct temperature map even when
+# native precipitation/snow variables are absent from the released 9km dataset.
+# Previously temperature_2m was downloaded but t2m was not enabled for ecmwf9,
+# making an otherwise valid high-resolution field invisible in the model menu.
+for _p in [x[0] for x in PR_WIN] + [x[0] for x in SN_WIN] + ['t2m', 'refl', 'sigwx', 'rh', 'gust']:
     if _p in PARAMS and 'ecmwf9' not in PARAMS[_p]['models']: PARAMS[_p]['models'] = list(PARAMS[_p]['models']) + ['ecmwf9']
 PARAMS['w500']['me'] = dict(sc='windup', unit='kt', k=1.94384 / 3.6)
 PARAMS['gust']['me'] = dict(sc='gust', unit='km/h', k=1.0)
@@ -329,6 +333,30 @@ class S3Source:
                 rd = None
             if rd is not None: break
         c = c2
+        # The native HRES 9km cycle is often ready before the matching 0.25°
+        # cycle. Use an earlier 0.25° *run* for the SAME valid time only when
+        # its field exists; _oct_pick still enforces an RMSE/uniqueness check.
+        # Do not guess the grid orientation or silently publish shifted data.
+        if rd is None:
+            try:
+                refs = ref.runs()
+                available_runs = sorted(
+                    {datetime.strptime(j['reference_time'][:16], '%Y-%m-%dT%H:%M').replace(tzinfo=UTC)
+                     for j in refs if j.get('reference_time')}, reverse=True)
+                for rrun in available_runs:
+                    if rrun > vt or (vt - rrun).total_seconds() > 12 * 3600:
+                        continue
+                    if not ref.exists(rrun, vt):
+                        continue
+                    try:
+                        rd = ref.read(rrun, vt, ['temperature_2m']).get('temperature_2m')
+                        if rd is not None:
+                            log(f'  ℹ ecmwf_ifs: مرجع تشخیص جهت O1280 از ران قدیمی‌تر 0.25° {rrun:%Y%m%d%H} با زمان اعتبار یکسان استفاده شد')
+                            break
+                    except Exception:
+                        rd = None
+            except Exception as e_:
+                log(f'  ⚠ ecmwf_ifs: مرجع جایگزین تشخیص جهت پیدا نشد ({type(e_).__name__}: {e_})')
         if rd is None:
             if extra is not None:
                 try: extra[0].close()
