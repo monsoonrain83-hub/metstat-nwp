@@ -36,7 +36,6 @@ BASE = {
     ('warm', 'general'): {'gem': 45, 'gfs': 25, 'ecmwf': 15, 'icon': 10, 'ukmo': 5},
     ('warm', 'convection'): {'gem': 45, 'gfs': 25, 'ecmwf': 15, 'icon': 10, 'ukmo': 5},
 }
-WEIGHT_CLASS = {g: 'general' for g in ('precip', 'snow', 'temp', 'humidity', 'convection', 'wind', 'pressure', 'sigwx')}
 
 GROUPS = ('precip', 'snow', 'temp', 'humidity', 'convection', 'wind', 'pressure', 'sigwx')
 GROUP_FA = {'precip': 'بارش', 'snow': 'برف', 'temp': 'دما', 'humidity': 'رطوبت', 'convection': 'همرفت',
@@ -70,10 +69,36 @@ def base_weights(group, d):
     s = 'cold' if group in ALL_YEAR_COLD else season(d); return dict(BASE[(s, WEIGHT_CLASS[group])]), s
 
 
-def weights(group, d, available):
+
+# Parameter-specific percentages apply in both seasons. Five model slots.
+def _specific_weights(group, pid=None, secondary=False):
+    def split(primary):
+        rest = (100.0 - sum(primary.values())) / (5 - len(primary))
+        return {m: primary.get(m, rest) for m in MM_MODELS}
+    if pid == 'cape':
+        return {'gfs': 50, 'ecmwf': 20, 'icon': 20, 'gem': 5, 'ukmo': 5}
+    if group == 'convection':
+        return split({'gfs': 50, 'ecmwf': 25})
+    if pid == 'pw':
+        return split({'ecmwf': 50, 'gfs': 25})
+    if pid == 'tmin':
+        return split({'ecmwf': 40, 'gfs': 25, 'gem': 20})
+    if pid == 'tmax':
+        return split({'gfs': 50, 'ecmwf': 25})
+    if pid in ('t2m', 'tanom', 'tanom5', 'tanom10'):
+        return split({'ecmwf': 50})
+    if group == 'wind':
+        return split({'ecmwf': 70})
+    if secondary:
+        return split({'ecmwf': 50})
+    return None
+
+
+def weights(group, d, available, pid=None, secondary=False):
     """وزن نهایی مدل‌ها (جمع = ۱). available: مدل‌هایی که این پارامتر/گام را دارند و فیلدشان آماده است.
     خروجی: (dict مدل→وزن, فصل, مدل‌های حذف‌شده از وزن پایه)."""
     base, s = base_weights(group, d)
+    base = _specific_weights(group, pid, secondary) or base
     av = [m for m in pick_sources(available) if m in base and m not in EXCLUDED]
     tot = float(sum(base[m] for m in av))
     if tot <= 0: return {}, s, sorted(base)
