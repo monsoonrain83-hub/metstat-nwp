@@ -78,7 +78,7 @@ def _specific_weights(group, pid=None, secondary=False):
     if pid in ('cape', 'cin'):
         return {'ecmwf': 50, 'gfs': 20, 'icon': 20, 'gem': 5, 'ukmo': 5}
     if pid == 'gdi':
-        return {'gfs': 60, 'ecmwf': 40, 'icon': 0, 'gem': 0, 'ukmo': 0}
+        return {'gfs': 60, 'ecmwf': 40}
     if group == 'convection':
         return split({'gfs': 50, 'ecmwf': 25})
     if pid == 'pw':
