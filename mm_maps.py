@@ -67,7 +67,8 @@ class MMCombiner:
         h = s.nm.MODELS[src]['hz']; return h[run.strftime('%H')] if isinstance(h, dict) else h
 
     def sink(s, mkey, rk, pid, run, vt, field, extra):
-        if mkey not in SOURCES or run.hour not in (0, 12) or pid not in s.nm.PARAMS or pid not in s.pmm: return      # فقط پارامترهای مالتی‌مدل (بدون گروه وزنی مثل w10 رد می‌شوند)
+        if mkey not in SOURCES or run.hour not in (0, 12) or pid not in s.nm.PARAMS or pid not in s.pmm: return
+        if not 0 <= (vt - run).total_seconds() / 3600 <= 120: return      # فقط پارامترهای مالتی‌مدل (بدون گروه وزنی مثل w10 رد می‌شوند)
         if field is None: return
         p = os.path.join(s.dir, rk, pid, f'{run:%Y%m%d%H}'); os.makedirs(p, exist_ok=True)
         path = os.path.join(p, f'{mkey}_{vt:%Y%m%d%H}.npz'); tmp = path + '.tmp.npz'
@@ -87,6 +88,7 @@ class MMCombiner:
         """None: هنوز صبر؛ وگرنه {slot: src} منابع انتخاب‌شده."""
         rk, pid, run, vt = k; nm = s.nm; P = nm.PARAMS.get(pid)
         if not P: return {}
+        if not 0 <= (vt - run).total_seconds() / 3600 <= 120: return {}
         lead = int(round((vt - run).total_seconds() / 3600)); have = s.idx.get(k, {}); pick = {}
         timed = final or time.time() - s.first.get(k, time.time()) > WAIT_MAX
         for slot in W.MM_MODELS:
@@ -155,9 +157,9 @@ class MMCombiner:
 
     def make(s, k, pick):
         nm = s.nm; rk, pid, run, vt = k; P0 = nm.PARAMS[pid]; lead = int(round((vt - run).total_seconds() / 3600))
-        if len(pick) < 2: return 0
+        if 'ecmwf' not in pick or 'gfs' not in pick: return 0  # mandatory core models for every field/time
         s.begin(run); rid = f'{run:%Y%m%d%H}'; R = s.eng.regions[rk]; D = {m: s.load(s.idx[k][src]) for m, src in pick.items()}
-        wts, season, _ = W.weights(s.grp(pid), vt, list(pick.values()))
+        wts, season, _ = W.weights(s.grp(pid), vt, list(pick.values()), pid=pid, secondary=(P0['kind'] == 'sec'))
         if not wts: return 0
         made = 0
         for mpid, P in s.pmm.items():
