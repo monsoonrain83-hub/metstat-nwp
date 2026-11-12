@@ -75,8 +75,10 @@ def _specific_weights(group, pid=None, secondary=False):
     def split(primary):
         rest = (100.0 - sum(primary.values())) / (5 - len(primary))
         return {m: primary.get(m, rest) for m in MM_MODELS}
-    if pid == 'cape':
-        return {'gfs': 50, 'ecmwf': 20, 'icon': 20, 'gem': 5, 'ukmo': 5}
+    if pid in ('cape', 'cin'):
+        return {'ecmwf': 50, 'gfs': 20, 'icon': 20, 'gem': 5, 'ukmo': 5}
+    if pid == 'gdi':
+        return {'gfs': 60, 'ecmwf': 40, 'icon': 0, 'gem': 0, 'ukmo': 0}
     if group == 'convection':
         return split({'gfs': 50, 'ecmwf': 25})
     if pid == 'pw':
