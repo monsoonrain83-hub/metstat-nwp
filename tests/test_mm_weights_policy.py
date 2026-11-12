@@ -32,7 +32,8 @@ class TestMultimodelWeights(unittest.TestCase):
 
     def test_parameter_weights(self):
         cases = [
-            ('convection', 'cape', False, {'gfs': 50, 'ecmwf': 20, 'icon': 20, 'gem': 5, 'ukmo': 5}),
+            ('convection', 'cape', False, {'ecmwf': 50, 'gfs': 20, 'icon': 20, 'gem': 5, 'ukmo': 5}),
+            ('convection', 'cin', False, {'ecmwf': 50, 'gfs': 20, 'icon': 20, 'gem': 5, 'ukmo': 5}),
             ('convection', 'ki', False, {'gfs': 50, 'ecmwf': 25}),
             ('humidity', 'pw', False, {'ecmwf': 50, 'gfs': 25}),
             ('wind', 'gust', False, {'ecmwf': 70}),
@@ -50,6 +51,14 @@ class TestMultimodelWeights(unittest.TestCase):
                     self.assertEqual(set(w), {'ecmwf', 'gfs', 'gem', 'icon', 'ukmo'})
                     for model, pct in expected.items():
                         self.assertAlmostEqual(w[model] * 100, pct)
+
+    def test_gdi_only_two_models(self):
+        for d in (date(2026, 7, 1), date(2026, 11, 12)):
+            w, _, missing = m.weights('convection', d, MODELS, pid='gdi')
+            self.assertEqual(set(w), {'gfs', 'ecmwf'})
+            self.assertAlmostEqual(w['gfs'], 0.60)
+            self.assertAlmostEqual(w['ecmwf'], 0.40)
+            self.assertEqual(set(missing), set())
 
     def test_missing_secondary_models_normalizes(self):
         w, _, missed = m.weights('convection', date(2026, 7, 1), ['ecmwf9', 'gfs'], pid='ki')
