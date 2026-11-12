@@ -10,7 +10,7 @@ from datetime import date, datetime
 
 # شناسهٔ مدل‌ها در nwp_maps.py: اروپا=ecmwf (۲۸ کیلومتر)، آمریکا=gfs (۱۳ کیلومتر؛ در نبود آن gfs25)،
 # آلمان=icon، کانادا=gem، بریتانیا=ukmo، فرانسه=arpege
-MM_MODELS = ('ecmwf', 'gfs', 'icon', 'gem')      # r84: ARPEGE حذف شد؛ وزن‌ها به تناسب بین بقیه پخش می‌شود
+MM_MODELS = ('ecmwf', 'gfs', 'icon', 'gem', 'ukmo')      # r84: ARPEGE حذف شد؛ وزن‌ها به تناسب بین بقیه پخش می‌شود
 EXCLUDED = ('navgem', 'access')                     # در ترکیب دخالت نمی‌کنند
 # هر «اسلات» از چند منبع به ترتیب اولویت پر می‌شود: اروپا ← ۹ کیلومتر تا هر گامی که دارد، وگرنه ۲۸ کیلومتر؛ آمریکا ← ۱۳ کیلومتر وگرنه ۲۸
 SLOT_SRC = {'ecmwf': ('ecmwf9', 'ecmwf'), 'gfs': ('gfs', 'gfs25')}
@@ -28,11 +28,13 @@ FA = {'ecmwf': 'اروپا (ECMWF)', 'gfs': 'آمریکا (GFS)', 'icon': 'آل�
       'ukmo': 'بریتانیا (UKMO)'}
 EN = {'ecmwf': 'ECMWF', 'gfs': 'GFS', 'icon': 'ICON', 'gem': 'GEM', 'ukmo': 'UKMO'}
 
-# وزن یکسان برای همهٔ پارامترها، مطابق دستور ۱۲ نوامبر ۲۰۲۶.
+# وزن‌های عمومی بازبینی‌شده؛ فصل سرد ۱۰۰٪ و فصل گرم ۱۰۰٪.
 # سرد: ۵ آبان تا ۲۹ اردیبهشت؛ گرم: ۳۰ اردیبهشت تا ۴ آبان.
 BASE = {
-    ('cold', 'general'): {'ecmwf': 60, 'gfs': 20, 'gem': 10, 'icon': 10},
-    ('warm', 'general'): {'gem': 60, 'gfs': 15, 'ecmwf': 15, 'icon': 10},
+    ('cold', 'general'): {'ecmwf': 45, 'gfs': 30, 'gem': 10, 'icon': 10, 'ukmo': 5},
+    ('cold', 'convection'): {'ecmwf': 45, 'gfs': 30, 'gem': 10, 'icon': 10, 'ukmo': 5},
+    ('warm', 'general'): {'gem': 45, 'gfs': 25, 'ecmwf': 15, 'icon': 10, 'ukmo': 5},
+    ('warm', 'convection'): {'gem': 45, 'gfs': 25, 'ecmwf': 15, 'icon': 10, 'ukmo': 5},
 }
 WEIGHT_CLASS = {g: 'general' for g in ('precip', 'snow', 'temp', 'humidity', 'convection', 'wind', 'pressure', 'sigwx')}
 
@@ -61,7 +63,7 @@ def season(d):
     return 'warm' if (2, 30) <= (m, dd) <= (8, 4) else 'cold'
 
 
-ALL_YEAR_COLD = ()     # باد و دما: همهٔ سال با وزن‌های فصل سرد (دستور کاربر)
+ALL_YEAR_COLD = ()     # باد و دما از وزن فصل مربوط استفاده می‌کنند.
 
 
 def base_weights(group, d):
