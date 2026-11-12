@@ -333,6 +333,30 @@ class S3Source:
                 rd = None
             if rd is not None: break
         c = c2
+        # The native HRES 9km cycle is often ready before the matching 0.25°
+        # cycle. Use an earlier 0.25° *run* for the SAME valid time only when
+        # its field exists; _oct_pick still enforces an RMSE/uniqueness check.
+        # Do not guess the grid orientation or silently publish shifted data.
+        if rd is None:
+            try:
+                refs = ref.runs()
+                available_runs = sorted(
+                    {datetime.strptime(j['reference_time'][:16], '%Y-%m-%dT%H:%M').replace(tzinfo=UTC)
+                     for j in refs if j.get('reference_time')}, reverse=True)
+                for rrun in available_runs:
+                    if rrun > vt or (vt - rrun).total_seconds() > 12 * 3600:
+                        continue
+                    if not ref.exists(rrun, vt):
+                        continue
+                    try:
+                        rd = ref.read(rrun, vt, ['temperature_2m']).get('temperature_2m')
+                        if rd is not None:
+                            log(f'  ℹ ecmwf_ifs: مرجع تشخیص جهت O1280 از ران قدیمی‌تر 0.25° {rrun:%Y%m%d%H} با زمان اعتبار یکسان استفاده شد')
+                            break
+                    except Exception:
+                        rd = None
+            except Exception as e_:
+                log(f'  ⚠ ecmwf_ifs: مرجع جایگزین تشخیص جهت پیدا نشد ({type(e_).__name__}: {e_})')
         if rd is None:
             if extra is not None:
                 try: extra[0].close()
