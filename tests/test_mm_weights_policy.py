@@ -1,34 +1,61 @@
 # -*- coding: utf-8 -*-
-"""Regression tests for the four-model, 120-hour MetStat policy."""
+"""Regression assertions for five-model seasonal and parameter weights."""
 import unittest
 from datetime import date
 import mm_weights as m
 
+MODELS = ['ecmwf9', 'gfs', 'gem', 'icon', 'ukmo']
+
 class TestMultimodelWeights(unittest.TestCase):
-    def test_cold_all_groups(self):
+    def test_cold_baseline(self):
         for g in m.GROUPS:
-            b, s = m.base_weights(g, date(2026, 11, 12))
-            self.assertEqual((s, b), ('cold', {'ecmwf': 60, 'gfs': 20, 'gem': 10, 'icon': 10}))
-    def test_warm_all_groups(self):
+            b, season = m.base_weights(g, date(2026, 11, 12))
+            self.assertEqual(season, 'cold')
+            self.assertEqual(b, {'ecmwf': 45, 'gfs': 30, 'gem': 10, 'icon': 10, 'ukmo': 5})
+
+    def test_warm_baseline(self):
         for g in m.GROUPS:
-            b, s = m.base_weights(g, date(2026, 7, 1))
-            self.assertEqual((s, b), ('warm', {'gem': 60, 'gfs': 15, 'ecmwf': 15, 'icon': 10}))
+            b, season = m.base_weights(g, date(2026, 7, 1))
+            self.assertEqual(season, 'warm')
+            self.assertEqual(b, {'gem': 45, 'gfs': 25, 'ecmwf': 15, 'icon': 10, 'ukmo': 5})
+
     def test_season_boundaries_1405(self):
-        # 1405/02/29=2026-05-19; 1405/02/30=2026-05-20
-        # 1405/08/04=2026-10-26; 1405/08/05=2026-10-27
-        for day, expected in [(date(2026,5,19),'cold'), (date(2026,5,20),'warm'),
-                              (date(2026,10,26),'warm'), (date(2026,10,27),'cold')]:
+        for day, expected in [
+            (date(2026, 5, 19), 'cold'), (date(2026, 5, 20), 'warm'),
+            (date(2026, 10, 26), 'warm'), (date(2026, 10, 27), 'cold')
+        ]:
             self.assertEqual(m.season(day), expected)
-    def test_priority_is_per_available_parameter(self):
-        sources=m.pick_sources(['ecmwf9','ecmwf','gfs','gem','icon'])
-        self.assertEqual(sources['ecmwf'], 'ecmwf9')
-        sources=m.pick_sources(['ecmwf','gfs','gem','icon'])
-        self.assertEqual(sources['ecmwf'], 'ecmwf')
-    def test_no_ukmo_and_exact_normalization(self):
-        for d in (date(2026,7,1),date(2026,11,12)):
-            for group in m.GROUPS:
-                w,_,missing=m.weights(group,d,['ecmwf9','ecmwf','gfs','icon','gem','ukmo'])
-                self.assertEqual(set(w), {'ecmwf','gfs','gem','icon'})
-                self.assertAlmostEqual(sum(w.values()),1.0)
-                self.assertEqual(missing,[])
-if __name__=='__main__': unittest.main()
+
+    def test_ecmwf_fallback(self):
+        self.assertEqual(m.pick_sources(MODELS)['ecmwf'], 'ecmwf9')
+        self.assertEqual(m.pick_sources(['ecmwf', 'gfs', 'gem'])['ecmwf'], 'ecmwf')
+
+    def test_parameter_weights(self):
+        cases = [
+            ('convection', 'cape', False, {'gfs': 50, 'ecmwf': 20, 'icon': 20, 'gem': 5, 'ukmo': 5}),
+            ('convection', 'ki', False, {'gfs': 50, 'ecmwf': 25}),
+            ('humidity', 'pw', False, {'ecmwf': 50, 'gfs': 25}),
+            ('wind', 'gust', False, {'ecmwf': 70}),
+            ('temp', 't2m', False, {'ecmwf': 50}),
+            ('temp', 'tmin', False, {'ecmwf': 40, 'gem': 20, 'gfs': 25, 'icon': 7.5, 'ukmo': 7.5}),
+            ('temp', 'tmax', False, {'gfs': 50, 'ecmwf': 25}),
+            ('precip', 'wrain', True, {'ecmwf': 50}),
+            ('convection', 'hail', True, {'gfs': 50, 'ecmwf': 25})
+        ]
+        for d in (date(2026, 7, 1), date(2026, 11, 12)):
+            for group, pid, secondary, expected in cases:
+                with self.subTest(date=d, param=pid):
+                    w, _, _ = m.weights(group, d, MODELS, pid=pid, secondary=secondary)
+                    self.assertAlmostEqual(sum(w.values()), 1.0)
+                    self.assertEqual(set(w), {'ecmwf', 'gfs', 'gem', 'icon', 'ukmo'})
+                    for model, pct in expected.items():
+                        self.assertAlmostEqual(w[model] * 100, pct)
+
+    def test_missing_secondary_models_normalizes(self):
+        w, _, missed = m.weights('convection', date(2026, 7, 1), ['ecmwf9', 'gfs'], pid='ki')
+        self.assertEqual(set(w), {'ecmwf', 'gfs'})
+        self.assertAlmostEqual(w['gfs'], 2.0 / 3.0)
+        self.assertEqual(set(missed), {'gem', 'icon', 'ukmo'})
+
+if __name__ == '__main__':
+    unittest.main()
