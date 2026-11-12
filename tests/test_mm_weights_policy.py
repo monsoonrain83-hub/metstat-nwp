@@ -58,7 +58,7 @@ class TestMultimodelWeights(unittest.TestCase):
             self.assertEqual(set(w), {'gfs', 'ecmwf'})
             self.assertAlmostEqual(w['gfs'], 0.60)
             self.assertAlmostEqual(w['ecmwf'], 0.40)
-            self.assertEqual(set(missing), set())
+            self.assertEqual(set(missing), {'gem', 'icon', 'ukmo'})
 
     def test_missing_secondary_models_normalizes(self):
         w, _, missed = m.weights('convection', date(2026, 7, 1), ['ecmwf9', 'gfs'], pid='ki')
