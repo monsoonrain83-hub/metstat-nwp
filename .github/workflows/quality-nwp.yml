@@ -19,6 +19,10 @@ jobs:
         run: bandit -q -r . -lll -x ./tests || true
       - name: "اجرای آزمایشی نقشه‌ساز (دادهٔ ساختگی)"
         run: python nwp_maps.py --mock --out out --models icon --max-steps 4 --regions iran
+      - name: "ECMWF HRES 9km — test native temperature map nonempty (offline mock)"
+        run: |
+          python nwp_maps.py --mock --out out9 --models ecmwf9 --max-steps 4 --regions iran
+          find out9 -type f -name 't2m_*' -size +0c -print | grep -q .
       - name: "نشت کلید"
         run: |
           if grep -rInE "(upload_key|relay_secret|api[_-]?key)[\"' ]*[:=][\"' ]*[A-Za-z0-9_\-]{16,}" --include=*.py --include=*.yml --include=*.php .; then echo "کلید در سورس دیده شد"; exit 1; fi
