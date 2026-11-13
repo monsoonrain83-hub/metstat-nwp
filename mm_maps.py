@@ -140,11 +140,19 @@ class MMCombiner:
             if k in s.done: continue
             rk, pid, run, vt = k; pick = s.decide(k, final)
             if pick is None: continue
-            s.done.add(k)
+            # Never consume a field before both mandatory source slots arrive.
+            # In particular, the wait timeout must NOT convert missing ECMWF/GFS
+            # into a permanently skipped output: more source fields can arrive later.
+            if 'ecmwf' not in pick or 'gfs' not in pick:
+                continue
             try:
-                made[(run)] = made.get(run, 0) + s.make(k, pick)
+                count = s.make(k, pick)
             except Exception as e:
+                # Keep the NPZ inputs so transient rendering/upload errors can be retried.
                 import traceback; traceback.print_exc(); nm.log(f'  ! {MM_NAME} {pid} {rk} {vt:%Y%m%d%H}: {e}')
+                continue
+            made[run] = made.get(run, 0) + count
+            s.done.add(k)
             for p in s.idx.get(k, {}).values():
                 try: os.remove(p)
                 except OSError: pass
