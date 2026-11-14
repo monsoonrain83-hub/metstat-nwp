@@ -19,13 +19,35 @@ def iso(t): return t.strftime("%Y-%m-%dT%H:%MZ")
 def load(p, d):
     try: return json.load(open(p))
     except Exception: return d
+def revalidate_cached_synop(records):
+    """Re-decode persisted SYNOP reports after decoder corrections.
+
+    Never invent missing values. Cached raw reports are authoritative;
+    this prevents stale, misclassified local groups entering daily stats.
+    """
+    corrected = 0
+    for record in records:
+        if record.get("src") != "synop" or not record.get("raw"):
+            continue
+        decoded = decode_synop(record["raw"])
+        if decoded is None:
+            continue
+        for key in ("tmax", "tmin", "rr24_7", "gust_ms"):
+            if record.get(key) != decoded.get(key):
+                record[key] = decoded.get(key)
+                corrected += 1
+    return corrected
+
 def main():
     os.makedirs(OUT + "/daily", exist_ok=True)
     S = load(OUT + "/stations.json", {}).get("stations", [])
     by_w = {s["wmo"]: s["id"] for s in S if s.get("wmo")}; by_i = {s["icao"]: s["id"] for s in S if s.get("icao")}
     meta = {s["id"]: s for s in S}
-    rec = load(OUT + "/recent.json", {"obs": []})["obs"]; seen = {(o["id"], o["src"], o["time"]) for o in rec}
-    log = {"time": iso(now()), "states": {}, "metar": 0, "synop": 0, "synop_unmatched": 0}
+    rec = load(OUT + "/recent.json", {"obs": []})["obs"]
+    corrected_cached_fields = revalidate_cached_synop(rec)
+    seen = {(o["id"], o["src"], o["time"]) for o in rec}
+    log = {"time": iso(now()), "states": {}, "metar": 0, "synop": 0, "synop_unmatched": 0,
+           "cached_synop_fields_corrected": corrected_cached_fields}
     # ---- METAR (AWC JSON, ICAO list) ----
     ids = sorted(by_i)
     for i in range(0, len(ids), 200):

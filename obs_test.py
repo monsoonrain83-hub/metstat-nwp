@@ -15,3 +15,24 @@ assert r["slp"] is None, r
 r = d("AAXX 06061 40754 12970 31808 10142 20061 30114 49905 60014="); assert r["slp"] == 990.5, r
 r = d("AAXX 06061 40754 12970 31808 10142 20061 30114 40005 60014="); assert r["slp"] == 1000.5, r
 print("ok r193")
+
+# --- v23: local SYNOP groups after 5xxxx are not section-3 minimum temperatures. ---
+r = d("AAXX 12181 40859 12960 02901 10092 20076 38760 40216 52015 60001 333 55093 21865 70000 555 10084 29090=")
+assert r["t"] == 9.2 and r["tmin"] is None and r["tmax"] is None, r
+r = d("AAXX 12181 40818 12965 01202 10062 21110 38038 40222 52013 60001 333 55098 21802 70000 555 10005 29028=")
+assert r["tmin"] is None and r["tmax"] is None, r
+# Valid standard Tx/Tn preceding local groups must still decode.
+r = d("AAXX 03061 40754 12970 31808 10142 20061 30114 40178 60014 333 10168 21025 70005 555 10099 21999=")
+assert r["tmax"] == 16.8 and r["tmin"] == -2.5, r
+# A 2xxxx appearing after a group 7xxxx is not a standard minimum.
+r = d("AAXX 03061 40754 12970 31808 10142 20061 30114 40178 60014 333 70000 21025=")
+assert r["tmin"] is None, r
+print("ok v23 section-boundary and order")
+
+# --- v23: previously persisted broken SYNOP values must not survive into daily. ---
+from obs_fetch import revalidate_cached_synop
+record = {"src": "synop", "raw": "AAXX 12181 40859 12960 02901 10092 20076 38760 40216 52015 60001 333 55093 21865 70000 555 10084 29090=",
+          "tmin": -86.5, "tmax": 8.4, "rr24_7": 0.0, "gust_ms": None}
+assert revalidate_cached_synop([record]) == 2, record
+assert record["tmin"] is None and record["tmax"] is None and record["rr24_7"] == 0.0, record
+print("ok v23 cached observation revalidation")
