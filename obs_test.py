@@ -28,3 +28,11 @@ assert r["tmax"] == 16.8 and r["tmin"] == -2.5, r
 r = d("AAXX 03061 40754 12970 31808 10142 20061 30114 40178 60014 333 70000 21025=")
 assert r["tmin"] is None, r
 print("ok v23 section-boundary and order")
+
+# --- v23: previously persisted broken SYNOP values must not survive into daily. ---
+from obs_fetch import revalidate_cached_synop
+record = {"src": "synop", "raw": "AAXX 12181 40859 12960 02901 10092 20076 38760 40216 52015 60001 333 55093 21865 70000 555 10084 29090=",
+          "tmin": -86.5, "tmax": 8.4, "rr24_7": 0.0, "gust_ms": None}
+assert revalidate_cached_synop([record]) == 2, record
+assert record["tmin"] is None and record["tmax"] is None and record["rr24_7"] == 0.0, record
+print("ok v23 cached observation revalidation")
