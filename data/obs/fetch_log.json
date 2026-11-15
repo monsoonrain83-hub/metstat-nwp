@@ -1,5 +1,5 @@
 {
- "time": "2026-11-15T16:52Z",
+ "time": "2026-11-15T17:49Z",
  "states": {
   "Iran": 53,
   "Iraq": 0,
@@ -11,9 +11,9 @@
   "Uzbekistan": 0,
   "Tajikistan": 0,
   "Afghanistan": -1,
-  "Pakistan": 1,
+  "Pakistan": 0,
   "Saudi_Arabia": 0,
-  "Oman": 65,
+  "Oman": 36,
   "United_Arab_Emirates": 0,
   "Qatar": 0,
   "Kuwait": 0,
@@ -23,8 +23,8 @@
   "Jordan": 0,
   "Yemen": 0
  },
- "metar": 248,
- "synop": 206,
+ "metar": 239,
+ "synop": 176,
  "synop_unmatched": 8102,
  "unmatched_wmo": {
   "40702": 51,
