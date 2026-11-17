@@ -1,12 +1,12 @@
 {
- "generated": "2026-11-10T13:27:02+00:00",
+ "generated": "2026-11-17T14:21:34+00:00",
  "mode": "REVIEW",
  "registry_n": 1028,
  "registry_active": 774,
  "sources": "atlas,isd_awc",
- "source_rows": 1295,
+ "source_rows": 1294,
  "status": {
-  "match": 1077,
+  "match": 1076,
   "new_candidate": 161,
   "coord_conflict": 15,
   "possible_duplicate": 42
