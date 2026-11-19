@@ -1,5 +1,7 @@
 """Render the public five-month Iran forecast with the production map renderer."""
 import hashlib
+import base64
+import struct
 import json
 import os
 import urllib.request
@@ -61,8 +63,19 @@ def main():
             page.add_init_script("localStorage.setItem('mmap.lang',JSON.stringify('" + lang + "'))")
             page.goto(SITE + '/index.html',wait_until='domcontentloaded',timeout=120000)
             page.wait_for_function("typeof sfShowMap === 'function'")
-            page.evaluate("""async () => {await sfLoad(); const box=document.createElement('div');
-              box.id='sfMapBox'; document.body.append(box);}""")
+            page.evaluate("""async () => {
+              await sfLoad();
+              const box=document.createElement('div');
+              box.id='sfMapBox'; document.body.append(box);
+              // Export the unchanged canvas without installing interactive resize handlers.
+              // Each normal card retains its canvas through a window listener.
+              window.caCard=(title,canvas,note,host)=>{
+                const card=document.createElement('article'), wrap=document.createElement('div');
+                wrap.className='caImgWrap';
+                const image=new Image(); image.src=canvas.toDataURL('image/png');
+                wrap.append(image);card.append(wrap);host.prepend(card);return card;
+              };
+            }""")
             for par, pack in packs.items():
                 rows = products[par] = []
                 page.evaluate("""p=>{SF.o.par=p.par; SF.o.reg=''; SF.upd=new Date(p.built);
@@ -77,6 +90,10 @@ def main():
                         }""",[idx,kind])
                         if not png.startswith('data:image/png;base64,iVBOR'):
                             raise ValueError('Invalid rendered PNG')
+                        raw_png = base64.b64decode(png.split(',',1)[1], validate=True)
+                        width, height = struct.unpack('>II',raw_png[16:24])
+                        if min(width,height) < 1000:
+                            raise ValueError('Unexpected map dimensions')
                         data = json.dumps({'png':png}).encode()
                         name = 'g_' + hashlib.sha256(data).hexdigest()[:32]
                         publish(name + '.json',data)
