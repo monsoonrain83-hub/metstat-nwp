@@ -1,7 +1,7 @@
 {
- "time": "2026-11-19T16:53Z",
+ "time": "2026-11-19T17:52Z",
  "states": {
-  "Iran": 97,
+  "Iran": 98,
   "Iraq": -1,
   "Turkey": 81,
   "Azerbaijan": 0,
@@ -23,8 +23,8 @@
   "Jordan": 0,
   "Yemen": 0
  },
- "metar": 229,
- "synop": 221,
+ "metar": 241,
+ "synop": 222,
  "synop_unmatched": 5894,
  "unmatched_wmo": {
   "17015": 51,
