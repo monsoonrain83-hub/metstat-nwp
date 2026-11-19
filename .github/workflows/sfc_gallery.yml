@@ -1,0 +1,49 @@
+name: Publish MetStat seasonal maps
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths: ['sfc_gallery.py', 'sfc_gallery_check.py', '.github/workflows/sfc_gallery.yml']
+  workflow_run:
+    workflows: [seas5, metstat-sfc, metstat-sfc-daily]
+    types: [completed]
+permissions:
+  contents: read
+concurrency:
+  group: sfc
+  cancel-in-progress: false
+jobs:
+  maps:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compare issued inputs and published SEAS cycle
+        id: check
+        env:
+          MANUAL: ${{ github.event_name == 'workflow_dispatch' }}
+        run: python sfc_gallery_check.py
+      - if: steps.check.outputs.refresh == 'true'
+        run: pip install numpy xarray netCDF4 cdsapi requests cfgrib eccodes
+      - if: steps.check.outputs.refresh == 'true'
+        env:
+          CDSAPI_URL: https://cds.climate.copernicus.eu/api
+          CDSAPI_KEY: ${{ secrets.CDSAPI_KEY }}
+          MX_HOST: ${{ secrets.MX_HOST }}
+          MX_KEY: ${{ secrets.MX_KEY }}
+        run: |
+          python sfc_build.py --no-era5 --out sfc_new
+          python sfc_gallery_check.py --publish-input
+      - if: steps.check.outputs.build == 'true'
+        run: pip install playwright && python -m playwright install --with-deps chromium
+      - if: steps.check.outputs.build == 'true'
+        env:
+          MX_HOST: ${{ secrets.MX_HOST }}
+          MX_KEY: ${{ secrets.MX_KEY }}
+        run: |
+          python sfc_precompute.py --host "" --key ""
+          SFC_PACK_DIR=sfc_pre python sfc_gallery.py

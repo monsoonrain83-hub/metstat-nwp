@@ -1,0 +1,35 @@
+name: Test seasonal gallery
+on:
+  pull_request:
+    paths:
+      - 'sfc_gallery*.py'
+      - '.github/workflows/sfc_gallery*.yml'
+      - 'host/**'
+      - 'tests/test_gallery*'
+concurrency:
+  group: seasonal-gallery-test-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install playwright && python -m playwright install --with-deps chromium
+      - name: Check catalog compression and conditional responses
+        run: python tests/test_gallery_catalog.py
+      - name: Check public viewer selection and failure handling
+        run: python tests/test_gallery_browser.py
+      - name: Render representative maps for both parameters and languages
+        run: python sfc_gallery.py --smoke
+      - name: Keep rendered maps for inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: seasonal-gallery-preview
+          path: gallery_out/
+          retention-days: 3
