@@ -49,6 +49,8 @@ def main():
         for lang in ('fa','en'):
             products = catalog['products'][lang] = {}
             page = browser.new_page(viewport={'width':1200,'height':900})
+            page.set_default_timeout(900000)
+            page.route('**/version.json*', lambda route: route.abort())
             page.add_init_script("localStorage.setItem('mmap.lang',JSON.stringify('" + lang + "'))")
             page.goto(SITE + '/index.html',wait_until='domcontentloaded',timeout=120000)
             page.wait_for_function("typeof sfShowMap === 'function'")
@@ -73,6 +75,7 @@ def main():
                         publish(name + '.json',data)
                         row['maps'][kind] = name
                     rows.append(row)
+                    print(lang, par, idx + 1, 'rendered', flush=True)
             page.close()
         browser.close()
     if json.loads(read(BASE + 'sfc_idx.json'))['issued'] != issued:

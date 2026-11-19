@@ -1,0 +1,26 @@
+name: Test seasonal gallery
+on:
+  pull_request:
+    paths:
+      - 'sfc_gallery*.py'
+      - '.github/workflows/sfc_gallery*.yml'
+permissions:
+  contents: read
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install playwright && python -m playwright install --with-deps chromium
+      - name: Render all public seasonal maps without publishing
+        run: python sfc_gallery.py
+      - name: Keep rendered maps for inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: seasonal-gallery-preview
+          path: gallery_out/
+          retention-days: 3
