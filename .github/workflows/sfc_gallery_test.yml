@@ -4,6 +4,8 @@ on:
     paths:
       - 'sfc_gallery*.py'
       - '.github/workflows/sfc_gallery*.yml'
+      - 'host/**'
+      - 'tests/test_gallery*'
 permissions:
   contents: read
 jobs:
@@ -16,6 +18,8 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install playwright && python -m playwright install --with-deps chromium
+      - name: Check public viewer selection and failure handling
+        run: python tests/test_gallery_browser.py
       - name: Render all public seasonal maps without publishing
         run: python sfc_gallery.py
       - name: Keep rendered maps for inspection

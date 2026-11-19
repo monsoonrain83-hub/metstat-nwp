@@ -34,7 +34,7 @@ def main():
     issued = inputs['issued']
     if not inputs.get('fc', {}).get('z') or inputs['fc'].get('mock'):
         raise ValueError('Missing SEAS forecast')
-    catalog = {'issued': issued, 'run': inputs['fc']['start'], 'products': {}}
+    catalog = {'version': 1, 'issued': issued, 'run': inputs['fc']['start'], 'products': {}}
     pack_dir = os.getenv('SFC_PACK_DIR')
     packs = {}
     for p in ('prcp', 'tmean'):
@@ -61,7 +61,7 @@ def main():
                 page.evaluate("""p=>{SF.o.par=p.par; SF.o.reg=''; SF.upd=new Date(p.built);
                   SF.out.auto=p; SF.cards.clear();}""",pack)
                 for idx in range(5):
-                    row = {'label':page.evaluate('i=>sfMonLab(SF.out.auto.T[i].t)',idx),'maps':{}}
+                    row = page.evaluate('''i => {const t=SF.out.auto.T[i].t; return {t,label:sfMonLab(t),validUntil:new Date(sfGDate(t).getTime()+15*864e5).toISOString(),maps:{}}}''',idx)
                     for kind in KINDS:
                         png = page.evaluate("""async ([ti,kind])=>{
                           SF.views.auto={mode:'auto',ti,kind}; SF.cards.clear();

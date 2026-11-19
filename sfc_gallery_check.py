@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timezone
 import os
 import sys
 from urllib.error import HTTPError
@@ -32,6 +33,7 @@ else:
         gallery = {}
     current = inputs.get('fc',{}).get('start') or [0,0]
     refresh = models['ecmwfseas'].get('status') == 'complete' and current < target
-    build = refresh or gallery.get('issued') != inputs['issued'] or gallery.get('run') != current or os.getenv('MANUAL') == 'true'
+    expired = any(datetime.fromisoformat(row['validUntil'].replace('Z','+00:00')) <= datetime.now(timezone.utc) for row in gallery.get('products',{}).get('en',{}).get('prcp',[]))
+    build = expired or gallery.get('version') != 1 or refresh or gallery.get('issued') != inputs['issued'] or gallery.get('run') != current or os.getenv('MANUAL') == 'true'
     with open(os.environ['GITHUB_OUTPUT'],'a') as f:
         print('refresh='+str(refresh).lower(), 'build='+str(build).lower(), sep='\n',file=f)
