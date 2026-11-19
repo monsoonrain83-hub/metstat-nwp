@@ -40,7 +40,7 @@ with sync_playwright() as pw:
     page.locator('select').nth(0).select_option('tmean')
     page.wait_for_function("document.querySelector('a').download.includes('tmean_1001')")
     assert page.locator('select').nth(1).input_value() == '1001'
-    page.locator('button').last.click()
+    page.get_by_role('button',name='Custom scenarios, provinces and map tools',exact=True).click()
     assert page.evaluate('advancedCalls') == 1
     fail['catalog'] = True
     page.evaluate("sfOpenPublished(document.getElementById('host'))")

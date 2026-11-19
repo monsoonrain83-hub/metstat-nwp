@@ -1,4 +1,5 @@
 """Render the public five-month Iran forecast with the production map renderer."""
+import sys
 import hashlib
 import base64
 import struct
@@ -34,6 +35,10 @@ def publish(name, data):
 
 
 def main():
+    smoke = '--smoke' in sys.argv
+    if smoke and os.getenv('MX_HOST'):
+        raise ValueError('Smoke tests cannot publish to the host')
+    kinds = ['c', 'mean', 'skill', 'm1', 'm10'] if smoke else KINDS
     index_data = read(BASE + 'sfc_idx.json')
     era_data = read(BASE + 'era5_iran.json')
     inputs = json.loads(index_data)
@@ -41,7 +46,7 @@ def main():
     issued = inputs['issued']
     if not inputs.get('fc', {}).get('z') or inputs['fc'].get('mock'):
         raise ValueError('Missing SEAS forecast')
-    catalog = {'version': 1, 'source_sha256': source_hash, 'built': datetime.now(timezone.utc).isoformat(), 'issued': issued, 'run': inputs['fc']['start'], 'products': {}}
+    catalog = {'version': 0 if smoke else 1, 'source_sha256': source_hash, 'built': datetime.now(timezone.utc).isoformat(), 'issued': issued, 'run': inputs['fc']['start'], 'products': {}}
     pack_dir = os.getenv('SFC_PACK_DIR')
     packs = {}
     for p in ('prcp', 'tmean'):
@@ -80,9 +85,10 @@ def main():
                 rows = products[par] = []
                 page.evaluate("""p=>{SF.o.par=p.par; SF.o.reg=''; SF.upd=new Date(p.built);
                   SF.out.auto=p; SF.cards.clear();}""",pack)
-                for idx in range(5):
+                for idx in range(1 if smoke else 5):
                     row = page.evaluate('''i => {const t=SF.out.auto.T[i].t; return {t,label:sfMonLab(t),validUntil:new Date(sfGDate(t).getTime()+15*864e5).toISOString(),maps:{}}}''',idx)
-                    for kind in KINDS:
+                    for kind in kinds:
+                        print('Rendering',lang,par,idx+1,kind,flush=True)
                         png = page.evaluate("""async ([ti,kind])=>{
                           SF.views.auto={mode:'auto',ti,kind}; SF.cards.clear();
                           const box=document.getElementById('sfMapBox'); box.replaceChildren();
@@ -104,7 +110,7 @@ def main():
         browser.close()
     if hashlib.sha256(read(BASE + 'sfc_idx.json') + read(BASE + 'era5_iran.json')).hexdigest() != source_hash:
         raise RuntimeError('Inputs changed during rendering')
-    publish('gallery_latest.json',json.dumps(catalog,ensure_ascii=False).encode())
+    publish('gallery_preview.json' if smoke else 'gallery_latest.json',json.dumps(catalog,ensure_ascii=False).encode())
 
 
 if __name__ == '__main__':

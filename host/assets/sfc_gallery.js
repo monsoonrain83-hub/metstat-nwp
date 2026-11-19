@@ -4,7 +4,7 @@ async function sfOpenPublished(host) {
   const translate = (fa, en) => language === 'fa' ? fa : en;
   const element = (tag, text = '') => Object.assign(document.createElement(tag), {textContent: text});
   const panel = element('section');
-  panel.className = 'card wide';
+  panel.className = 'sfPublished';
   panel.dataset.sfcPublished = '1';
   const title = element('h2', translate('پیش‌بینی ماهانه و فصلی', 'Monthly and seasonal forecast'));
   const dates = element('p');
@@ -26,7 +26,22 @@ async function sfOpenPublished(host) {
   advanced.type = 'button';
   advanced.className = 'btn';
   advanced.onclick = () => openSF(true);
-  panel.append(title, dates, controls, status, image, save, retry, advanced);
+  const grid = element('div');
+  grid.className = 'sfGrid';
+  const sidebar = element('div');
+  sidebar.className = 'sfSide';
+  const settings = element('section');
+  settings.className = 'card sfSet';
+  settings.append(controls, advanced);
+  sidebar.append(settings);
+  const body = element('div');
+  body.className = 'sfBody';
+  const mapCard = element('section');
+  mapCard.className = 'card wide';
+  mapCard.append(status, image, save, retry);
+  body.append(mapCard);
+  grid.append(sidebar, body);
+  panel.append(title, dates, grid);
   host.replaceChildren(panel);
   const active = () => host.contains(panel) && LANG === language;
   async function readJSON(url) {
