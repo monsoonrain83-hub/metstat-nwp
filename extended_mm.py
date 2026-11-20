@@ -61,12 +61,16 @@ def blend(period, fields):
         if np.asarray(fields[key]).shape != shape:
             raise ValueError(f'Non-identical grid for {key}; regrid first')
     A = np.stack([np.asarray(fields[m], dtype=np.float64) for m in w], axis=0)
-    W = np.array(list(w.values()), dtype=np.float64)[:, None, None]
     valid = np.isfinite(A)
-    weighted = np.sum(np.where(valid, A, 0.0) * W, axis=0)
-    weight_total = np.sum(valid * W, axis=0)
-    # Do not mislabel a single-model pixel as a multimodel forecast.
-    supported = valid[0] & (np.sum(valid[1:], axis=0) >= 1)
-    out = np.full(shape, np.nan, dtype=np.float32)
-    np.divide(weighted, weight_total, out=out, where=supported & (weight_total > 0))
-    return out, w
+    # Keep ECMWF at EXACTLY 60% in every supported cell. If an alternative
+    # model is missing locally, redistribute the OTHER 40% amongst the
+    # remaining alternatives, not back to ECMWF.
+    ow = np.array(list(w.values())[1:], dtype=np.float64)[:, None, None]
+    other_weight = np.sum(valid[1:] * ow, axis=0)
+    other_sum = np.sum(np.where(valid[1:], A[1:], 0.0) * ow, axis=0)
+    supported = valid[0] & (other_weight > 0)
+    other_mean = np.zeros(shape, dtype=np.float64)
+    np.divide(other_sum, other_weight, out=other_mean, where=other_weight > 0)
+    out = np.where(supported, 0.6 * np.where(valid[0], A[0], 0.0)
+                   + 0.4 * other_mean, np.nan)
+    return out.astype(np.float32), w
