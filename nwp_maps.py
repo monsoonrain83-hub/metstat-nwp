@@ -88,9 +88,9 @@ PARAMS.update({
     'tsoil': dict(kind='inst', sc='temp', models=I_ECA, unit='°C', en='Soil temperature near surface (°C)', fa='دمای خاک نزدیک سطح'),
     'tmax':  dict(kind='day', sc='temp', models=I_ECA, unit='°C', en='Max. temperature 2m, 24h (°C)', fa='دمای بیشینه ۲۴ ساعته', lapse=True),
     'tmin':  dict(kind='day', sc='temp', models=I_ECA, unit='°C', en='Min. temperature 2m, 24h (°C)', fa='دمای کمینه ۲۴ ساعته', lapse=True),
-    'tanom': dict(kind='day', sc='tanom', models=I_ECZ, unit='K', en='Temperature 2m anomaly, daily mean (K)', fa='انومالی دمای ۲ متری (میانگین روزانه)', lapse=True),
-    'tanom5': dict(kind='day', sc='tanom5', models=I_ECZ, unit='K', win_d=5, en='Temperature 2m anomaly, 5-day mean (K)', fa='انومالی دمای ۲ متری (میانگین ۵ روزه)', lapse=True),
-    'tanom10': dict(kind='day', sc='tanom10', models=I_ECZ, unit='K', win_d=10, en='Temperature 2m anomaly, 10-day mean (K)', fa='انومالی دمای ۲ متری (میانگین ۱۰ روزه)', lapse=True),
+    'tanom': dict(kind='day', sc='tanom', models=ALL, unit='K', en='Temperature 2m anomaly, daily mean (K)', fa='انومالی دمای ۲ متری (میانگین روزانه)', lapse=True),
+    'tanom5': dict(kind='day', sc='tanom5', models=ALL, unit='K', win_d=5, en='Temperature 2m anomaly, 5-day mean (K)', fa='انومالی دمای ۲ متری (میانگین ۵ روزه)', lapse=True),
+    'tanom10': dict(kind='day', sc='tanom10', models=ALL, unit='K', win_d=10, en='Temperature 2m anomaly, 10-day mean (K)', fa='انومالی دمای ۲ متری (میانگین ۱۰ روزه)', lapse=True),
     'rh':    dict(kind='inst', sc='rh', models=I_EC, unit='%', en='Relative humidity 2m (%)', fa='رطوبت نسبی ۲ متری'),
     'pw':    dict(kind='inst', sc='pw', models=I_EC, unit='mm', en='Entire Atmosphere Precipitable Water (mm)', fa='آب قابل بارش'),
     'ki':    dict(kind='inst', sc='ki', models=I_ECG, unit='', en='K-Index', fa='شاخص K'),
@@ -153,7 +153,7 @@ for _h, (_fa, _en, _sck, _mm) in secondary.PRODUCTS.items():
 # native precipitation/snow variables are absent from the released 9km dataset.
 # Previously temperature_2m was downloaded but t2m was not enabled for ecmwf9,
 # making an otherwise valid high-resolution field invisible in the model menu.
-for _p in [x[0] for x in PR_WIN] + [x[0] for x in SN_WIN] + ['t2m', 'refl', 'sigwx', 'rh', 'gust']:
+for _p in [x[0] for x in PR_WIN] + [x[0] for x in SN_WIN] + ['t2m', 'tanom', 'tanom5', 'tanom10', 'refl', 'sigwx', 'rh', 'gust']:
     if _p in PARAMS and 'ecmwf9' not in PARAMS[_p]['models']: PARAMS[_p]['models'] = list(PARAMS[_p]['models']) + ['ecmwf9']
 PARAMS['w500']['me'] = dict(sc='windup', unit='kt', k=1.94384 / 3.6)
 PARAMS['gust']['me'] = dict(sc='gust', unit='km/h', k=1.0)
@@ -162,10 +162,10 @@ PARAMS.update({
     'w10':   dict(kind='inst', sc='wind10', models=I_ECG, unit='kt', me_only=True, ln=True, en='MSLP (mb) & 10m Wind Speed (kt)', fa='فشار سطح دریا و سرعت باد ۱۰ متری (گره)'),
     'w250':  dict(kind='inst', sc='windup', models=I_EC, unit='kt', me_only=True, ln=True, en='250mb Wind Speed/Streamlines (kt) & MSLP Extrema (mb)', fa='سرعت باد و خطوط جریان ۲۵۰ هکتوپاسکال (گره)'),
     'w200':  dict(kind='inst', sc='windup', models=I_EC, unit='kt', me_only=True, ln=True, en='200mb Wind Speed/Streamlines (kt)', fa='سرعت باد و خطوط جریان ۲۰۰ هکتوپاسکال (گره)'),
-    'z500a': dict(kind='inst', sc='z500a', models=I_ECZ, unit='dm', me_only=True, ln=True, en='500hPa Geopotential Height (dm) & Anomaly', fa='ارتفاع ژئوپتانسیل ۵۰۰ هکتوپاسکال و انومالی (دکامتر)'),
-    'z850a': dict(kind='inst', sc='z850a', models=I_EC, unit='dm', me_only=True, ln=True, en='850hPa Geopotential Height (dm) & Anomaly', fa='ارتفاع ژئوپتانسیل ۸۵۰ هکتوپاسکال و انومالی (دکامتر)'),
-    'z700a': dict(kind='inst', sc='z700a', models=I_EC, unit='dm', me_only=True, ln=True, en='700hPa Geopotential Height (dm) & Anomaly', fa='ارتفاع ژئوپتانسیل ۷۰۰ هکتوپاسکال و انومالی (دکامتر)'),
-    'mslpa': dict(kind='inst', sc='mslpa', models=I_ECG, unit='hPa', me_only=True, ln=True, en='MSLP (hPa) & Anomaly', fa='فشار سطح دریا و انومالی (هکتوپاسکال)'),
+    'z500a': dict(kind='inst', sc='z500a', models=ALL, unit='dm', me_only=True, ln=True, en='500hPa Geopotential Height (dm) & Anomaly', fa='ارتفاع ژئوپتانسیل ۵۰۰ هکتوپاسکال و انومالی (دکامتر)'),
+    'z850a': dict(kind='inst', sc='z850a', models=ALL, unit='dm', me_only=True, ln=True, en='850hPa Geopotential Height (dm) & Anomaly', fa='ارتفاع ژئوپتانسیل ۸۵۰ هکتوپاسکال و انومالی (دکامتر)'),
+    'z700a': dict(kind='inst', sc='z700a', models=ALL, unit='dm', me_only=True, ln=True, en='700hPa Geopotential Height (dm) & Anomaly', fa='ارتفاع ژئوپتانسیل ۷۰۰ هکتوپاسکال و انومالی (دکامتر)'),
+    'mslpa': dict(kind='inst', sc='mslpa', models=ALL, unit='hPa', me_only=True, ln=True, en='MSLP (hPa) & Anomaly', fa='فشار سطح دریا و انومالی (هکتوپاسکال)'),
     'thk1000': dict(kind='inst', sc='thk1000', models=I_ECG, unit='dam', me_only=True, ln=True, en='1000–500 hPa Thickness (dam) & MSLP', fa='ضخامت لایهٔ ۱۰۰۰–۵۰۰ هکتوپاسکال و فشار سطح دریا (دکامتر)'),
     'thk8550': dict(kind='inst', sc='thk8550', models=I_EC, unit='dam', me_only=True, ln=True, en='850–500 hPa Thickness (dam)', fa='ضخامت لایهٔ ۸۵۰–۵۰۰ هکتوپاسکال (دکامتر)'),
     'thk7050': dict(kind='inst', sc='thk7050', models=I_EC, unit='dam', me_only=True, ln=True, en='700–500 hPa Thickness (dam)', fa='ضخامت لایهٔ ۷۰۰–۵۰۰ هکتوپاسکال (دکامتر)'),
@@ -1172,10 +1172,15 @@ SEC_UPPER = {f'{q}_{p}hPa' for q in ('temperature', 'relative_humidity', 'geopot
 MM_ON = False       # با --mm روشن می‌شود (مالتی‌مدل)
 def needed_vars(mkey, pids, kind):
     v = {'precipitation', 'snowfall_water_equivalent'}
-    if mkey in ('ecmwf', 'ukmo', 'gfs', 'gem') or MM_ON: v |= {'temperature_2m'}
+    if mkey in ('ecmwf', 'ukmo', 'gfs', 'gem') or MM_ON or any(pid in pids for pid in ('tanom', 'tanom5', 'tanom10')): v |= {'temperature_2m'}
     if MM_ON: v |= {'wind_direction_10m', 'wind_speed_10m', 'pressure_msl', 'relative_humidity_2m', 'wind_gusts_10m'}
     if mkey == 'ecmwf': v |= {'temperature_2m_max', 'temperature_2m_min'}
-    if kind == 'all' and mkey in ('gfs', 'gem'): v |= {'geopotential_height_500hPa'}      # r192: انومالی Z500 برای GFS/GEM
+    if kind == 'all':
+        # Load actual source fields for requested anomaly products; absent data are
+        # handled by make() as unavailable rather than publishing empty maps.
+        for level in (500, 700, 850):
+            if f'z{level}a' in pids: v.add(f'geopotential_height_{level}hPa')
+        if 'mslpa' in pids: v.add('pressure_msl')
     if kind == 'all':
         if mkey == 'ecmwf9':
             v |= {'temperature_2m', 'relative_humidity_2m', 'wind_gusts_10m', 'wind_u_component_10m', 'wind_v_component_10m', 'cape', 'precipitation_type'}
