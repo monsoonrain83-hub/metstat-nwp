@@ -161,9 +161,9 @@ PARAMS.update({
     'w10':   dict(kind='inst', sc='wind10', models=I_ECG, unit='kt', me_only=True, ln=True, en='MSLP (mb) & 10m Wind Speed (kt)', fa='فشار سطح دریا و سرعت باد ۱۰ متری (گره)'),
     'w250':  dict(kind='inst', sc='windup', models=I_EC, unit='kt', me_only=True, ln=True, en='250mb Wind Speed/Streamlines (kt) & MSLP Extrema (mb)', fa='سرعت باد و خطوط جریان ۲۵۰ هکتوپاسکال (گره)'),
     'w200':  dict(kind='inst', sc='windup', models=I_EC, unit='kt', me_only=True, ln=True, en='200mb Wind Speed/Streamlines (kt)', fa='سرعت باد و خطوط جریان ۲۰۰ هکتوپاسکال (گره)'),
-    'z500a': dict(kind='inst', sc='z500a', models=['ecmwf', 'gfs', 'gfs25', 'icon', 'ukmo', 'gem'], unit='dm', me_only=True, ln=True, en='500hPa Geopotential Height (dm) & Anomaly', fa='ارتفاع ژئوپتانسیل ۵۰۰ هکتوپاسکال و انومالی (دکامتر)'),
-    'z850a': dict(kind='inst', sc='z850a', models=['ecmwf', 'gfs', 'gfs25'], unit='dm', me_only=True, ln=True, en='850hPa Geopotential Height (dm) & Anomaly', fa='ارتفاع ژئوپتانسیل ۸۵۰ هکتوپاسکال و انومالی (دکامتر)'),
-    'z700a': dict(kind='inst', sc='z700a', models=['ecmwf', 'gfs', 'gfs25'], unit='dm', me_only=True, ln=True, en='700hPa Geopotential Height (dm) & Anomaly', fa='ارتفاع ژئوپتانسیل ۷۰۰ هکتوپاسکال و انومالی (دکامتر)'),
+    'z500a': dict(kind='inst', sc='z500a', cadence_h=24, models=['ecmwf', 'gfs', 'gfs25', 'icon', 'ukmo', 'gem'], unit='dm', me_only=True, ln=True, en='500hPa Geopotential Height (dm) & Anomaly', fa='ارتفاع ژئوپتانسیل ۵۰۰ هکتوپاسکال و انومالی (دکامتر)'),
+    'z850a': dict(kind='inst', sc='z850a', cadence_h=24, models=['ecmwf', 'gfs', 'gfs25'], unit='dm', me_only=True, ln=True, en='850hPa Geopotential Height (dm) & Anomaly', fa='ارتفاع ژئوپتانسیل ۸۵۰ هکتوپاسکال و انومالی (دکامتر)'),
+    'z700a': dict(kind='inst', sc='z700a', cadence_h=24, models=['ecmwf', 'gfs', 'gfs25'], unit='dm', me_only=True, ln=True, en='700hPa Geopotential Height (dm) & Anomaly', fa='ارتفاع ژئوپتانسیل ۷۰۰ هکتوپاسکال و انومالی (دکامتر)'),
     'thk1000': dict(kind='inst', sc='thk1000', models=I_ECG, unit='dam', me_only=True, ln=True, en='1000–500 hPa Thickness (dam) & MSLP', fa='ضخامت لایهٔ ۱۰۰۰–۵۰۰ هکتوپاسکال و فشار سطح دریا (دکامتر)'),
     'thk8550': dict(kind='inst', sc='thk8550', models=I_EC, unit='dam', me_only=True, ln=True, en='850–500 hPa Thickness (dam)', fa='ضخامت لایهٔ ۸۵۰–۵۰۰ هکتوپاسکال (دکامتر)'),
     'thk7050': dict(kind='inst', sc='thk7050', models=I_EC, unit='dam', me_only=True, ln=True, en='700–500 hPa Thickness (dam)', fa='ضخامت لایهٔ ۷۰۰–۵۰۰ هکتوپاسکال (دکامتر)'),
@@ -1685,6 +1685,9 @@ class Engine:
             # Valid at model-run hour (+120, +240, +360 h), not daily rolling windows.
             if P.get('win_d') == 5: return lead in (120, 240, 360)
             return vt.hour == 18 and lead >= 24
+        # Geopotential anomalies are informational 24h snapshots; avoid
+        # multiplying large contour+image output every 3–6 hours on a 10GB host.
+        if P.get('cadence_h'): return lead > 0 and lead % P['cadence_h'] == 0
         return want_all
 
     def acc(s, st, name, var, vt, h):
