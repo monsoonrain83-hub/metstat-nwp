@@ -1,0 +1,29 @@
+name: metstat-dev-watch
+# Checks development every 30 minutes; does not merge/deploy or generate live maps.
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch: {}
+permissions:
+  contents: read
+  actions: write
+  pull-requests: read
+  issues: write
+concurrency:
+  group: metstat-dev-watch
+  cancel-in-progress: false
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check current PR and test status
+        env:
+          GH_TOKEN: ${{ github.token }}
+          METSTAT_DEV_PR: '14'
+          METSTAT_DEV_ISSUE: '15'
+        run: python tools/metstat_dev_watch.py
