@@ -38,6 +38,19 @@ class TestERA5TemperatureClimatology(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "missing/nonfinite"):
                 C.build(ds)
 
+    def test_reject_region_outside_source_grid(self):
+        ds, lat, lon = self.sample()
+        with patch.object(C, "LATS", np.array([5.0, 6.0, 7.0], np.float32)), \
+             patch.object(C, "LONS", lon):
+            with self.assertRaisesRegex(ValueError, "does not cover"):
+                C.build(ds)
+
+    def test_missing_single_six_hour_slot_cannot_be_hidden_by_mean(self):
+        ds, lat, lon = self.sample(missing=True)
+        with patch.object(C, "LATS", lat), patch.object(C, "LONS", lon):
+            with self.assertRaisesRegex(ValueError, "source slots"):
+                C.build(ds)
+
     def test_reject_celsius_mislabeled_as_kelvin(self):
         ds, lat, lon = self.sample(temp=20.0)
         with patch.object(C, "LATS", lat), patch.object(C, "LONS", lon):
