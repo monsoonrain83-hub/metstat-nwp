@@ -49,6 +49,21 @@ class TestDailyAnomalyPolicy(unittest.TestCase):
         self.assertEqual(N.MODELS['ecmwf9']['hz']['06'], 144)
         self.assertEqual(N.MODELS['ecmwf9']['hz']['18'], 144)
 
+    def test_ecmwf9_all_preferred_outputs_are_enabled_without_dropping_fallback(self):
+        # The 0.1 degree run may only render inputs actually present at a step.
+        # Keep 0.25 degree generation as a complete per-field/per-lead fallback.
+        for pid, product in N.PARAMS.items():
+            if 'ecmwf' in product['models']:
+                self.assertIn('ecmwf9', product['models'], pid)
+        for pid in ('p24', 'tanom', 'z500a', 'z700a', 'z850a', 'z500', 'sfc'):
+            self.assertIn('ecmwf', N.PARAMS[pid]['models'])
+            self.assertIn('ecmwf9', N.PARAMS[pid]['models'])
+        pressure = N.needed_vars('ecmwf9', ['z500a', 'z700a', 'z850a'], 'all')
+        for level in (500, 700, 850):
+            self.assertIn(f'geopotential_height_{level}hPa', pressure)
+        self.assertIn('pressure_msl', pressure)
+        self.assertIn('temperature_2m', pressure)
+
     def test_pressure_anomaly_snapshots_once_each_24h(self):
         run = datetime(2026, 11, 20, 0, tzinfo=UTC)
         state = SimpleNamespace(run=run)
