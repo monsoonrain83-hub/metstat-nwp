@@ -188,6 +188,14 @@ _CAT = {'t2m': 'tp', 'tsoil': 'tp', 'tmax': 'tp', 'tmin': 'tp', 'tanom': 'tp', '
         'mfc850': 'dy', 'dte': 'cv', 'thk': 'dy', 'ccc': 'dy'}
 for _p in list(SEC_IDX):
     if _p[:2] in ('vo', 'dv', 'ta', 'te', 'th', 'tw') or _p[0] == 'w' and _p[1:].isdigit(): _CAT.setdefault(_p, 'dy')
+# Prefer ECMWF 0.1-degree products for every parameter that the 0.25-degree
+# product supports. Publication is strictly data-driven: absent native 9km fields
+# do not yield guessed values, and the 0.25-degree pipeline remains a fallback.
+# The website manifest resolves overlapping 9km/0.25-degree outputs per valid
+# time and parameter, not by dropping whole forecast cycles.
+for _P in PARAMS.values():
+    if 'ecmwf' in _P['models'] and 'ecmwf9' in MODELS:
+        _P['models'] = list(dict.fromkeys(_P['models'] + ['ecmwf9']))
 for _P in PARAMS.values(): _P['models'] = [m for m in _P['models'] if m in MODELS]
 for _i, (_p, _P) in enumerate(PARAMS.items()):
     _P['cat'] = _CAT.get(_p) or ('sc' if _P.get('kind') == 'sec' else 'sn' if _P.get('var') == 'snow' else 'pr'); _P['ord'] = _i
@@ -1170,9 +1178,9 @@ SEC_UPPER = {f'{q}_{p}hPa' for q in ('temperature', 'relative_humidity', 'geopot
 MM_ON = False       # با --mm روشن می‌شود (مالتی‌مدل)
 def needed_vars(mkey, pids, kind):
     v = {'precipitation', 'snowfall_water_equivalent'}
-    if mkey in ('ecmwf', 'ukmo', 'gfs', 'gem') or MM_ON or any(pid in pids for pid in ('tanom', 'tanom5')): v |= {'temperature_2m'}
+    if mkey in ('ecmwf', 'ecmwf9', 'ukmo', 'gfs', 'gem') or MM_ON or any(pid in pids for pid in ('tanom', 'tanom5')): v |= {'temperature_2m'}
     if MM_ON: v |= {'wind_direction_10m', 'wind_speed_10m', 'pressure_msl', 'relative_humidity_2m', 'wind_gusts_10m'}
-    if mkey == 'ecmwf': v |= {'temperature_2m_max', 'temperature_2m_min'}
+    if mkey in ('ecmwf', 'ecmwf9'): v |= {'temperature_2m_max', 'temperature_2m_min'}
     if kind == 'all':
         # Load actual source fields for requested anomaly products; absent data are
         # handled by make() as unavailable rather than publishing empty maps.
@@ -1182,7 +1190,7 @@ def needed_vars(mkey, pids, kind):
     if kind == 'all':
         if mkey == 'ecmwf9':
             v |= {'temperature_2m', 'relative_humidity_2m', 'wind_gusts_10m', 'wind_u_component_10m', 'wind_v_component_10m', 'cape', 'precipitation_type'}
-        if mkey == 'ecmwf':
+        if mkey in ('ecmwf', 'ecmwf9'):
             v |= {'relative_humidity_2m', 'total_column_integrated_water_vapour', 'cape', 'pressure_msl', 'wind_gusts_10m', 'wind_u_component_10m', 'wind_v_component_10m',
                   'soil_temperature_0_to_7cm', 'precipitation_type'}
             v |= {'wind_u_component_1000hPa', 'wind_v_component_1000hPa'}
