@@ -26,10 +26,10 @@ SC_VOTE = ('sigwx',)           # پارامترهای رده‌ای: رأی وز
 def mm_extend_params(PARAMS):
     """پارامترهایی که در nwp_maps فقط برای ECMWF بودند، برای بقیهٔ مدل‌های مالتی‌مدل هم فعال می‌شود (اگر متغیرش در Open-Meteo باشد، میدان ساخته می‌شود؛ وگرنه فقط از ترکیب حذف می‌شود)."""
     allm = ['ecmwf', 'gfs', 'gfs25', 'icon', 'ukmo', 'gem']
-    for pid in ('t2m', 'tmax', 'tmin', 'rh', 'pw', 'gust', 'sfc'):
+    for pid in ('t2m', 'tmax', 'tmin', 'tanom', 'tanom5', 'tanom10', 'mslpa', 'rh', 'pw', 'gust', 'sfc'):
         if pid in PARAMS: PARAMS[pid]['models'] = list(dict.fromkeys(list(PARAMS[pid]['models']) + allm))
     up = ['ecmwf', 'icon', 'ukmo', 'gfs25']          # مدل‌هایی که ترازهای فشاری‌شان در خواندن اصلی هست
-    for pid in ('z850', 'z700', 'z500', 'w500', 'w300'):
+    for pid in ('z850', 'z700', 'z500', 'z500a', 'w500', 'w300'):
         if pid in PARAMS: PARAMS[pid]['models'] = list(dict.fromkeys(list(PARAMS[pid]['models']) + up))
 
 
