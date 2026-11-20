@@ -39,6 +39,16 @@ class TestDailyAnomalyPolicy(unittest.TestCase):
             self.assertIn(model, p['tanom']['models'])
             self.assertIn(model, p['tanom5']['models'])
 
+    def test_pressure_anomaly_snapshots_once_each_24h(self):
+        run = datetime(2026, 11, 20, 0, tzinfo=UTC)
+        state = SimpleNamespace(run=run)
+        for pid in ('z500a', 'z700a', 'z850a'):
+            p = N.PARAMS[pid]
+            for lead in (0, 3, 6, 12, 18, 24, 30, 48, 120, 144):
+                vt = run + timedelta(hours=lead)
+                self.assertEqual(N.Engine.plan(None, p, state, vt, lead, 6, True),
+                                 lead > 0 and lead % 24 == 0, (pid, lead))
+
     def test_three_nonoverlapping_five_day_periods(self):
         run = datetime(2026, 11, 20, 0, tzinfo=UTC)
         state = SimpleNamespace(run=run)
