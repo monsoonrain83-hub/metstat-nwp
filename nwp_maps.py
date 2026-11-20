@@ -1457,6 +1457,10 @@ class Engine:
         for name, d in D.items():
             if name == 'upper': continue
             cp_off = d.pop('_cum_precip', None); cs_off = d.pop('_cum_snow', None)      # r132: تجمعی مستقیم منبع رسمی
+            # Temperature history must not depend on precipitation being present.
+            # Some high-resolution sources contain valid temperature without precip.
+            if 'temperature_2m' in d and name == 'main':
+                st.tser[name][vt] = (d['temperature_2m'], d.get('temperature_2m_max', d['temperature_2m']), d.get('temperature_2m_min', d['temperature_2m']), dt_h)
             p = d.get('precipitation'); sn = d.get('snowfall_water_equivalent')
             if p is None: continue
             if sn is None: sn = p * snow_frac_t(d['temperature_2m']) if 'temperature_2m' in d else np.zeros_like(p)
@@ -1470,10 +1474,6 @@ class Engine:
                 if cs_off is not None and cs_off.shape == c['snow'].shape: c['snow'] = np.nan_to_num(np.minimum(cs_off, cp_off)).astype(np.float32)
             st.hist[name][vt] = (c['precip'].copy(), c['snow'].copy())
             if i > 0 and lead % 24 == 0 and cp_off is None: log(f'  [{mkey}/{name}] تجمعی بارش +{lead}h: میانگین {np.nanmean(c["precip"]):.2f} · بیشینه {np.nanmax(c["precip"]):.1f} mm   (برای بررسی با منبع بیرونی)')
-            if 'temperature_2m' in d and (mkey in ('ecmwf', 'ecmwf9', 'gfs', 'gfs25', 'gem', 'ukmo', 'icon') or MM_ON):
-                # Keep actual source temperatures for all selected daily anomalies,
-                # including UKMO/ICON and the 9 km/0.25 degree fallback sources.
-                st.tser[name][vt] = (d['temperature_2m'], d.get('temperature_2m_max', d['temperature_2m']), d.get('temperature_2m_min', d['temperature_2m']), dt_h)
         made = 0
         for rk, R in s.regions.items():
             if s.sink_only and rk == 'eu': continue
