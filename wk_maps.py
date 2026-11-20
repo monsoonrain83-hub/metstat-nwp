@@ -41,13 +41,14 @@ MODELS = {
 PARAMS = {  # id: (فارسی، واحد، دسته، ترتیب، مقیاس)
     'wta': ('انومالی هفتگی دمای ۲ متری (°C)', '°C', 'tp', 20, 'wkta'),
     'wpa': ('انومالی هفتگی بارش (میلی‌متر در هفته)', 'mm', 'pr', 10, 'wkpa'),
+    'wz5a': ('انومالی هفتگی ارتفاع ژئوپتانسیل ۵۰۰ هکتوپاسکال (دکامتر)', 'dam', 'ul', 30, 'z500a'),
     'tpp': ('پیش‌بینی فصلی بارش — دهک غالب و احتمال (٪)', '%', 'pr', 11, 'terp'),
     'tpt': ('پیش‌بینی فصلی دما — دهک غالب و احتمال (٪)', '%', 'tp', 21, 'tert'),
 }
-MPAR = {'ecwk': ('wta', 'wpa'), 'cfswk': ('wta', 'wpa'), 'mmwk': ('wta', 'wpa'), 'iri': ('tpp', 'tpt')}
+MPAR = {'ecwk': ('wta', 'wpa'), 'cfswk': ('wta', 'wpa', 'wz5a'), 'mmwk': ('wta', 'wpa'), 'iri': ('tpp', 'tpt')}
 
-def begin(up, mk, run):
-    M = MODELS[mk]; ps = MPAR[mk]
+def begin(up, mk, run, available=None):
+    M = MODELS[mk]; ps = tuple(available) if available is not None else MPAR[mk]
     return up.call('begin', js={'model': mk, 'run': f'{run:%Y%m%d%H}', 'name': M['name'], 'label': M['label'],
         'info': dict(tclass=M['tclass'], res=M['res'], cyc=M['cyc'], prov=M['prov']), 'cats': [dict(id=i, fa=f, o=o) for i, f, o in N.CATS],
         'scales': {PARAMS[p][4]: dict(c=styles.SC[PARAMS[p][4]]['colors'], e=[None if abs(x) == INF else x for x in styles.SC[PARAMS[p][4]]['edges']],
@@ -158,7 +159,10 @@ def cfs_weekly(mock=False, target_start=None):
         t0 = target_start or datetime(2026, 10, 21, tzinfo=UTC)
         lo = np.arange(CROP[0], CROP[1] + 0.1, 0.5); la = np.arange(CROP[2], CROP[3] + 0.1, 0.5)
         X_, Y_ = np.meshgrid(lo, la)
-        return t0, lo, la, np.stack([np.cos(X_ / 6 - k) * 3 for k in range(5)]).astype(np.float32), np.stack([np.sin(Y_ / 3 + k) * 15 for k in range(5)]).astype(np.float32)
+        return (t0, lo, la,
+                np.stack([np.cos(X_ / 6 - k) * 3 for k in range(5)]).astype(np.float32),
+                np.stack([np.sin(Y_ / 3 + k) * 15 for k in range(5)]).astype(np.float32),
+                np.stack([np.sin(X_ / 12 - k) * 4 for k in range(5)]).astype(np.float32))
     if _CFS_CACHE is None:
         import ens_maps as E
         fs = E.S3(); run = E.cfs_pick_run(fs)
@@ -173,7 +177,11 @@ def cfs_weekly(mock=False, target_start=None):
     start = target_start or run
     if start.tzinfo is None: raise ValueError('UTC-aware weekly anchor required')
     start = start.astimezone(UTC)
-    lo = la = None; TA, PA = [], []
+    lo = la = None; TA, PA, ZA = [], [], []
+    clim_ok = True
+    class ZGrid:
+        pass
+    zg = ZGrid()
     n = 6 if target_start else 5
     # Each day d means the forecast interval ending at (run + d days).
     for w in range(n):
@@ -191,6 +199,7 @@ def cfs_weekly(mock=False, target_start=None):
             shape = P[days[0]]['t2m'][0].shape if days else (len(la), len(lo))
             TA.append(np.full(shape, np.nan, np.float32))
             PA.append(np.full(shape, np.nan, np.float32))
+            ZA.append(np.full(shape, np.nan, np.float32))
             continue
         lo, la = P[days[0]]['t2m'][1], P[days[0]]['t2m'][2]
         t = np.mean([P[d]['t2m'][0] for d in days], axis=0)
@@ -199,24 +208,47 @@ def cfs_weekly(mock=False, target_start=None):
         doy = mid.timetuple().tm_yday
         TA.append(t - clim_on(Ct, doy, lo, la))
         PA.append(p - 7 * clim_on(Cp, doy, lo, la))
+        # CFS source includes real 500-hPa daily height (4-member ensemble).
+        # A week requires all seven days and a valid ERA5/NCEP reference.
+        zfield = None
+        if clim_ok and all('z5' in P[d] for d in days):
+            try:
+                zg.lon, zg.lat = np.meshgrid(np.asarray(lo), np.asarray(la))
+                anomalies = []
+                for day in days:
+                    dt = run + timedelta(days=day)
+                    C = N.z500_clim_at(zg, dt)
+                    if C is None: raise RuntimeError('500-hPa climatology unavailable')
+                    anomalies.append(np.asarray(P[day]['z5'][0], float) - C)
+                zfield = np.nanmean(anomalies, axis=0) / 10.0  # m → dam
+            except Exception as exc:
+                clim_ok = False
+                log(f'  ⚠ CFS 500hPa weekly anomaly unavailable: {type(exc).__name__}: {str(exc)[:120]}')
+        ZA.append(np.asarray(zfield, np.float32) if zfield is not None else np.full(t.shape, np.nan, np.float32))
     if not TA: return None
-    return start, lo, la, np.stack(TA).astype(np.float32), np.stack(PA).astype(np.float32)
+    return (start, lo, la, np.stack(TA).astype(np.float32),
+            np.stack(PA).astype(np.float32), np.stack(ZA).astype(np.float32))
 
 def make_weekly(up, mk, R, a):
-    t0, lo, la, ta, pa = R; run = t0.replace(hour=0, minute=0, second=0, microsecond=0)
-    r = begin(up, mk, run); have = set(r.get('have', [])); made = 0
+    t0, lo, la, ta, pa = R[:5]; run = t0.replace(hour=0, minute=0, second=0, microsecond=0)
+    z = R[5] if len(R) > 5 else None
+    valid_z = z is not None and np.isfinite(z).any()
+    selected = tuple(p for p in MPAR[mk] if p != 'wz5a' or valid_z)
+    r = begin(up, mk, run, available=selected); have = set(r.get('have', [])); made = 0
     for w in range(ta.shape[0]):
         vt = run + timedelta(days=7 * (w + 1)); lead = 24 * 7 * (w + 1)          # زمان معتبر = پایان هفته
         made += put(up, mk, run, 'wta', vt, lead, L.regrid(ta[w], lo, la), have)
         made += put(up, mk, run, 'wpa', vt, lead, L.regrid(pa[w], lo, la), have)
+        if valid_z and w < len(z) and np.isfinite(z[w]).any():
+            made += put(up, mk, run, 'wz5a', vt, lead, L.regrid(z[w], lo, la), have)
     up.wait(); up.call('end', js={'model': mk, 'run': f'{run:%Y%m%d%H}'}); log(f'✓ {mk}: {made} نقشه'); return made
 
 # ---------------------------------------------------------------- weekly multimodel, quantitative fields only
 def make_weekly_mm(up, ec, cfs):
     """True matched-week 60/40 blend; never publish ECMWF-only fields as MM."""
     if ec is None or cfs is None or ec[0] != cfs[0]: return 0
-    run, elo, ela, eta, epa = ec
-    _, clo, cla, cta, cpa = cfs
+    run, elo, ela, eta, epa = ec[:5]
+    _, clo, cla, cta, cpa = cfs[:5]
     prepared = []
     for w in range(min(len(eta), len(cta))):
         for pid, earr, carr in (('wta', eta[w], cta[w]), ('wpa', epa[w], cpa[w])):
