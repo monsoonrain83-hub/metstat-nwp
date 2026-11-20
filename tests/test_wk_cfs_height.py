@@ -42,7 +42,7 @@ class TestCfsWeeklyHeight(unittest.TestCase):
              patch.object(wk, 'ltm', return_value={'grid': 1}), \
              patch.object(wk, 'clim_on', return_value=0.), \
              patch.object(wk.N, 'z500_clim_at', side_effect=lambda R, d: z_reference):
-            return wk.cfs_weekly()
+            return wk.cfs_weekly(include_z500=True)
 
     def test_real_daily_z500_fields_produce_signed_decametres(self):
         result = self.get(np.full((2, 2), 5750., dtype=np.float32))
