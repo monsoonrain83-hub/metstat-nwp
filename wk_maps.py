@@ -40,6 +40,7 @@ PARAMS = {  # id: (فارسی، واحد، دسته، ترتیب، مقیاس)
     'wta': ('انومالی هفتگی دمای ۲ متری (°C)', '°C', 'tp', 20, 'wkta'),
     'wpa': ('انومالی هفتگی بارش (میلی‌متر در هفته)', 'mm', 'pr', 10, 'wkpa'),
     'wslpa': ('آنومالی هفتگی فشار متوسط سطح دریا (hPa)', 'hPa', 'sf', 22, 'mslpa'),
+    'wz500a': ('اختلاف هفتگی ارتفاع ژئوپتانسیل ۵۰۰ نسبت به ERA5/NCEP (دکامتر؛ بدون حذف اریبی مدل)', 'dam', 'ul', 23, 'z500a'),
     'tpp': ('پیش‌بینی فصلی بارش — دهک غالب و احتمال (٪)', '%', 'pr', 11, 'terp'),
     'tpt': ('پیش‌بینی فصلی دما — دهک غالب و احتمال (٪)', '%', 'tp', 21, 'tert'),
 }
@@ -47,6 +48,7 @@ MPAR = {'ecwk': ('wta', 'wpa'), 'cfswk': ('wta', 'wpa'), 'iri': ('tpp', 'tpt')}
 PARAM_EN = {'wta': 'Weekly 2 m temperature anomaly (°C)',
             'wpa': 'Weekly precipitation anomaly (mm/week)',
             'wslpa': 'Weekly mean sea level pressure anomaly (hPa)',
+            'wz500a': 'Weekly 500 hPa height deviation vs ERA5/NCEP (dam; CFS bias not corrected)',
             'tpp': 'Seasonal precipitation tercile probability (%)',
             'tpt': 'Seasonal temperature tercile probability (%)'}
 
@@ -198,7 +200,9 @@ def cfs_weekly(mock=False):
     raw = E.cfs_collect(fs, run, 35, True); P = E.cfs_products(raw, 35)
     Ct, Cp = ltm('t'), ltm('p')
     if Ct is None or Cp is None: log('✗ CFS هفتگی: اقلیم NCEP خوانده نشد'); return None
-    lo = la = None; TA, PA = [], []
+    lo = la = None; TA, PA, ZA = [], [], []
+    zgrid = None
+    zready = True
     for w in range(5):
         days = [d for d in range(7 * w + 1, 7 * w + 8) if d in P and 't2m' in P[d] and 'p24' in P[d]]
         if len(days) < 7: break
@@ -206,14 +210,44 @@ def cfs_weekly(mock=False):
         t = np.mean([P[d]['t2m'][0] for d in days], 0); p = np.sum([P[d]['p24'][0] for d in days], 0)
         mid = run + timedelta(days=7 * w + 4); doy = mid.timetuple().tm_yday
         TA.append(t - clim_on(Ct, doy, lo, la)); PA.append(p - 7 * clim_on(Cp, doy, lo, la))
+        # CFS ensemble already fetches actual 500 hPa GRIB values each day.
+        # This is a reference-climatology departure, NOT a bias-corrected
+        # CFS hindcast anomaly. Do not publish if any day/reference is absent.
+        if zready:
+            if not all('z5' in P[d] for d in days):
+                zready = False
+            else:
+                zlo, zla = P[days[0]]['z5'][1:3]
+                if zgrid is None:
+                    zx, zy = np.meshgrid(zlo, zla)
+                    from types import SimpleNamespace
+                    zgrid = (zlo, zla, SimpleNamespace(lon=zx, lat=zy))
+                if not np.array_equal(zlo, zgrid[0]) or not np.array_equal(zla, zgrid[1]):
+                    zready = False
+                else:
+                    clim = [N.z500_clim_at(zgrid[2], run + timedelta(days=d)) for d in days]
+                    if any(c is None for c in clim):
+                        zready = False
+                    else:
+                        zmean = np.mean([P[d]['z5'][0] for d in days], axis=0)
+                        za = (zmean - np.mean(clim, axis=0)) / 10.0  # m -> dam
+                        if not np.isfinite(za).all():
+                            zready = False
+                        else:
+                            ZA.append(np.asarray(za, np.float32))
     if not TA: return None
-    return run, lo, la, np.stack(TA).astype(np.float32), np.stack(PA).astype(np.float32)
+    base = (run, lo, la, np.stack(TA).astype(np.float32), np.stack(PA).astype(np.float32))
+    if zready and len(ZA) == len(TA) and zgrid is not None:
+        return base + ({'field': np.stack(ZA), 'lon': zgrid[0], 'lat': zgrid[1]},)
+    return base
 
 def make_weekly(up, mk, R, a):
     t0, lo, la, ta, pa = R[:5]
     slpa = R[5] if mk == 'ecwk' and len(R) == 6 else None
+    z500 = R[5] if mk == 'cfswk' and len(R) == 6 and isinstance(R[5], dict) else None
     run = t0.replace(hour=0, minute=0, second=0, microsecond=0)
-    r = begin(up, mk, run, extra=('wslpa',) if slpa is not None else ())
+    extra = (('wslpa',) if slpa is not None else ()) + (('wz500a',) if z500 is not None else ())
+    r = begin(up, mk, run, extra=extra)
     have = set(r.get('have', [])); made = 0
     for w in range(ta.shape[0]):
         vt = run + timedelta(days=7 * (w + 1)); lead = 24 * 7 * (w + 1)          # زمان معتبر = پایان هفته
@@ -221,6 +255,9 @@ def make_weekly(up, mk, R, a):
         made += put(up, mk, run, 'wpa', vt, lead, L.regrid(pa[w], lo, la), have)
         if slpa is not None:
             made += put(up, mk, run, 'wslpa', vt, lead, L.regrid(slpa[w], lo, la), have)
+        if z500 is not None:
+            made += put(up, mk, run, 'wz500a', vt, lead,
+                        L.regrid(z500['field'][w], z500['lon'], z500['lat']), have)
     up.wait(); up.call('end', js={'model': mk, 'run': f'{run:%Y%m%d%H}'}); log(f'✓ {mk}: {made} نقشه'); return made
 
 # ---------------------------------------------------------------- ۳) IRI فصلی سه‌دهکی
