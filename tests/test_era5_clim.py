@@ -1,0 +1,49 @@
+"""Synthetic, offline regression tests for regional ERA5 climatology builder."""
+import unittest
+from unittest.mock import patch
+import numpy as np
+import xarray as xr
+import era5_clim as C
+
+
+class TestERA5TemperatureClimatology(unittest.TestCase):
+    def sample(self, temp=293.15, missing=False):
+        lat = np.array([5.0, 6.0], dtype=np.float32)
+        lon = np.array([40.0, 41.0], dtype=np.float32)
+        shape = (366, 4, 2, 2)
+        coords = dict(dayofyear=np.arange(1, 367), hour=[0, 6, 12, 18],
+                      latitude=lat, longitude=lon)
+        t = np.full(shape, temp, dtype=np.float32)
+        if missing:
+            t[0, 0, 0, 0] = np.nan
+        z = np.full((3,) + shape, 5600 * 9.80665, dtype=np.float32)
+        ds = xr.Dataset({
+            "2m_temperature": (tuple(coords), t),
+            "mean_sea_level_pressure": (tuple(coords), np.full(shape, 101300.0, np.float32)),
+            "geopotential": (("level",) + tuple(coords), z),
+        }, coords={**coords, "level": [500, 700, 850]})
+        return ds, lat, lon
+
+    def test_temperature_celsius_and_full_366_days(self):
+        ds, lat, lon = self.sample()
+        with patch.object(C, "LATS", lat), patch.object(C, "LONS", lon):
+            output = C.build(ds)
+        self.assertEqual(output["t2m"].shape, (366, 2, 2))
+        self.assertTrue(np.allclose(output["t2m"], 20.0, atol=0.03))
+        self.assertEqual(set(output), {"lat", "lon", "z500", "z700", "z850", "msl", "t2m"})
+
+    def test_no_silent_interpolation_of_missing_climatology(self):
+        ds, lat, lon = self.sample(missing=True)
+        with patch.object(C, "LATS", lat), patch.object(C, "LONS", lon):
+            with self.assertRaisesRegex(ValueError, "missing/nonfinite"):
+                C.build(ds)
+
+    def test_reject_celsius_mislabeled_as_kelvin(self):
+        ds, lat, lon = self.sample(temp=20.0)
+        with patch.object(C, "LATS", lat), patch.object(C, "LONS", lon):
+            with self.assertRaisesRegex(ValueError, "Kelvin"):
+                C.build(ds)
+
+
+if __name__ == "__main__":
+    unittest.main()
