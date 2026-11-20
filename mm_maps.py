@@ -45,7 +45,7 @@ class MMCombiner:
     def build_params(s):
         nm = s.nm; out = {}
         for pid, P in nm.PARAMS.items():
-            if P.get('me_only') or P.get('raw'): continue
+            # Allow the two real gridded anomaly products in the ME region.\n            # They are not generated for Iran/Fars square tiles, so never advertise\n            # a synthetic 'Iran' product or alter source-model availability.\n            if P.get('raw') or (P.get('me_only') and pid not in ('z500a', 'mslpa')): continue
             if s.grp(pid) is None: continue
             if len([m for m in P['models'] if m in W.MM_MODELS or m in ('ecmwf9', 'gfs25')]) < 2: continue
             out[pid] = P
@@ -126,7 +126,7 @@ class MMCombiner:
         rid = f'{run:%Y%m%d%H}'
         if rid in s.begun: return
         nm = s.nm; up = s.eng.up
-        params = {k: dict(fa=v['fa'], unit=v['unit'], cat=v['cat'], o=v['ord'], sc=(v.get('me') or {}).get('sc', v['sc']), mu=(v.get('me') or {}).get('unit', v['unit']),
+        params = {k: dict(fa=v['fa'], en=v['en'], unit=v['unit'], cat=v['cat'], o=v['ord'], sc=(v.get('me') or {}).get('sc', v['sc']), mu=(v.get('me') or {}).get('unit', v['unit']),
                           alt=v.get('alt', ''), me=int(bool(v.get('me_only'))), ln=int(bool(v.get('cont') or v.get('barbs') or v.get('ln')))) for k, v in s.pmm.items()}
         r = up.call('begin', js={'model': MM_ID, 'run': rid, 'name': MM_NAME, 'label': MM_LABEL, 'fa': MM_FA,
                                  'info': dict(tclass='daily', res='multi', cyc='00/12', prov=s.model['prov']),
