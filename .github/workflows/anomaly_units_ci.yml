@@ -1,0 +1,27 @@
+name: Anomaly unit metadata tests
+on:
+  pull_request:
+    paths:
+      - 'nwp_maps.py'
+      - 'ens_maps.py'
+      - 'tests/test_anomaly_units.py'
+      - '.github/workflows/anomaly_units_ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'nwp_maps.py'
+      - 'ens_maps.py'
+      - 'tests/test_anomaly_units.py'
+      - '.github/workflows/anomaly_units_ci.yml'
+permissions: { contents: read }
+jobs:
+  units:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install numpy scipy pillow requests matplotlib
+      - name: Check decametre labels and imported parameter contracts
+        run: python -m unittest discover -s tests -p 'test_anomaly_units.py' -v
