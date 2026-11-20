@@ -34,7 +34,7 @@ class TestDailyAnomalyPolicy(unittest.TestCase):
         for model in ('ecmwf', 'gfs', 'gfs25', 'icon', 'ukmo', 'gem'):
             self.assertIn(model, p['z500a']['models'])
         for pid in ('z700a', 'z850a'):
-            self.assertEqual(set(p[pid]['models']), {'ecmwf', 'gfs', 'gfs25'})
+            self.assertEqual(set(p[pid]['models']), {'ecmwf9', 'ecmwf', 'gfs', 'gfs25'})
         for model in ('ecmwf', 'ecmwf9', 'gfs', 'gfs25', 'icon', 'ukmo', 'gem'):
             self.assertIn(model, p['tanom']['models'])
             self.assertIn(model, p['tanom5']['models'])
