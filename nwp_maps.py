@@ -88,9 +88,8 @@ PARAMS.update({
     'tsoil': dict(kind='inst', sc='temp', models=I_ECA, unit='°C', en='Soil temperature near surface (°C)', fa='دمای خاک نزدیک سطح'),
     'tmax':  dict(kind='day', sc='temp', models=I_ECA, unit='°C', en='Max. temperature 2m, 24h (°C)', fa='دمای بیشینه ۲۴ ساعته', lapse=True),
     'tmin':  dict(kind='day', sc='temp', models=I_ECA, unit='°C', en='Min. temperature 2m, 24h (°C)', fa='دمای کمینه ۲۴ ساعته', lapse=True),
-    'tanom': dict(kind='day', sc='tanom', models=ALL, unit='K', en='Temperature 2m anomaly, daily mean (K)', fa='انومالی دمای ۲ متری (میانگین روزانه)', lapse=True),
-    'tanom5': dict(kind='day', sc='tanom5', models=ALL, unit='K', win_d=5, en='Temperature 2m anomaly, 5-day mean (K)', fa='انومالی دمای ۲ متری (میانگین ۵ روزه)', lapse=True),
-    'tanom10': dict(kind='day', sc='tanom10', models=ALL, unit='K', win_d=10, en='Temperature 2m anomaly, 10-day mean (K)', fa='انومالی دمای ۲ متری (میانگین ۱۰ روزه)', lapse=True),
+    'tanom': dict(kind='day', sc='tanom', models=ALL, unit='°C', en='Temperature 2m anomaly, daily mean (°C)', fa='انومالی دمای ۲ متری (میانگین روزانه)', lapse=True),
+    'tanom5': dict(kind='day', sc='tanom5', models=ALL, unit='°C', win_d=5, en='Temperature 2m anomaly, non-overlapping 5-day mean (°C)', fa='انومالی دمای ۲ متری (بازه‌های ۵ روزهٔ مستقل)', lapse=True),
     'rh':    dict(kind='inst', sc='rh', models=I_EC, unit='%', en='Relative humidity 2m (%)', fa='رطوبت نسبی ۲ متری'),
     'pw':    dict(kind='inst', sc='pw', models=I_EC, unit='mm', en='Entire Atmosphere Precipitable Water (mm)', fa='آب قابل بارش'),
     'ki':    dict(kind='inst', sc='ki', models=I_ECG, unit='', en='K-Index', fa='شاخص K'),
@@ -162,10 +161,9 @@ PARAMS.update({
     'w10':   dict(kind='inst', sc='wind10', models=I_ECG, unit='kt', me_only=True, ln=True, en='MSLP (mb) & 10m Wind Speed (kt)', fa='فشار سطح دریا و سرعت باد ۱۰ متری (گره)'),
     'w250':  dict(kind='inst', sc='windup', models=I_EC, unit='kt', me_only=True, ln=True, en='250mb Wind Speed/Streamlines (kt) & MSLP Extrema (mb)', fa='سرعت باد و خطوط جریان ۲۵۰ هکتوپاسکال (گره)'),
     'w200':  dict(kind='inst', sc='windup', models=I_EC, unit='kt', me_only=True, ln=True, en='200mb Wind Speed/Streamlines (kt)', fa='سرعت باد و خطوط جریان ۲۰۰ هکتوپاسکال (گره)'),
-    'z500a': dict(kind='inst', sc='z500a', models=ALL, unit='dm', me_only=True, ln=True, en='500hPa Geopotential Height (dm) & Anomaly', fa='ارتفاع ژئوپتانسیل ۵۰۰ هکتوپاسکال و انومالی (دکامتر)'),
-    'z850a': dict(kind='inst', sc='z850a', models=ALL, unit='dm', me_only=True, ln=True, en='850hPa Geopotential Height (dm) & Anomaly', fa='ارتفاع ژئوپتانسیل ۸۵۰ هکتوپاسکال و انومالی (دکامتر)'),
-    'z700a': dict(kind='inst', sc='z700a', models=ALL, unit='dm', me_only=True, ln=True, en='700hPa Geopotential Height (dm) & Anomaly', fa='ارتفاع ژئوپتانسیل ۷۰۰ هکتوپاسکال و انومالی (دکامتر)'),
-    'mslpa': dict(kind='inst', sc='mslpa', models=ALL, unit='hPa', me_only=True, ln=True, en='MSLP (hPa) & Anomaly', fa='فشار سطح دریا و انومالی (هکتوپاسکال)'),
+    'z500a': dict(kind='inst', sc='z500a', models=['ecmwf', 'gfs', 'gfs25', 'icon', 'ukmo', 'gem'], unit='dm', me_only=True, ln=True, en='500hPa Geopotential Height (dm) & Anomaly', fa='ارتفاع ژئوپتانسیل ۵۰۰ هکتوپاسکال و انومالی (دکامتر)'),
+    'z850a': dict(kind='inst', sc='z850a', models=['ecmwf', 'gfs', 'gfs25'], unit='dm', me_only=True, ln=True, en='850hPa Geopotential Height (dm) & Anomaly', fa='ارتفاع ژئوپتانسیل ۸۵۰ هکتوپاسکال و انومالی (دکامتر)'),
+    'z700a': dict(kind='inst', sc='z700a', models=['ecmwf', 'gfs', 'gfs25'], unit='dm', me_only=True, ln=True, en='700hPa Geopotential Height (dm) & Anomaly', fa='ارتفاع ژئوپتانسیل ۷۰۰ هکتوپاسکال و انومالی (دکامتر)'),
     'thk1000': dict(kind='inst', sc='thk1000', models=I_ECG, unit='dam', me_only=True, ln=True, en='1000–500 hPa Thickness (dam) & MSLP', fa='ضخامت لایهٔ ۱۰۰۰–۵۰۰ هکتوپاسکال و فشار سطح دریا (دکامتر)'),
     'thk8550': dict(kind='inst', sc='thk8550', models=I_EC, unit='dam', me_only=True, ln=True, en='850–500 hPa Thickness (dam)', fa='ضخامت لایهٔ ۸۵۰–۵۰۰ هکتوپاسکال (دکامتر)'),
     'thk7050': dict(kind='inst', sc='thk7050', models=I_EC, unit='dam', me_only=True, ln=True, en='700–500 hPa Thickness (dam)', fa='ضخامت لایهٔ ۷۰۰–۵۰۰ هکتوپاسکال (دکامتر)'),
@@ -1172,7 +1170,7 @@ SEC_UPPER = {f'{q}_{p}hPa' for q in ('temperature', 'relative_humidity', 'geopot
 MM_ON = False       # با --mm روشن می‌شود (مالتی‌مدل)
 def needed_vars(mkey, pids, kind):
     v = {'precipitation', 'snowfall_water_equivalent'}
-    if mkey in ('ecmwf', 'ukmo', 'gfs', 'gem') or MM_ON or any(pid in pids for pid in ('tanom', 'tanom5', 'tanom10')): v |= {'temperature_2m'}
+    if mkey in ('ecmwf', 'ukmo', 'gfs', 'gem') or MM_ON or any(pid in pids for pid in ('tanom', 'tanom5')): v |= {'temperature_2m'}
     if MM_ON: v |= {'wind_direction_10m', 'wind_speed_10m', 'pressure_msl', 'relative_humidity_2m', 'wind_gusts_10m'}
     if mkey == 'ecmwf': v |= {'temperature_2m_max', 'temperature_2m_min'}
     if kind == 'all':
@@ -1472,7 +1470,9 @@ class Engine:
                 if cs_off is not None and cs_off.shape == c['snow'].shape: c['snow'] = np.nan_to_num(np.minimum(cs_off, cp_off)).astype(np.float32)
             st.hist[name][vt] = (c['precip'].copy(), c['snow'].copy())
             if i > 0 and lead % 24 == 0 and cp_off is None: log(f'  [{mkey}/{name}] تجمعی بارش +{lead}h: میانگین {np.nanmean(c["precip"]):.2f} · بیشینه {np.nanmax(c["precip"]):.1f} mm   (برای بررسی با منبع بیرونی)')
-            if 'temperature_2m' in d and (mkey in ('ecmwf', 'gfs', 'gem') or MM_ON):
+            if 'temperature_2m' in d and (mkey in ('ecmwf', 'ecmwf9', 'gfs', 'gfs25', 'gem', 'ukmo', 'icon') or MM_ON):
+                # Keep actual source temperatures for all selected daily anomalies,
+                # including UKMO/ICON and the 9 km/0.25 degree fallback sources.
                 st.tser[name][vt] = (d['temperature_2m'], d.get('temperature_2m_max', d['temperature_2m']), d.get('temperature_2m_min', d['temperature_2m']), dt_h)
         made = 0
         for rk, R in s.regions.items():
@@ -1681,6 +1681,9 @@ class Engine:
             if P['h'] in (1, 3, 6) and dt_h > P['h'] + 1e-6: return False
             return t0 == st.run or t0 in st.hist['main']
         if P['kind'] == 'day':
+            # Only three complete, non-overlapping five-day periods: 1–5, 6–10, 11–15.
+            # Valid at model-run hour (+120, +240, +360 h), not daily rolling windows.
+            if P.get('win_d') == 5: return lead in (120, 240, 360)
             return vt.hour == 18 and lead >= 24
         return want_all
 
@@ -1758,15 +1761,20 @@ class Engine:
         if P['kind'] == 'day':
             ser = st.tser['main']; wd = P.get('win_d', 1); ts = sorted(t for t in ser if vt - timedelta(hours=24 * wd) < t <= vt)
             if len(ts) < 3 * wd: return None
-            if wd > 1:                                         # میانگین ۵/۱۰ روزه: پوشش زمانی کامل لازم است (≥۹۰٪ گام‌های پنجره)
-                dts = [ser[t][3] for t in ts if ser[t][3]]; step = float(np.median(dts)) if dts else 6.0
-                if len(ts) < 0.9 * 24 * wd / max(step, 1.0): return None
+            if wd > 1:                                         # full 5-day interval required; 90% minimum temporal coverage
+                dts = [max(0.0, float(ser[t][3])) for t in ts]
+                if sum(dts) < 0.9 * 24 * wd: return None
             if pid in ('tmax', 'tmaxr'):
                 f = lambda: np.nanmax(np.stack([ser[t][1] for t in ts]), 0)
             elif pid in ('tmin', 'tminr'):
                 f = lambda: np.nanmin(np.stack([ser[t][2] for t in ts]), 0)
             else:
-                f = lambda: np.nanmean(np.stack([ser[t][0] for t in ts]), 0)
+                # When step spacing switches 3h → 6h, avoid biasing the 5-day mean.
+                if wd > 1:
+                    weight = np.array([max(0.0, float(ser[t][3])) for t in ts], dtype=np.float64)
+                    f = lambda: np.average(np.stack([ser[t][0] for t in ts]), 0, weights=weight)
+                else:
+                    f = lambda: np.nanmean(np.stack([ser[t][0] for t in ts]), 0)
             T = I(f()) if P.get('raw') else s.lapse(st, R, f, full=pid.startswith('tanom'))
             if pid.startswith('tanom'):
                 if wd > 1:
@@ -1799,19 +1807,30 @@ class Engine:
             if u is None or v is None: return None
             U, V = I(u) * 1.94384, I(v) * 1.94384
             return (np.hypot(U, V), dict(stream=(U, V), lows=(I(d['pressure_msl']) if (p == 250 and 'pressure_msl' in d) else None)))
-        if pid == 'z500a':
-            g = d.get('geopotential_height_500hPa'); C = z500_clim_at(R, vt)
-            if g is None or C is None: return None
-            Z = I(g); return ((Z - C) / 10, dict(cont=Z / 10, cont_lvls=np.arange(480, 620, 1), bold=580, cont_fine=True))
-        if pid in ('z850a', 'z700a'):
-            L = int(pid[1:4]); g = d.get(f'geopotential_height_{L}hPa'); C = z_clim_at(R, vt, L)
-            if g is None or C is None: return None
-            Z = I(g); A = (Z - C) / 10; Zc = Z / 10
-            try:                                                      # ترازِ زیر سطح زمین (فلات ایران/تبت) ماسک شود
-                hs = src.hsurf()
-                if hs is not None: bg = I(hs) >= Z; A = np.where(bg, np.nan, A).astype(np.float32); Zc = np.where(bg, np.nan, Zc).astype(np.float32)
-            except Exception: pass
-            return (A, dict(cont=Zc, cont_lvls=(np.arange(100, 180, 1) if L == 850 else np.arange(250, 340, 1)), cont_fine=True))
+        if pid in ('z500a', 'z850a', 'z700a'):
+            level = int(pid[1:4]); key = f'geopotential_height_{level}hPa'
+            # GFS 13km may provide pressure levels only from its genuine 0.25° upper
+            # source; never mix fields from different model centres or fabricate data.
+            src_name = next((name for name in ('main', 'upper') if key in D.get(name, {})), None)
+            if src_name is None: return None
+            source = st.srcs.get(src_name)
+            C = z_clim_at(R, vt, level)
+            if source is None or C is None: return None
+            Z = R.interp(source, D[src_name][key])
+            A, Zc = (Z - C) / 10, Z / 10
+            if level in (700, 850):
+                try:
+                    hs = source.hsurf()
+                    if hs is not None:
+                        bg = R.interp(source, hs) >= Z
+                        A = np.where(bg, np.nan, A).astype(np.float32)
+                        Zc = np.where(bg, np.nan, Zc).astype(np.float32)
+                except Exception: pass
+            levels = (np.arange(480, 620, 1) if level == 500 else
+                      np.arange(100, 180, 1) if level == 850 else np.arange(250, 340, 1))
+            ex = dict(cont=Zc, cont_lvls=levels, cont_fine=True)
+            if level == 500: ex['bold'] = 580
+            return (A, ex)
         if pid == 'mslpa':
             if 'pressure_msl' not in d: return None
             C = slp_clim_at(R, vt)
