@@ -16,6 +16,7 @@ import argparse, io, math, os, sys, time
 from datetime import datetime, timedelta, timezone
 import numpy as np
 import nwp_maps as N, styles, lr_maps as L
+import extended_mm as X
 
 UTC = timezone.utc; log = N.log
 CROP = (16.0, 69.0, 8.0, 46.0)
@@ -34,6 +35,7 @@ for _k in ('wkta', 'wkpa', 'terp', 'tert'): assert len(styles.SC[_k]['edges']) =
 MODELS = {
     'ecwk':  dict(label='ECMWF EC46 — انومالی هفتگی (۶ هفته)', name='ECMWF-EC46-WEEKLY', res='نقطه‌ای ۱٫۵°', cyc='روزانه', prov='ECMWF EC46 · Open-Meteo Seasonal API (CC BY 4.0); انومالی نسبت به اقلیم مدل', tclass='weekly'),
     'cfswk': dict(label='CFSv2 — انومالی هفتگی (۵ هفته، میانگین ۴ عضو)', name='CFSv2-WEEKLY', res='~0.5°', cyc='روزانه', prov='NOAA CFSv2 (AWS) · اقلیم NCEP/NCAR R1 1991–2020 (NOAA PSL)', tclass='weekly'),
+    'mmwk': dict(label='MetStat MultiModel — هفتگی (ECMWF ۶۰٪، CFSv2 ۴۰٪)', name='MetStat-MULTIMODEL-WEEKLY', res='ترکیبی', cyc='هفتگی', prov='EC46 (model climatology) + CFSv2 (NCEP 1991–2020)', tclass='weekly'),
     'iri':   dict(label='IRI دانشگاه کلمبیا — پیش‌بینی فصلی احتمالاتی (سه‌دهکی)', name='IRI-SEASONAL', res='1° / 2.5°', cyc='ماهانه', prov='IRI, Columbia University (Data Library)', tclass='seasonal'),
 }
 PARAMS = {  # id: (فارسی، واحد، دسته، ترتیب، مقیاس)
@@ -42,7 +44,7 @@ PARAMS = {  # id: (فارسی، واحد، دسته، ترتیب، مقیاس)
     'tpp': ('پیش‌بینی فصلی بارش — دهک غالب و احتمال (٪)', '%', 'pr', 11, 'terp'),
     'tpt': ('پیش‌بینی فصلی دما — دهک غالب و احتمال (٪)', '%', 'tp', 21, 'tert'),
 }
-MPAR = {'ecwk': ('wta', 'wpa'), 'cfswk': ('wta', 'wpa'), 'iri': ('tpp', 'tpt')}
+MPAR = {'ecwk': ('wta', 'wpa'), 'cfswk': ('wta', 'wpa'), 'mmwk': ('wta', 'wpa'), 'iri': ('tpp', 'tpt')}
 
 def begin(up, mk, run):
     M = MODELS[mk]; ps = MPAR[mk]
@@ -145,26 +147,60 @@ def clim_on(C, doy, lo, la):
     from scipy.interpolate import RegularGridInterpolator
     I = RegularGridInterpolator((lat, lon), f, bounds_error=False, fill_value=np.nan); LO, LA = np.meshgrid(np.asarray(lo) % 360, la)
     return I(np.stack([LA.ravel(), LO.ravel()], 1)).reshape(LA.shape).astype(np.float32)
-def cfs_weekly(mock=False):
+_CFS_CACHE = None  # reuse the same CFS daily forecast when aligning ECMWF weeks
+
+def cfs_weekly(mock=False, target_start=None):
+    """CFS weekly anomalies; with target_start aggregate actual CFS days into
+    ECMWF's *exact* UTC seven-day windows before making a multimodel map.
+    """
+    global _CFS_CACHE
     if mock:
-        t0 = datetime(2026, 10, 21, tzinfo=UTC); lo = np.arange(CROP[0], CROP[1] + 0.1, 0.5); la = np.arange(CROP[2], CROP[3] + 0.1, 0.5); X, Y = np.meshgrid(lo, la)
-        return t0, lo, la, np.stack([np.cos(X / 6 - k) * 3 for k in range(5)]).astype(np.float32), np.stack([np.sin(Y / 3 + k) * 15 for k in range(5)]).astype(np.float32)
-    import ens_maps as E
-    fs = E.S3(); run = E.cfs_pick_run(fs)
-    if run is None: return None
-    raw = E.cfs_collect(fs, run, 35, True); P = E.cfs_products(raw, 35)
-    Ct, Cp = ltm('t'), ltm('p')
-    if Ct is None or Cp is None: log('✗ CFS هفتگی: اقلیم NCEP خوانده نشد'); return None
+        t0 = target_start or datetime(2026, 10, 21, tzinfo=UTC)
+        lo = np.arange(CROP[0], CROP[1] + 0.1, 0.5); la = np.arange(CROP[2], CROP[3] + 0.1, 0.5)
+        X_, Y_ = np.meshgrid(lo, la)
+        return t0, lo, la, np.stack([np.cos(X_ / 6 - k) * 3 for k in range(5)]).astype(np.float32), np.stack([np.sin(Y_ / 3 + k) * 15 for k in range(5)]).astype(np.float32)
+    if _CFS_CACHE is None:
+        import ens_maps as E
+        fs = E.S3(); run = E.cfs_pick_run(fs)
+        if run is None: return None
+        raw = E.cfs_collect(fs, run, 35, True)
+        P = E.cfs_products(raw, 35)
+        Ct, Cp = ltm('t'), ltm('p')
+        if Ct is None or Cp is None:
+            log('✗ CFS هفتگی: اقلیم NCEP خوانده نشد'); return None
+        _CFS_CACHE = (run, P, Ct, Cp)
+    run, P, Ct, Cp = _CFS_CACHE
+    start = target_start or run
+    if start.tzinfo is None: raise ValueError('UTC-aware weekly anchor required')
+    start = start.astimezone(UTC)
     lo = la = None; TA, PA = [], []
-    for w in range(5):
-        days = [d for d in range(7 * w + 1, 7 * w + 8) if d in P and 't2m' in P[d] and 'p24' in P[d]]
-        if len(days) < 7: break
+    n = 6 if target_start else 5
+    # Each day d means the forecast interval ending at (run + d days).
+    for w in range(n):
+        window_start = start + timedelta(days=7 * w)
+        window_end = window_start + timedelta(days=7)
+        days = [d for d in sorted(P)
+                if 't2m' in P[d] and 'p24' in P[d]
+                and window_start < run + timedelta(days=d) <= window_end]
+        if len(days) != 7:
+            if not target_start: break
+            if lo is None:
+                candidate = next((P[d] for d in sorted(P) if 't2m' in P[d]), None)
+                if candidate is None: return None
+                lo, la = candidate['t2m'][1], candidate['t2m'][2]
+            shape = P[days[0]]['t2m'][0].shape if days else (len(la), len(lo))
+            TA.append(np.full(shape, np.nan, np.float32))
+            PA.append(np.full(shape, np.nan, np.float32))
+            continue
         lo, la = P[days[0]]['t2m'][1], P[days[0]]['t2m'][2]
-        t = np.mean([P[d]['t2m'][0] for d in days], 0); p = np.sum([P[d]['p24'][0] for d in days], 0)
-        mid = run + timedelta(days=7 * w + 4); doy = mid.timetuple().tm_yday
-        TA.append(t - clim_on(Ct, doy, lo, la)); PA.append(p - 7 * clim_on(Cp, doy, lo, la))
+        t = np.mean([P[d]['t2m'][0] for d in days], axis=0)
+        p = np.sum([P[d]['p24'][0] for d in days], axis=0)
+        mid = window_start + timedelta(days=3, hours=12)
+        doy = mid.timetuple().tm_yday
+        TA.append(t - clim_on(Ct, doy, lo, la))
+        PA.append(p - 7 * clim_on(Cp, doy, lo, la))
     if not TA: return None
-    return run, lo, la, np.stack(TA).astype(np.float32), np.stack(PA).astype(np.float32)
+    return start, lo, la, np.stack(TA).astype(np.float32), np.stack(PA).astype(np.float32)
 
 def make_weekly(up, mk, R, a):
     t0, lo, la, ta, pa = R; run = t0.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -174,6 +210,32 @@ def make_weekly(up, mk, R, a):
         made += put(up, mk, run, 'wta', vt, lead, L.regrid(ta[w], lo, la), have)
         made += put(up, mk, run, 'wpa', vt, lead, L.regrid(pa[w], lo, la), have)
     up.wait(); up.call('end', js={'model': mk, 'run': f'{run:%Y%m%d%H}'}); log(f'✓ {mk}: {made} نقشه'); return made
+
+# ---------------------------------------------------------------- weekly multimodel, quantitative fields only
+def make_weekly_mm(up, ec, cfs):
+    """True matched-week 60/40 blend; never publish ECMWF-only fields as MM."""
+    if ec is None or cfs is None or ec[0] != cfs[0]: return 0
+    run, elo, ela, eta, epa = ec
+    _, clo, cla, cta, cpa = cfs
+    prepared = []
+    for w in range(min(len(eta), len(cta))):
+        for pid, earr, carr in (('wta', eta[w], cta[w]), ('wpa', epa[w], cpa[w])):
+            if not np.isfinite(earr).any() or not np.isfinite(carr).any(): continue
+            A = L.regrid(earr, elo, ela)
+            B = L.regrid(carr, clo, cla)
+            mixed, used = X.blend('weekly', {'ecwk': A, 'cfswk': B})
+            if mixed is None or not np.isfinite(mixed).any(): continue
+            valid = run + timedelta(days=7 * (w + 1))
+            prepared.append((pid, valid, w, mixed))
+    if not prepared:
+        log('ⓘ MM هفتگی: هیچ بازهٔ ۷روزهٔ مشترک با دادهٔ کامل از ECMWF و CFSv2 موجود نیست')
+        return 0
+    r = begin(up, 'mmwk', run); have = set(r.get('have', [])); made = 0
+    for pid, valid, w, mixed in prepared:
+        made += put(up, 'mmwk', run, pid, valid, 24 * 7 * (w + 1), mixed, have)
+    up.wait(); up.call('end', js={'model': 'mmwk', 'run': f'{run:%Y%m%d%H}'})
+    log(f'✓ mmwk: {made} نقشهٔ هفتگی مشترک با وزن ECMWF 60%, CFSv2 40%')
+    return made
 
 # ---------------------------------------------------------------- ۳) IRI فصلی سه‌دهکی
 IRI = 'https://iridl.ldeo.columbia.edu/SOURCES/.IRI/.FD/.NMME_Seasonal_Forecast/'
@@ -227,16 +289,22 @@ def main():
     a = ap.parse_args()
     if not a.host and not a.out: sys.exit('--host یا --out لازم است')
     up = N.Uploader(a.host, a.key, a.out); only = set(a.only.split(',')); tot = 0
+    ec = cfs = None
     if 'ecwk' in only:
         try:
-            R = ec_weekly(a.mock); tot += make_weekly(up, 'ecwk', R, a) if R else 0
-            if not R: log('✗ ecwk: انومالی هفتگی از Open-Meteo گرفته نشد (نام متغیر یا مدل را در لاگ ببینید)')
+            ec = ec_weekly(a.mock); tot += make_weekly(up, 'ecwk', ec, a) if ec else 0
+            if not ec: log('✗ ecwk: انومالی هفتگی از Open-Meteo گرفته نشد (نام متغیر یا مدل را در لاگ ببینید)')
         except Exception as e: log(f'✗ ecwk: {e}')
     if 'cfswk' in only:
         try:
-            R = cfs_weekly(a.mock); tot += make_weekly(up, 'cfswk', R, a) if R else 0
-            if not R: log('✗ cfswk: ساخته نشد')
+            cfs = cfs_weekly(a.mock); tot += make_weekly(up, 'cfswk', cfs, a) if cfs else 0
+            if not cfs: log('✗ cfswk: ساخته نشد')
         except Exception as e: log(f'✗ cfswk: {e}')
+    if ec is not None and cfs is not None:
+        try:
+            aligned = cfs_weekly(a.mock, target_start=ec[0])
+            tot += make_weekly_mm(up, ec, aligned)
+        except Exception as e: log(f'✗ مولتی‌مدل هفتگی: {e}')
     if 'iri' in only:
         try: tot += make_iri(up, a)
         except Exception as e: log(f'✗ iri: {e}')
