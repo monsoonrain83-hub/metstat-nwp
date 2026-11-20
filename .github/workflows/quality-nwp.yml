@@ -25,6 +25,11 @@ jobs:
           find out9 -type f -name 't2m_*' -size +0c -print | grep -q .
       - name: "Regression — multimodel policy and preservation of pending fields"
         run: python -m unittest discover -s tests -p 'test_mm_*.py' -v
+      - name: "Weekly MM smoke — only matched ECMWF/CFS periods"
+        run: |
+          python wk_maps.py --mock --out /tmp/metstat-wk-test --only ecwk,cfswk
+          find /tmp/metstat-wk-test/mmwk -type f -name 'wta_*.webp' -size +0c -print | grep -q .
+          find /tmp/metstat-wk-test/mmwk -type f -name 'wpa_*.webp' -size +0c -print | grep -q .
       - name: "نشت کلید"
         run: |
           if grep -rInE "(upload_key|relay_secret|api[_-]?key)[\"' ]*[:=][\"' ]*[A-Za-z0-9_\-]{16,}" --include=*.py --include=*.yml --include=*.php .; then echo "کلید در سورس دیده شد"; exit 1; fi
