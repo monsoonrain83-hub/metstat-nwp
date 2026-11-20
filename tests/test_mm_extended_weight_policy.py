@@ -31,7 +31,7 @@ class TestExtendedMultimodel(unittest.TestCase):
         self.assertAlmostEqual(result[0, 0], 2 * .6 + 7 * .2 + 9 * .2)
         self.assertTrue(np.isnan(result[0, 1]))  # ECMWF data missing
         self.assertTrue(np.isnan(result[1, 0]))  # no second member
-        self.assertAlmostEqual(result[1, 1], (4 * .6 + 6 * .2) / .8)
+        self.assertAlmostEqual(result[1, 1], 4 * .6 + 6 * .4)
         self.assertEqual(len(w), 3)
 
     def test_invalid_grid_not_silently_combined(self):
