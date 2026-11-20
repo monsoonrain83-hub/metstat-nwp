@@ -42,7 +42,8 @@ def host_run(host, key):
     try:
         import requests
         m = requests.get(host.rstrip('/') + '/data/manifest.json', timeout=60, headers={'User-Agent': 'MetStat-seas5/1.0'}).json()['models']
-        return (m.get(key) or {}).get('run')
+        item = m.get(key) or {}
+        return item.get('run') if item.get('status') == 'complete' else None
     except Exception as e:
         log(f'  ⓘ manifest هاست خوانده نشد ({type(e).__name__}) — بدون بررسی تکراری‌بودن ادامه می‌دهم'); return None
 
@@ -139,18 +140,23 @@ def main():
             for vn, v in VARS.items():
                 with tempfile.TemporaryDirectory() as td:
                     p = os.path.join(td, f'{vn}.nc')
-                    try: retrieve(c, v[0], y, m, p, pressure_level=PRESSURE_LEVELS.get(vn))
+                    try:
+                        if vn in PRESSURE_LEVELS: retrieve(c, v[0], y, m, p, pressure_level=PRESSURE_LEVELS[vn])
+                        else: retrieve(c, v[0], y, m, p)
                     except Exception as e:
                         log(f'  ✗ {vn} {y}-{m:02d}: {type(e).__name__}: {str(e)[:300]}')
-                        if vn in OPTIONAL_VARS: continue  # preserve existing temperature/rain outputs
-                        break  # this month's required data are not yet ready
+                        if vn in OPTIONAL_VARS: continue  # optional fields must never block the two established products
+                        fields = {}  # never publish an incomplete temperature/precipitation cycle
+                        break
                     try: d, lon, lat, offs, units = read_cds(p); fields[vn] = (convert(vn, d, units), lon, lat, offs); log(f'  {vn}: shape={d.shape} offs={offs} units="{units}"')
                     except Exception as e:
                         log(f'  ✗ خواندن {vn}: {type(e).__name__}: {e}')
                         if vn in OPTIONAL_VARS: continue
                         fields = {}; break
-        if not fields: continue
-        if len(fields) < len(VARS): log('  ⚠ فقط بخشی از پارامترها آمد؛ همان‌ها آپلود می‌شود')
+        if not {'t2a', 'tpara'}.issubset(fields):
+            log(f'  ✗ SEAS5 {run}: temperature/precipitation missing, no partial cycle published')
+            continue
+        if len(fields) < len(VARS): log('  ⚠ فقط پارامترهای پایه آمدند؛ پارامترهای اختیاری ناموجود منتشر نمی‌شوند')
         publish(up, fields, y, m, run); return 0
     log('✗ SEAS5: برای هیچ‌کدام از دو ماه اخیر داده‌ای گرفته نشد'); return 0
 
