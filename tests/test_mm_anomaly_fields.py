@@ -5,7 +5,7 @@ from datetime import date
 from types import SimpleNamespace
 import numpy as np
 import mm_weights as W
-from mm_maps import MMCombiner
+from mm_maps import MMCombiner, mm_extend_params
 
 
 class TestDailyAnomalyMultimodel(unittest.TestCase):
@@ -25,6 +25,17 @@ class TestDailyAnomalyMultimodel(unittest.TestCase):
         s = MMCombiner.__new__(MMCombiner)
         s.nm = SimpleNamespace(PARAMS=data)
         return s
+
+    def test_models_are_extended_only_when_combiner_enabled(self):
+        dummy = {}
+        def field(models):
+            return {'models': list(models)}
+        for p in ('tanom', 'tanom5', 'tanom10', 'z500a', 'mslpa'):
+            dummy[p] = field(['ecmwf', 'gfs'])
+        mm_extend_params(dummy)
+        for p in ('tanom', 'tanom5', 'tanom10', 'mslpa'):
+            self.assertTrue({'ecmwf', 'gfs', 'icon', 'ukmo', 'gem', 'gfs25'}.issubset(dummy[p]['models']))
+        self.assertTrue({'icon', 'ukmo', 'gfs25'}.issubset(dummy['z500a']['models']))
 
     def test_pressure_anomaly_weight_group(self):
         self.assertEqual(W.group_of("z500a"), "pressure")
