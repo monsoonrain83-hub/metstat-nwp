@@ -190,7 +190,7 @@ def clim_on(C, doy, lo, la):
     from scipy.interpolate import RegularGridInterpolator
     I = RegularGridInterpolator((lat, lon), f, bounds_error=False, fill_value=np.nan); LO, LA = np.meshgrid(np.asarray(lo) % 360, la)
     return I(np.stack([LA.ravel(), LO.ravel()], 1)).reshape(LA.shape).astype(np.float32)
-def cfs_weekly(mock=False):
+def cfs_weekly(mock=False, include_z500=False):
     if mock:
         t0 = datetime(2026, 10, 21, tzinfo=UTC); lo = np.arange(CROP[0], CROP[1] + 0.1, 0.5); la = np.arange(CROP[2], CROP[3] + 0.1, 0.5); X, Y = np.meshgrid(lo, la)
         return t0, lo, la, np.stack([np.cos(X / 6 - k) * 3 for k in range(5)]).astype(np.float32), np.stack([np.sin(Y / 3 + k) * 15 for k in range(5)]).astype(np.float32)
@@ -202,7 +202,7 @@ def cfs_weekly(mock=False):
     if Ct is None or Cp is None: log('✗ CFS هفتگی: اقلیم NCEP خوانده نشد'); return None
     lo = la = None; TA, PA, ZA = [], [], []
     zgrid = None
-    zready = True
+    zready = bool(include_z500)
     for w in range(5):
         days = [d for d in range(7 * w + 1, 7 * w + 8) if d in P and 't2m' in P[d] and 'p24' in P[d]]
         if len(days) < 7: break
@@ -312,7 +312,7 @@ def make_iri(up, a):
     up.wait(); up.call('end', js={'model': 'iri', 'run': f'{issue:%Y%m%d%H}'}); log(f'✓ iri: {made} نقشه'); return made
 
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument('--host'); ap.add_argument('--key', default=''); ap.add_argument('--out'); ap.add_argument('--mock', action='store_true'); ap.add_argument('--only', default='ecwk,cfswk,iri'); ap.add_argument('--ec-mslp', action='store_true', help='Opt-in verified ECMWF EC46 weekly MSLP anomaly')
+    ap = argparse.ArgumentParser(); ap.add_argument('--host'); ap.add_argument('--key', default=''); ap.add_argument('--out'); ap.add_argument('--mock', action='store_true'); ap.add_argument('--only', default='ecwk,cfswk,iri'); ap.add_argument('--ec-mslp', action='store_true', help='Opt-in verified ECMWF EC46 weekly MSLP anomaly'); ap.add_argument('--cfs-z500', action='store_true', help='Opt-in CFS weekly 500 hPa departure vs reference climatology')
     a = ap.parse_args()
     if not a.host and not a.out: sys.exit('--host یا --out لازم است')
     up = N.Uploader(a.host, a.key, a.out); only = set(a.only.split(',')); tot = 0
@@ -323,7 +323,7 @@ def main():
         except Exception as e: log(f'✗ ecwk: {e}')
     if 'cfswk' in only:
         try:
-            R = cfs_weekly(a.mock); tot += make_weekly(up, 'cfswk', R, a) if R else 0
+            R = cfs_weekly(a.mock, include_z500=a.cfs_z500); tot += make_weekly(up, 'cfswk', R, a) if R else 0
             if not R: log('✗ cfswk: ساخته نشد')
         except Exception as e: log(f'✗ cfswk: {e}')
     if 'iri' in only:
