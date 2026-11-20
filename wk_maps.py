@@ -213,28 +213,32 @@ def cfs_weekly(mock=False):
         # CFS ensemble already fetches actual 500 hPa GRIB values each day.
         # This is a reference-climatology departure, NOT a bias-corrected
         # CFS hindcast anomaly. Do not publish if any day/reference is absent.
-        if zready:
-            if not all('z5' in P[d] for d in days):
-                zready = False
-            else:
-                zlo, zla = P[days[0]]['z5'][1:3]
-                if zgrid is None:
-                    zx, zy = np.meshgrid(zlo, zla)
-                    from types import SimpleNamespace
-                    zgrid = (zlo, zla, SimpleNamespace(lon=zx, lat=zy))
-                if not np.array_equal(zlo, zgrid[0]) or not np.array_equal(zla, zgrid[1]):
+        try:
+            if zready:
+                if not all('z5' in P[d] for d in days):
                     zready = False
                 else:
-                    clim = [N.z500_clim_at(zgrid[2], run + timedelta(days=d)) for d in days]
-                    if any(c is None for c in clim):
+                    zlo, zla = P[days[0]]['z5'][1:3]
+                    if zgrid is None:
+                        zx, zy = np.meshgrid(zlo, zla)
+                        from types import SimpleNamespace
+                        zgrid = (zlo, zla, SimpleNamespace(lon=zx, lat=zy))
+                    if not np.array_equal(zlo, zgrid[0]) or not np.array_equal(zla, zgrid[1]):
                         zready = False
                     else:
-                        zmean = np.mean([P[d]['z5'][0] for d in days], axis=0)
-                        za = (zmean - np.mean(clim, axis=0)) / 10.0  # m -> dam
-                        if not np.isfinite(za).all():
+                        clim = [N.z500_clim_at(zgrid[2], run + timedelta(days=d)) for d in days]
+                        if any(c is None for c in clim):
                             zready = False
                         else:
-                            ZA.append(np.asarray(za, np.float32))
+                            zmean = np.mean([P[d]['z5'][0] for d in days], axis=0)
+                            za = (zmean - np.mean(clim, axis=0)) / 10.0  # m -> dam
+                            if not np.isfinite(za).all():
+                                zready = False
+                            else:
+                                ZA.append(np.asarray(za, np.float32))
+        except Exception as err:
+            zready = False
+            log(f'  CFS weekly Z500 reference unavailable: {type(err).__name__}: {err}; base products retained')
     if not TA: return None
     base = (run, lo, la, np.stack(TA).astype(np.float32), np.stack(PA).astype(np.float32))
     if zready and len(ZA) == len(TA) and zgrid is not None:
