@@ -39,6 +39,16 @@ class TestDailyAnomalyPolicy(unittest.TestCase):
             self.assertIn(model, p['tanom']['models'])
             self.assertIn(model, p['tanom5']['models'])
 
+    def test_ecmwf9_full_runs_extend_to_360h_without_changing_other_models(self):
+        # ECMWF 0.1-degree IFS open data: 00/12 deterministic forecasts to +360h.
+        # Only the model cap changes. A missing forecast step must never be invented.
+        self.assertEqual(N.MODELS['ecmwf9']['hz']['00'], 360)
+        self.assertEqual(N.MODELS['ecmwf9']['hz']['12'], 360)
+        self.assertEqual(N.MODELS['ecmwf']['hz']['00'], 360)
+        self.assertEqual(N.MODELS['ecmwf']['hz']['12'], 360)
+        self.assertEqual(N.MODELS['ecmwf9']['hz']['06'], 144)
+        self.assertEqual(N.MODELS['ecmwf9']['hz']['18'], 144)
+
     def test_pressure_anomaly_snapshots_once_each_24h(self):
         run = datetime(2026, 11, 20, 0, tzinfo=UTC)
         state = SimpleNamespace(run=run)
