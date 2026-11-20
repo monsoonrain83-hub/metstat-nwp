@@ -30,6 +30,11 @@ jobs:
           python wk_maps.py --mock --out /tmp/metstat-wk-test --only ecwk,cfswk
           find /tmp/metstat-wk-test/mmwk -type f -name 'wta_*.webp' -size +0c -print | grep -q .
           find /tmp/metstat-wk-test/mmwk -type f -name 'wpa_*.webp' -size +0c -print | grep -q .
+      - name: "Monthly MM smoke — real-source gating via mock only"
+        run: |
+          python monthly_mm_maps.py --mock --out /tmp/metstat-mo-test
+          find /tmp/metstat-mo-test/mmmo -type f -name 'lrta_*.webp' -size +0c -print | grep -q .
+          find /tmp/metstat-mo-test/mmmo -type f -name 'lrpa_*.webp' -size +0c -print | grep -q .
       - name: "نشت کلید"
         run: |
           if grep -rInE "(upload_key|relay_secret|api[_-]?key)[\"' ]*[:=][\"' ]*[A-Za-z0-9_\-]{16,}" --include=*.py --include=*.yml --include=*.php .; then echo "کلید در سورس دیده شد"; exit 1; fi
