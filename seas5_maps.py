@@ -30,7 +30,9 @@ def host_run(host, key):
     try:
         import requests
         m = requests.get(host.rstrip('/') + '/data/manifest.json', timeout=60, headers={'User-Agent': 'MetStat-seas5/1.0'}).json()['models']
-        return (m.get(key) or {}).get('run')
+        item = m.get(key) or {}
+        # A run becomes reusable only AFTER the server has finished publishing it.
+        return item.get('run') if item.get('status') == 'complete' else None
     except Exception as e:
         log(f'  ⓘ manifest هاست خوانده نشد ({type(e).__name__}) — بدون بررسی تکراری‌بودن ادامه می‌دهم'); return None
 
@@ -98,7 +100,9 @@ def main():
     have = None if a.force else host_run(a.host, 'ecmwfseas'); have2 = None if a.force else host_run(a.host, 'ecmwfseass')
     for (y, m) in cand:
         run = f'{y}{m:02d}0100'
-        if have == run and have2 == run: log(f'✓ SEAS5 {run} روی هاست هست؛ کاری لازم نیست'); return 0
+        if have == run and have2 == run:
+            log(f'✓ SEAS5 {run} برای هر دو مدل کامل منتشر شده؛ از دانلود/آپلود تکراری جلوگیری شد')
+            return 0
         fields = {}
         if a.mock:
             rng = np.random.default_rng(3); la = np.arange(44.5, 8, -1.0); lo = np.arange(17.5, 68)
@@ -110,11 +114,16 @@ def main():
                 with tempfile.TemporaryDirectory() as td:
                     p = os.path.join(td, f'{vn}.nc')
                     try: retrieve(c, v[0], y, m, p)
-                    except Exception as e: log(f'  ✗ {vn} {y}-{m:02d}: {type(e).__name__}: {str(e)[:300]}'); break      # این ماه هنوز منتشر نشده → ماه قبل
+                    except Exception as e:
+                        log(f'  ✗ {vn} {y}-{m:02d}: {type(e).__name__}: {str(e)[:300]}')
+                        fields = {}  # Never publish a partial precipitation/temperature cycle.
+                        break  # Try the previous month only if both products were unavailable.
                     try: d, lon, lat, offs, units = read_cds(p); fields[vn] = (convert(vn, d, units), lon, lat, offs); log(f'  {vn}: shape={d.shape} offs={offs} units="{units}"')
                     except Exception as e: log(f'  ✗ خواندن {vn}: {type(e).__name__}: {e}'); fields = {}; break
         if not fields: continue
-        if len(fields) < len(VARS): log('  ⚠ فقط بخشی از پارامترها آمد؛ همان‌ها آپلود می‌شود')
+        if set(fields) != set(VARS):
+            log(f'  ✗ SEAS5 {run}: پارامترهای ناقص {sorted(set(VARS) - set(fields))}؛ هیچ مدلی منتشر نشد')
+            continue
         publish(up, fields, y, m, run); return 0
     log('✗ SEAS5: برای هیچ‌کدام از دو ماه اخیر داده‌ای گرفته نشد'); return 0
 
