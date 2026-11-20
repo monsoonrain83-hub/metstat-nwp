@@ -21,6 +21,14 @@ WAIT_MAX = 45 * 60            # اگر پس از ۴۵ دقیقه از اولین
 MINMAX_FA = {'max': 'بیشینهٔ مدل‌ها', 'min': 'کمینهٔ مدل‌ها'}
 MINMAX_EN = {'max': 'model maximum', 'min': 'model minimum'}
 SC_VOTE = ('sigwx',)           # پارامترهای رده‌ای: رأی وزنی به‌جای میانگین
+MM_UPPER_ANOM = frozenset(('z500a', 'z700a', 'z850a'))
+MM_EXTENDED_ANOM = MM_UPPER_ANOM | frozenset(('tanom', 'tanom5'))
+
+
+def max_anomaly_lead(pid):
+    # Existing non-anomaly multimodel stays limited to five days.
+    # New requested anomaly products extend to the input models' horizon.
+    return 384 if pid in MM_EXTENDED_ANOM else 120
 
 
 def mm_extend_params(PARAMS):
@@ -45,7 +53,7 @@ class MMCombiner:
     def build_params(s):
         nm = s.nm; out = {}
         for pid, P in nm.PARAMS.items():
-            if P.get('me_only') or P.get('raw'): continue
+            if (P.get('me_only') and pid not in MM_UPPER_ANOM) or P.get('raw'): continue
             if s.grp(pid) is None: continue
             if len([m for m in P['models'] if m in W.MM_MODELS or m in ('ecmwf9', 'gfs25')]) < 2: continue
             out[pid] = P
@@ -68,7 +76,7 @@ class MMCombiner:
 
     def sink(s, mkey, rk, pid, run, vt, field, extra):
         if mkey not in SOURCES or run.hour not in (0, 12) or pid not in s.nm.PARAMS or pid not in s.pmm: return
-        if not 0 <= (vt - run).total_seconds() / 3600 <= 120: return      # فقط پارامترهای مالتی‌مدل (بدون گروه وزنی مثل w10 رد می‌شوند)
+        if not 0 <= (vt - run).total_seconds() / 3600 <= max_anomaly_lead(pid): return
         if field is None: return
         p = os.path.join(s.dir, rk, pid, f'{run:%Y%m%d%H}'); os.makedirs(p, exist_ok=True)
         path = os.path.join(p, f'{mkey}_{vt:%Y%m%d%H}.npz'); tmp = path + '.tmp.npz'
@@ -88,7 +96,7 @@ class MMCombiner:
         """None: هنوز صبر؛ وگرنه {slot: src} منابع انتخاب‌شده."""
         rk, pid, run, vt = k; nm = s.nm; P = nm.PARAMS.get(pid)
         if not P: return {}
-        if not 0 <= (vt - run).total_seconds() / 3600 <= 120: return {}
+        if not 0 <= (vt - run).total_seconds() / 3600 <= max_anomaly_lead(pid): return {}
         lead = int(round((vt - run).total_seconds() / 3600)); have = s.idx.get(k, {}); pick = {}
         timed = final or time.time() - s.first.get(k, time.time()) > WAIT_MAX
         for slot in W.MM_MODELS:
