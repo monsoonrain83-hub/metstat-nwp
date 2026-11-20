@@ -18,7 +18,7 @@ def select_region(da):
     """Select geographic coordinates without accidentally extrapolating."""
     if float(da.longitude.max()) > 180:
         da = da.assign_coords(longitude=((da.longitude + 180) % 360) - 180)
-    return da.sortby("latitude").sortby("longitude").sel(
+    da = da.sortby("latitude").sortby("longitude")\n    # nearest-neighbour selection must not extrapolate outside source coverage.\n    if (float(LATS.min()) < float(da.latitude.min()) or\n            float(LATS.max()) > float(da.latitude.max()) or\n            float(LONS.min()) < float(da.longitude.min()) or\n            float(LONS.max()) > float(da.longitude.max())):\n        raise ValueError("ERA5 source grid does not cover the requested region")\n    return da.sel(
         latitude=LATS, longitude=LONS, method="nearest"
     )
 
@@ -28,7 +28,7 @@ def daily_field(da, divisor=1.0):
     regional = select_region(da)
     if "hour" not in regional.dims:
         raise ValueError("ERA5 climatology lacks 6-hour time-of-day dimension")
-    daily = (regional.mean("hour") / divisor).compute()
+    # xarray.mean skips NaN by default; that would silently turn an incomplete\n    # four-slot climatological day into a seemingly complete daily normal.\n    # Require all source slots at each grid cell before calculating its mean.\n    if not bool(regional.notnull().all().compute()):\n        raise ValueError("ERA5 climatology has missing/nonfinite source slots")\n    daily = (regional.mean("hour", skipna=False) / divisor).compute()
     values = np.asarray(daily.values, dtype=np.float32)
     if values.shape != (366, len(LATS), len(LONS)):
         raise ValueError(f"Unexpected ERA5 climatology shape: {values.shape}")
