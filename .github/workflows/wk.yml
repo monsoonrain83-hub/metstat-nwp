@@ -20,4 +20,9 @@ jobs:
           sudo apt-get update -y && sudo apt-get install -y libeccodes-dev || true
           pip install eccodes s3fs requests numpy scipy pillow matplotlib netCDF4
       - name: weekly anomalies + IRI seasonal
-        run: python wk_maps.py --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}"
+        # Keep the two optional anomaly products off until a real API/hindcast
+        # check and scientific map QC pass. Once verified, the normal daily
+        # schedule publishes them automatically with existing model products.
+        env:
+          WEEKLY_ANOMALY_FLAGS: ${{ vars.METSTAT_WEEKLY_ANOMALY_VERIFIED == 'yes' && '--ec-mslp --cfs-z500' || '' }}
+        run: python wk_maps.py --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}" $WEEKLY_ANOMALY_FLAGS
