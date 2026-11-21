@@ -113,7 +113,7 @@ function manifest(): void {
             'params' => [], 'items' => [], 'items_prev' => [], 'done' => 0, 'expected' => 0, 'cats' => jload("$NWP/cats.json", []), 'scales' => jload("$NWP/scales.json", (object)[])];
     foreach (glob("$NWP/*/state.json") ?: [] as $f) {
         $S = jload($f, null); if (!$S || !$S['run']) continue; $m = basename(dirname($f));
-        $man['models'][$m] = ['fa' => $S['label'] ?? $m, 'name' => $S['name'] ?? $m, 'run' => $S['run'], 'status' => $S['status'] ?? 'downloading', 'done' => count($S['items']), 'info' => $S['info'] ?? (object)[]];
+        $man['models'][$m] = ['fa' => $S['label'] ?? $m, 'name' => $S['name'] ?? $m, 'run' => $S['run'], 'status' => $S['status'] ?? 'downloading', 'done' => count($S['items']), 'maxlead' => (int)($S['maxlead'] ?? 0), 'info' => $S['info'] ?? (object)[]];
         if ($man['run'] === null || $S['run'] > $man['run']) $man['run'] = $S['run'];
         if (($S['status'] ?? '') !== 'complete') $man['status'] = 'downloading';
         foreach ($S['items'] as $file => $i) { $it = ['f' => "data/nwp/$m/{$S['run']}/$file", 'r' => $i['r'], 'm' => $m, 'p' => $i['p'], 's' => (int)$i['s'], 'v' => $i['v'], 'run' => $S['run']]; if (isset($i['w'])) $it['w'] = $i['w']; $man['items'][] = $it; }
@@ -137,7 +137,7 @@ if ($a === 'begin') {
         foreach (glob("$MD/20*", GLOB_ONLYDIR) ?: [] as $d) { $b = basename($d); if ($b === $run || $b === $prev) continue; rrmdir($d); logl("حذف $model/$b"); }
         $S = ['run' => $run, 'name' => (string)($body['name'] ?? $model), 'label' => (string)($body['label'] ?? $model), 'started' => gmdate('c'), 'status' => 'downloading', 'items' => []];
         $inf = is_array($body['info'] ?? null) ? $body['info'] : []; $S['info'] = ['tclass' => preg_match('~^(daily|weekly|monthly|seasonal|ens)$~', (string)($inf['tclass'] ?? '')) ? $inf['tclass'] : 'daily',
-            'res' => mb_substr((string)($inf['res'] ?? ''), 0, 60), 'cyc' => mb_substr((string)($inf['cyc'] ?? ''), 0, 30), 'prov' => mb_substr((string)($inf['prov'] ?? ''), 0, 60)];
+            'res' => mb_substr((string)($inf['res'] ?? ''), 0, 60), 'cyc' => mb_substr((string)($inf['cyc'] ?? ''), 0, 30), 'prov' => mb_substr((string)($inf['prov'] ?? ''), 0, 60), 'horizon' => max(0, min(1000, (int)($inf['horizon'] ?? 0)))];
         jsave($SF, $S); logl("شروع $model $run");
         if (!empty($body['params']) && is_array($body['params'])) { $P = jload("$NWP/params.json", []); foreach ($body['params'] as $id => $p) if (preg_match('~^[a-z0-9]{1,10}$~', (string)$id)) $P[$id] = ['fa' => (string)($p['fa'] ?? $id), 'unit' => (string)($p['unit'] ?? ''),
             'cat' => preg_replace('~[^a-z]~', '', (string)($p['cat'] ?? '')), 'o' => (int)($p['o'] ?? 0), 'sc' => preg_replace('~[^a-z0-9_]~', '', (string)($p['sc'] ?? '')), 'mu' => (string)($p['mu'] ?? ($p['unit'] ?? '')),
@@ -162,6 +162,10 @@ if ($a === 'put') {
     if (in_array(substr($p, -1), ['L', 'V', 'W', 'H'], true)) jout(['ok' => true, 'line' => true]);          // لایهٔ خطوطِ کاشی؛ در فهرست جدا نمی‌آید
     $S['items'][$file] = ['r' => $reg, 'p' => $p, 'v' => $v, 's' => (int)($meta['s'] ?? 0)];
     if (isset($meta['w']) && preg_match('~^[a-z0-9:,]{1,90}$~', (string)$meta['w'])) $S['items'][$file]['w'] = (string)$meta['w'];          // مالتی‌مدل: مدل‌های به‌کاررفته و وزن‌ها
+    $S['maxlead'] = max((int)($S['maxlead'] ?? 0), (int)($meta['s'] ?? 0));
+    // If more images arrive after an earlier end, the run is actively updating.
+    // Do not expose a stale complete flag while the pipeline continues.
+    if (($S['status'] ?? '') === 'complete') { $S['status'] = 'downloading'; unset($S['ended']); }
     jsave($SF, $S);
     // فهرست کلی هر ۲۰ نقشه (و در پایان) بازسازی می‌شود تا هاست کند نشود
     if (count($S['items']) % 20 === 1) manifest();
