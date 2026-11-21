@@ -51,6 +51,27 @@ class TestERA5TemperatureClimatology(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "source slots"):
                 C.build(ds)
 
+    def test_reject_missing_hour_even_if_all_remaining_values_are_finite(self):
+        ds, lat, lon = self.sample()
+        ds = ds.sel(hour=[0, 6, 12])
+        with patch.object(C, "LATS", lat), patch.object(C, "LONS", lon):
+            with self.assertRaisesRegex(ValueError, "time coordinates"):
+                C.build(ds)
+
+    def test_reject_mislabeled_six_hour_slots(self):
+        ds, lat, lon = self.sample()
+        ds = ds.assign_coords(hour=[0, 6, 12, 21])
+        with patch.object(C, "LATS", lat), patch.object(C, "LONS", lon):
+            with self.assertRaisesRegex(ValueError, "time coordinates"):
+                C.build(ds)
+
+    def test_reject_missing_calendar_day(self):
+        ds, lat, lon = self.sample()
+        ds = ds.sel(dayofyear=slice(1, 365))
+        with patch.object(C, "LATS", lat), patch.object(C, "LONS", lon):
+            with self.assertRaisesRegex(ValueError, "time coordinates"):
+                C.build(ds)
+
     def test_reject_celsius_mislabeled_as_kelvin(self):
         ds, lat, lon = self.sample(temp=20.0)
         with patch.object(C, "LATS", lat), patch.object(C, "LONS", lon):
