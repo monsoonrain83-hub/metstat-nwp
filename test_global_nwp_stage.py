@@ -28,6 +28,12 @@ class GlobalNWPTests(unittest.TestCase):
         self.assertTrue(m['full_globe'])
         self.assertFalse(m['mock'])
         self.assertEqual(m['projection'],'EPSG:4326 equirectangular')
+    def test_requested_360h_is_reachable_without_fabrication(self):
+        start=datetime(2026,11,21,0,tzinfo=timezone.utc)
+        m={'valid_times':['2026-11-21T00:00','2026-12-06T00:00']}
+        self.assertEqual(g.valid_candidates(m,start,360)[0],datetime(2026,12,6,0,tzinfo=timezone.utc))
+        self.assertEqual(g.valid_candidates(m,start,361)[0],datetime(2026,12,6,0,tzinfo=timezone.utc))
+
     def test_select_lead_and_reject_bad_data(self):
         m={'valid_times':['2026-11-21T12:00','2026-11-22T12:00','2026-11-26T12:00']}
         dt=datetime(2026,11,21,12,tzinfo=timezone.utc)

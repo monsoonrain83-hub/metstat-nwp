@@ -14,6 +14,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw
 import nwp_maps as N
+from nwp_unified_resolution import select_frame_source, SOURCE_PRIORITY
 
 UTC = timezone.utc
 DOMAINS = {
@@ -79,7 +80,7 @@ def valid_candidates(meta, run, requested_lead=24):
             vt = datetime.strptime(s[:16],'%Y-%m-%dT%H:%M').replace(tzinfo=UTC)
         except ValueError: continue
         hours = (vt-run).total_seconds()/3600
-        if 0 <= hours <= 120:out.append((abs(hours-requested_lead),vt))
+        if 0 <= hours <= 384:out.append((abs(hours-requested_lead),vt))
     return [v for _,v in sorted(out)]
 
 def acquire(model, outdir, requested_lead=24):
@@ -90,6 +91,13 @@ def acquire(model, outdir, requested_lead=24):
     # Intentional global override of the existing regional BBOX subsetting;
     # do NOT mutate N.BBOX or production Engine's model loops.
     src.i0=0;src.i1=src.nx;src.j0=0;src.j1=src.ny
+    # The native high-resolution source is optional, never a prerequisite to
+    # rendering a verified 0.25-degree fallback at the SAME cycle and lead.
+    hi_src = None
+    if model in SOURCE_PRIORITY:
+        high_domain = SOURCE_PRIORITY[model][0][0]
+        hi_src = N.S3Source(high_domain, fs)
+        hi_src.i0=0;hi_src.i1=hi_src.nx;hi_src.j0=0;hi_src.j1=hi_src.ny
     runs = [x for x in src.runs() if x and x.get('reference_time')]
     if not runs:raise RuntimeError(model+': source has no current cycle')
     runs.sort(key=lambda m:m['reference_time'],reverse=True)
@@ -102,40 +110,54 @@ def acquire(model, outdir, requested_lead=24):
             try: data = src.read(run, valid, sorted(v[0] for v in FIELDS.values()))
             except Exception as e:
                 errors.append(str(e)[:120]);continue
-            # On GFS, the coarse pressure-level archive may omit T2m. The
-            # independent GFS013 surface archive contains the actual field.
-            # Resample nearest onto the precisely georeferenced 0.25° world grid.
-            gfs_surface_fallback = False
-            if model == 'gfs' and 'temperature_2m' not in data:
+            # A source is selectable only after actual field read + shape and
+            # coverage QC. Prefer each variable at native 9/13km independently.
+            high_data = {}
+            if hi_src is not None and hi_src.exists(run,valid):
                 try:
-                    surface=N.S3Source('ncep_gfs013',fs)
-                    surface.i0=0;surface.i1=surface.nx;surface.j0=0;surface.j1=surface.ny
-                    if surface.exists(run,valid):
-                        raw=surface.read(run,valid,['temperature_2m']).get('temperature_2m')
-                        if raw is not None and raw.shape==(surface.ny,surface.nx):
-                            ilon=np.clip(np.rint((src.lo0+np.arange(src.nx)*src.dx-surface.lo0)/surface.dx).astype(int),0,surface.nx-1)
-                            ilat=np.clip(np.rint((src.la0+np.arange(src.ny)*src.dy-surface.la0)/surface.dy).astype(int),0,surface.ny-1)
-                            data['temperature_2m']=raw[np.ix_(ilat,ilon)]
-                            gfs_surface_fallback=True
-                            print('GFS_REAL_SURFACE_FALLBACK ncep_gfs013 -> 0.25deg',flush=True)
-                except Exception as e:errors.append('GFS T2m alternate source: '+str(e)[:120])
+                    high_data = hi_src.read(run,valid,sorted(v[0] for v in FIELDS.values()))
+                except Exception as e:
+                    errors.append('HIGHRES '+hi_src.dom+': '+str(e)[:150])
+                    high_data = {}
             products={}
             for p,(key,units,lo,hi) in FIELDS.items():
-                arr=data.get(key)
-                if arr is None:continue
-                if arr.ndim!=2 or arr.shape!=(src.ny,src.nx):
-                    errors.append(f'{p}: incorrect raster shape {arr.shape}');continue
-                # Some fields have valid physical gaps; require nearly global coverage.
-                if np.isfinite(arr).mean() < .90:
-                    errors.append(f'{p}: only {np.isfinite(arr).mean():.1%} valid');continue
+                verified = {}
+                source_instances = {}
+                # Read and validate both candidate rasters separately. We NEVER
+                # present 28km data as a 9km raster or count both as two models.
+                for source, raw in ((src, data.get(key)),
+                                    (hi_src, high_data.get(key))):
+                    if source is None or raw is None: continue
+                    if raw.ndim != 2 or raw.shape != (source.ny,source.nx):
+                        errors.append(f'{source.dom}/{p}: incorrect raster shape {raw.shape}');continue
+                    if float(np.isfinite(raw).mean()) < .90:
+                        errors.append(f'{source.dom}/{p}: insufficient global coverage');continue
+                    try: to_units(p,raw)
+                    except Exception as e: errors.append(f'{source.dom}/{p}: {e}');continue
+                    verified[source.dom] = raw
+                    source_instances[source.dom] = source
+                if model in SOURCE_PRIORITY:
+                    choice = select_frame_source(model,key,run,valid,
+                        lambda d,v,r,t: d in verified)
+                    if choice is None: continue
+                    chosen_domain, nominal_resolution = choice.domain,choice.nominal_resolution
+                elif dom in verified:
+                    chosen_domain,nominal_resolution=dom,'15 km'
+                else: continue
+                arr=verified[chosen_domain]
+                chosen_src=source_instances[chosen_domain]
                 try:
                     fname=f'{model}_{p}_{valid:%Y%m%d%H}.webp'
                     stats=render(arr,p,outdir/fname)
                     products[p]={'file':fname,'variable':key,'units':units,
-                                 'field_source_domain':('ncep_gfs013' if p=='t2m' and gfs_surface_fallback else dom),
-                                 'resampling':('nearest-neighbor native 0.117deg to 0.25deg' if p=='t2m' and gfs_surface_fallback else 'native model grid'),
+                                 'field_source_domain':chosen_domain,
+                                 'nominal_resolution':nominal_resolution,
+                                 'source_grid':[chosen_src.nx,chosen_src.ny],
+                                 'source_grid_origin':[chosen_src.lo0,chosen_src.la0],
+                                 'source_grid_spacing':[chosen_src.dx,chosen_src.dy],
+                                 'resampling':'native-source-grid',
                                  **stats}
-                except Exception as e:errors.append(f'{p}: {e}')
+                except Exception as e: errors.append(f'{p}: {e}')
             if products:
                 man=product_manifest(model,run,valid,dom,products)
                 (outdir/'manifest.json').write_text(json.dumps(man,ensure_ascii=False,indent=2),encoding='utf-8')
