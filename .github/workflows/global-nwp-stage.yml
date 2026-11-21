@@ -3,7 +3,7 @@ on:
   workflow_dispatch: {}
   push:
     branches: [main]
-    paths: [global_nwp_stage.py, test_global_nwp_stage.py, pack_global_products.py, host/assets/world_country_bounds.json, .github/workflows/global-nwp-stage.yml]
+    paths: [global_nwp_stage.py, test_global_nwp_stage.py, pack_global_products.py, host/assets/world_country_bounds.json, host/assets/world_capitals.json, host/assets/world_borders.json, .github/workflows/global-nwp-stage.yml]
   schedule:
     - cron: "15 2,8,14,20 * * *"
 permissions:
@@ -65,6 +65,8 @@ jobs:
         run: |
           python pack_global_products.py /tmp/metstat-world-downloads /tmp/metstat-world-build/world
           cp host/assets/world_country_bounds.json /tmp/metstat-world-build/world/country_bounds.json
+          cp host/assets/world_capitals.json /tmp/metstat-world-build/world/capitals.json
+          cp host/assets/world_borders.json /tmp/metstat-world-build/world/borders.json
       - name: Provide cPanel copy-ready world data bundle and Natural Earth bounds
         uses: actions/upload-artifact@v4
         with:
