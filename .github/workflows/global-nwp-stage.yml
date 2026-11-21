@@ -82,7 +82,11 @@ jobs:
           if git show-ref --verify --quiet refs/remotes/origin/world-data; then
             git switch -C world-data origin/world-data
           else
-            git switch -c world-data
+            # A new branch starting from main includes .github/workflows and
+            # is rejected by GitHub's token without workflow-scope permission.
+            # Start an orphan DATA-ONLY branch with no inherited workflows.
+            git switch --orphan world-data
+            git rm -r --cached . > /dev/null 2>&1 || true
           fi
           rm -rf world
           cp -a /tmp/metstat-world-build/world ./world
