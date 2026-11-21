@@ -22,7 +22,8 @@ assert.equal(fa.zoomIn(),false);assert.deepEqual(fa.state().path,['world','asia'
 assert.deepEqual(fa.menu('country').map(n=>n.id),['iran','iraq']);
 assert.deepEqual(fa.menu('region').map(n=>n.id),['me','east_asia']);
 assert.equal(fa.hit(['iran']),false); // map hit must not jump backwards
-assert.equal(fa.select('me'),true);assert.equal(fa.hit(['fars','iran']),true);assert.equal(fa.state().selected,'iran');
+assert.equal(fa.select('me'),true);assert.equal(fa.hit(['fars','iran']),true);assert.equal(fa.state().selected,'fars');
+assert.equal(fa.select('me'),true);assert.equal(fa.hit(['iran','fars']),true);assert.equal(fa.state().selected,'fars'); // permutation cannot alter geographic drill-down
 const en=nav.create(nodes,{locale:'en'});assert.equal(en.state().selected,'world');
 const fav=nav.create(nodes,{locale:'en',favorite:'fars'});assert.equal(fav.state().selected,'fars');
 assert.throws(()=>nav.create([...nodes,{id:'bad',level:'county',parent:'iraq',bounds:B}]),/only supported in Iran/);
