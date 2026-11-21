@@ -1,6 +1,13 @@
 name: era5-clim
 # r192: یک‌بار (یا هنگام نیاز) اقلیم ERA5 (Z500/700/850 و MSLP) را از WeatherBench2 می‌سازد و در data/static می‌گذارد
-on: workflow_dispatch
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [feature/extended-mm-60-40-no-iri]
+    paths: [era5_clim.py, .github/workflows/era5-clim.yml]
+concurrency:
+  group: era5-clim-${{ github.ref }}
+  cancel-in-progress: false
 permissions: { contents: write }
 jobs:
   build:
