@@ -14,4 +14,11 @@ assert.equal(ui.change('fars'),true);assert.equal(ui.controls[4].disabled,false)
 ui.element.children[5].handlers.click();assert.equal(savedFavorite(storage),'fars');
 const reload=create(nodes,{locale:'en',favorite:savedFavorite(storage)});assert.equal(reload.state().selected,'fars');
 assert.deepEqual(out,['me','estahban','fars']);ui.destroy();assert.equal(ui.element.removed,true);
-console.log('MetStat geographic toolbar tests passed');
+const protectedNav=create(nodes,{locale:'fa'}),blockedOut=[];
+const guarded=mount({container:new El('div'),nav:protectedNav,locale:'fa',document:doc,
+  allowBounds:(b,s)=>s.level!=='world'&&s.level!=='continent',
+  onBounds:(b,s)=>blockedOut.push(s.selected)});
+assert.equal(guarded.zoomOut(),true);assert.equal(protectedNav.state().selected,'me');
+assert.equal(guarded.zoomOut(),false);assert.equal(protectedNav.state().selected,'me');
+assert.deepEqual(blockedOut,['me']);guarded.destroy();
+console.log('MetStat geographic toolbar and published-extent guards passed');
