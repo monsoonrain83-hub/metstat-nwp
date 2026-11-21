@@ -55,7 +55,9 @@ def to_units(param, field):
     _, _, lo, hi = field_spec(param)
     if param == 't2m' or (param.startswith('t') and param[1:].isdigit()):
         if med > 130: a = a - 273.15
-        if not (-125 < float(np.nanmedian(a)) < 70): raise ValueError('unphysical temperature')
+        val = float(np.nanmedian(a))
+        if not (max(-125., lo-(hi-lo)*0.7) < val < min(70., hi+(hi-lo)*0.7)):
+            raise ValueError('unphysical temperature level')
     elif param.startswith('z') and param[1:].isdigit():
         # Open-Meteo usually stores geopotential height in metres. Support
         # documented SI geopotential m²/s² and dam, never silently relabel.
@@ -65,8 +67,12 @@ def to_units(param, field):
         if not (lo-(hi-lo)*0.7 < val < hi+(hi-lo)*0.7):
             raise ValueError('unphysical geopotential height level')
     elif param.startswith('rh') and param[2:].isdigit():
-        if not (0 <= med <= 100): raise ValueError('unphysical relative humidity')
         q01,q99 = np.nanpercentile(a,[1,99])
+        # Some providers express RH as 0..1 fraction; valid global RH fields
+        # should contain a broad range of humidity, never a false 0.5% map.
+        if 0 <= q01 and q99 <= 1.01:
+            a = a*100.0
+            q01,q99 = q01*100.0,q99*100.0
         if q01 < -2 or q99 > 102: raise ValueError('relative humidity outside 0-100%')
     elif param == 'mslp':
         if med > 3000: a = a / 100.0
