@@ -24,6 +24,8 @@ def parse_run(s):
 def audit(man,now=None):
  now=now or datetime.now(UTC);models=man.get('models') or {};items=man.get('items') or []
  result={};flows=set()
+ print('MANIFEST_DEBUG', 'items_count='+str(len(items)), 'first_item='+str(items[0] if items else 'none')[:480],
+       'models='+','.join(sorted(models)[:25]), flush=True)
  for m,(max_age,variables,wf) in RULES.items():
   obj=models.get(m) or {};run=obj.get('run');dt=parse_run(run)
   age=None if dt is None else round((now-dt).total_seconds()/3600,1)
