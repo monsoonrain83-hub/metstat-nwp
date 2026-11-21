@@ -1885,6 +1885,12 @@ class Engine:
             C = z_clim_at(R, vt, level)
             if source is None or C is None: return None
             Z = R.interp(source, D[src_name][key])
+            # Do not publish geopotential anomalies from incomplete/misaligned
+            # climatology or source grids. NaNs can be valid terrain masks later,
+            # but never a missing reference at this stage.
+            if (np.shape(Z) != np.shape(C) or not np.isfinite(Z).all()
+                    or not np.isfinite(C).all()):
+                return None
             A, Zc = (Z - C) / 10, Z / 10
             if level in (700, 850):
                 try:
