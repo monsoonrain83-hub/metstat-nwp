@@ -32,6 +32,8 @@ jobs:
           pip install "omfiles[fsspec]" s3fs
       - name: Unit and orientation checks
         run: python -m unittest test_global_nwp_stage -v
+      - name: Test world publish freshness guard
+        run: python -m unittest test_world_publish_freshness -v
       - name: Fetch actual full-globe model fields and render
         run: python global_nwp_stage.py --model "${{ matrix.model }}" --out "global_artifacts/${{ matrix.model }}" --lead 24
       - name: Archive real products and manifest (not fake placeholders)
