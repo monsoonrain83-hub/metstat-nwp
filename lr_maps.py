@@ -15,9 +15,9 @@ MODELS = {
     'nmme':    ('ENSMEAN', 'NMME میانگین چندمدلی', 'NMME ensemble mean'),
     'cfsv2':   ('CFSv2', 'CFSv2 (NOAA)', 'CFSv2'),
     # r113: CCSM4 از تولید حذف شد (درخواست کاربر)
-    'gemnemo': ('GEM5_NEMO', 'GEM5-NEMO (ECCC)', 'GEM5-NEMO'),
-    'nasa':    ('NASA', 'NASA GEOS-S2S', 'NASA GEOS-S2S'),
-    'gfdl':    ('GFDL', 'GFDL SPEAR', 'GFDL SPEAR'),
+    'gemnemo': ('GEM5.2_NEMO', 'GEM5.2-NEMO (ECCC)', 'GEM5.2-NEMO'),
+    'nasa':    ('NASA_GEOS5v2', 'NASA GEOS-S2S', 'NASA GEOS-S2S'),
+    'gfdl':    ('GFDL_SPEAR', 'GFDL SPEAR', 'GFDL SPEAR'),
     'cancm':   ('CanCM4i', 'CanCM4i (ECCC)', 'CanCM4i'),
 }
 VARS = {'prate': ('lrpa', 'انومالی بارش ماهانه (میلی‌متر در روز)', 'mm/d', 'pr', 'lrpa', 86400.0), 'tmp2m': ('lrta', 'انومالی دمای ۲ متری ماهانه (°C)', '°C', 'tp', 'lrta', 1.0)}

@@ -20,7 +20,8 @@ AREA = [45, 17, 9, 68]       # N, W, S, E — کادر ME_EXT (۲۰–۶۵°E، 
 LEADS = 6
 # (نام CDS، شناسه پارامتر سایت، برچسب، واحد، دستهٔ سایت، مقیاس رنگ)
 VARS = {'t2a':   ('2m_temperature_anomaly',             'lrta', 'انومالی دمای ۲ متری (°C)',                 '°C',   'tp', 'lrta'),
-        'tpara': ('total_precipitation_anomalous_rate', 'lrpa', 'انومالی بارش (میلی‌متر در روز)',            'mm/d', 'pr', 'lrpa')}
+        'tpara': ('total_precipitation_anomalous_rate', 'lrpa', 'انومالی بارش (میلی‌متر در روز)',            'mm/d', 'pr', 'lrpa'),
+        'z500':  ('geopotential',                      'lz5a', 'انومالی ارتفاع ژئوپتانسیل ۵۰۰ هکتوپاسکال', 'dam', 'ul', 'z500a')}
 SEAS_MODELS = {'ecmwfseas':  dict(tclass='monthly',  span=1, cyc='ماهانه (گام ۱ ماهه)',          fa='ECMWF SEAS5 (ماهانه)'),
                'ecmwfseass': dict(tclass='seasonal', span=3, cyc='فصلی (میانگین ۳ ماهه)',       fa='ECMWF SEAS5 (فصلی)')}
 
@@ -63,13 +64,113 @@ def convert(vn, data, units):
     if u not in ('k', 'kelvin', 'degc', '°c', 'c'): raise RuntimeError(f'واحد دما ناشناخته: «{units}» (انتظار K)')
     return data
 
-def begin_payload(mk, run):
+# ---------------------------------------------------------------- pressure-level geopotential anomaly, relative to SEAS5's
+# OWN 1993–2016 hindcasts at the SAME start month and forecast lead.
+# A valid hindcast is mandatory: no reanalysis shortcut or fabricated anomaly.
+Z_DS = 'seasonal-monthly-pressure-levels'
+Z_YEARS = tuple(range(1993, 2017))
+
+
+def retrieve_z500(c, years, month, filepath):
+    c.retrieve(Z_DS, {
+        'originating_centre': 'ecmwf', 'system': '51',
+        'variable': ['geopotential'], 'pressure_level': ['500'],
+        'product_type': ['monthly_mean'],
+        'year': [str(y) for y in years], 'month': [f'{month:02d}'],
+        'leadtime_month': [str(i) for i in range(1, LEADS + 1)],
+        'area': AREA, 'data_format': 'netcdf',
+    }, filepath)
+
+
+def read_z500(path):
+    """Average all forecast members; for hindcasts also average across years.
+
+    Returns height in METERS, not raw geopotential (m²/s²).
+    """
+    import xarray as xr
+    import zipfile
+    if zipfile.is_zipfile(path):
+        with zipfile.ZipFile(path) as archive:
+            items = [n for n in archive.namelist() if n.endswith(('.nc', '.grib', '.grb'))]
+            if not items: raise ValueError('CDS zip has no data file')
+            path = archive.extract(items[0], os.path.dirname(path))
+    with open(path, 'rb') as f: header = f.read(4)
+    ds = xr.open_dataset(path, engine='cfgrib', backend_kwargs={'indexpath': ''}) if header == b'GRIB' else xr.open_dataset(path)
+    try:
+        vn = 'z' if 'z' in ds.data_vars else next(iter(ds.data_vars))
+        v = ds[vn]
+        units = str(v.attrs.get('units', '')).strip().lower()
+        aliases = {'latitude': 'lat', 'longitude': 'lon', 'forecastMonth': 'lead'}
+        la = next((x for x in ('latitude', 'lat') if x in v.dims), None)
+        lo = next((x for x in ('longitude', 'lon') if x in v.dims), None)
+        fc = next((x for x in ('forecastMonth', 'leadtime_month', 'step') if x in v.dims), None)
+        if la is None or lo is None or fc is None:
+            raise ValueError(f'Unexpected Z500 CDS dimensions: {v.dims}')
+        for dim in list(v.dims):
+            if dim in (la, lo, fc): continue
+            if dim in ('number', 'member', 'ensemble', 'forecast_reference_time', 'time', 'start_date'):
+                v = v.mean(dim, skipna=True)
+            else:
+                if v.sizes[dim] != 1:
+                    raise ValueError(f'Unexpected non-singleton dimension {dim}: {v.sizes[dim]}')
+                v = v.isel({dim: 0})
+        v = v.transpose(fc, la, lo)
+        data = np.asarray(v.values, dtype=np.float64)
+        u = re.sub(r'\s+', '', units).replace('**', '^')
+        if 'm^2' in u or 'm2' in u:
+            data = data / 9.80665
+        elif u in ('m', 'gpm', 'geopotentialmetre', 'geopotentialmeter'):
+            pass
+        else:
+            raise ValueError(f'Unknown Z500 unit (cannot convert to height): {units}')
+        offs = [int(float(k)) - 1 for k in np.atleast_1d(v[fc].values)]
+        if len(offs) < 3 or not np.isfinite(data).any():
+            raise ValueError('Incomplete Z500 monthly data')
+        return data, np.asarray(v[lo].values, float), np.asarray(v[la].values, float), offs
+    finally:
+        ds.close()
+
+
+def z500_hindcast_climatology(c, month):
+    """Cache 24-year SEAS5 hindcast mean by initialization month; do not refetch daily."""
+    cache_dir = os.path.join(N.HERE, 'data', 'cache')
+    os.makedirs(cache_dir, exist_ok=True)
+    cache_path = os.path.join(cache_dir, f'seas5_z500_hc51_{month:02d}.npz')
+    if os.path.isfile(cache_path):
+        with np.load(cache_path, allow_pickle=False) as d:
+            return (d['data'], d['lon'], d['lat'], d['offs'].tolist())
+    with tempfile.TemporaryDirectory() as td:
+        target = os.path.join(td, 'z500_hindcast.nc')
+        retrieve_z500(c, Z_YEARS, month, target)
+        data, lon, lat, offs = read_z500(target)
+    np.savez_compressed(cache_path, data=data.astype(np.float32),
+                        lon=lon, lat=lat, offs=np.asarray(offs, dtype=np.int16))
+    return data, lon, lat, offs
+
+
+def z500_anomalies(c, year, month):
+    """Return SEAS5 forecast minus model-hindcast climatology, in decameters."""
+    with tempfile.TemporaryDirectory() as td:
+        dest = os.path.join(td, 'z500_fc.nc')
+        retrieve_z500(c, [year], month, dest)
+        fc, lon, lat, offs = read_z500(dest)
+    hc, hc_lon, hc_lat, hc_offs = z500_hindcast_climatology(c, month)
+    if (fc.shape != hc.shape or offs != hc_offs or
+            not np.allclose(lon, hc_lon) or not np.allclose(lat, hc_lat)):
+        raise ValueError('Forecast/hindcast Z500 grids or lead months do not match')
+    anomaly_dam = (fc - hc) / 10.0
+    return anomaly_dam.astype(np.float32), lon, lat, offs
+
+
+def begin_payload(mk, run, available):
     M = SEAS_MODELS[mk]
+    selected = [(i, vn, VARS[vn]) for i, vn in enumerate(VARS) if vn in available]
+    scale_keys = {p[5] for _, _, p in selected}
     return {'model': mk, 'run': run, 'name': mk.upper(), 'label': M['fa'],
             'info': dict(tclass=M['tclass'], res='1°', cyc=M['cyc'], prov='ECMWF SEAS5 / Copernicus C3S'),
             'cats': [dict(id=i, fa=f, o=o) for i, f, o in N.CATS],
-            'scales': {k: dict(c=styles.SC[k]['colors'], e=[None if abs(x) == math.inf else x for x in styles.SC[k]['edges']], lo=True, hi=True) for k in ('lrta', 'lrpa')},
-            'params': {v[1]: dict(fa=v[2], unit=v[3], cat=v[4], o=90 + i, sc=v[5], mu=v[3], alt='', me=1, ln=0) for i, v in enumerate(VARS.values())}}
+            'scales': {k: dict(c=styles.SC[k]['colors'], e=[None if abs(x) == math.inf else x for x in styles.SC[k]['edges']], lo=True, hi=True) for k in scale_keys},
+            'params': {v[1]: dict(fa=v[2], unit=v[3], cat=v[4], o=90 + i, sc=v[5], mu=v[3], alt='', me=1, ln=0) for i, _, v in selected}}
 
 def publish(up, fields, y0, m0, run):
     """fields: {vn: (data_mm(lead,lat,lon) در واحد سایت، lon، lat، offs)} → هر دو مدل (ماهانه + فصلی)"""
@@ -79,7 +180,7 @@ def publish(up, fields, y0, m0, run):
         for vn, (arr, lon, lat, offs) in fields.items():
             pid, sc = VARS[vn][1], VARS[vn][5]
             if not started:
-                up.call('begin', js=begin_payload(mk, run)); started = True
+                up.call('begin', js=begin_payload(mk, run, fields)); started = True
             for k in range(len(arr) - M['span'] + 1):
                 a = arr[k:k + M['span']]
                 if offs[k:k + M['span']] != list(range(offs[k], offs[k] + M['span'])): continue            # فقط ماه‌های پیاپی
@@ -102,17 +203,24 @@ def main():
         fields = {}
         if a.mock:
             rng = np.random.default_rng(3); la = np.arange(44.5, 8, -1.0); lo = np.arange(17.5, 68)
-            for vn in VARS: fields[vn] = (rng.normal(0, 1.0 if vn == 't2a' else 1.0, (LEADS, len(la), len(lo))), lo, la, list(range(LEADS)))
+            for vn in VARS: fields[vn] = (rng.normal(0, 1.0 if vn != 'z500' else 3.0, (LEADS, len(la), len(lo))), lo, la, list(range(LEADS)))
         else:
             import cdsapi
             c = cdsapi.Client(quiet=True, retry_max=3, sleep_max=30, timeout=1800)
             for vn, v in VARS.items():
+                if vn == 'z500': continue  # CDS pressure-level product handled separately below
                 with tempfile.TemporaryDirectory() as td:
                     p = os.path.join(td, f'{vn}.nc')
                     try: retrieve(c, v[0], y, m, p)
                     except Exception as e: log(f'  ✗ {vn} {y}-{m:02d}: {type(e).__name__}: {str(e)[:300]}'); break      # این ماه هنوز منتشر نشده → ماه قبل
                     try: d, lon, lat, offs, units = read_cds(p); fields[vn] = (convert(vn, d, units), lon, lat, offs); log(f'  {vn}: shape={d.shape} offs={offs} units="{units}"')
                     except Exception as e: log(f'  ✗ خواندن {vn}: {type(e).__name__}: {e}'); fields = {}; break
+            if fields:
+                try:
+                    fields['z500'] = z500_anomalies(c, y, m)
+                    log(f'  ✓ SEAS5 Z500 {y}-{m:02d}: خوداقلیم مدل ۱۹۹۳–۲۰۱۶')
+                except Exception as e:
+                    log(f'  ⓘ Z500 unavailable, no empty Z500 parameter will be published: {type(e).__name__}: {str(e)[:220]}')
         if not fields: continue
         if len(fields) < len(VARS): log('  ⚠ فقط بخشی از پارامترها آمد؛ همان‌ها آپلود می‌شود')
         publish(up, fields, y, m, run); return 0

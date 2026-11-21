@@ -1,26 +1,100 @@
 # -*- coding: utf-8 -*-
-"""MetStat r192 — اقلیم ERA5 برای نقشه‌های انومالی (Z500/Z700/Z850 و MSLP).
-منبع: WeatherBench2 «era5-hourly-climatology» (ERA5، دورهٔ ۱۹۹۰–۲۰۱۹، میانگین‌گیری هموارشدهٔ هر روز سال)، بایگانی عمومی گوگل‌کلود.
-خروجی: data/static/era5_clim_1deg.npz — میانگین روزانه (۳۶۶ روز) روی شبکهٔ ۱° (لنگرهای ۰٫۲۵° هر ۴ نقطه) برای lon −15…95، lat 5…65.
-اثر تغییرات روزانهٔ جزرومد جوی (≤۱–۲ m در Z500، ≤۱ hPa در MSLP) نادیده گرفته می‌شود؛ در برابر انومالی‌های ده‌ها متر/چند hPa ناچیز است."""
-import sys, numpy as np, xarray as xr
-URL = 'gs://weatherbench2/datasets/era5-hourly-climatology/1990-2019_6h_1440x721.zarr'
-ds = xr.open_zarr(URL, storage_options={'token': 'anon'}, chunks=None)
-print(dict(ds.sizes), list(ds.data_vars)[:20], flush=True)
-lat = ds['latitude'].values; lon = ds['longitude'].values
-def sel(da):
-    da = da.sortby('latitude')
-    lons = np.arange(-15, 95.1, 1.0); lats = np.arange(5, 65.1, 1.0)
-    da = da.assign_coords(longitude=((da.longitude + 180) % 360) - 180) if da.longitude.max() > 180 else da
-    da = da.sortby('longitude')
-    return da.sel(latitude=lats, longitude=lons, method='nearest')
-out = {}
-G = ds['geopotential']
-for L in (500, 700, 850):
-    a = sel(G.sel(level=L)).mean('hour').compute().values / 9.80665          # m
-    out[f'z{L}'] = a.astype(np.float16); print('z', L, a.shape, float(np.nanmin(a)), float(np.nanmax(a)), flush=True)
-m = sel(ds['mean_sea_level_pressure']).mean('hour').compute().values / 100.0       # hPa
-out['msl'] = m.astype(np.float16); print('msl', m.shape, float(np.nanmin(m)), float(np.nanmax(m)), flush=True)
-out['lat'] = np.arange(5, 65.1, 1.0, dtype=np.float32); out['lon'] = np.arange(-15, 95.1, 1.0, dtype=np.float32)
-np.savez_compressed('data/static/era5_clim_1deg.npz', **out)
-import os; print('saved', os.path.getsize('data/static/era5_clim_1deg.npz') // 1024, 'KB')
+"""Build a regional ERA5 daily climatology from WeatherBench2 (1990–2019).
+
+This is a *reference climatology*, not forecast data. Output is not published
+until consumers explicitly validate its coverage and units.
+"""
+import os
+import numpy as np
+import xarray as xr
+
+URL = "gs://weatherbench2/datasets/era5-hourly-climatology/1990-2019_6h_1440x721.zarr"
+OUT = "data/static/era5_clim_1deg.npz"
+LONS = np.arange(-15, 95.1, 1.0, dtype=np.float32)
+LATS = np.arange(5, 65.1, 1.0, dtype=np.float32)
+
+
+def select_region(da):
+    """Select geographic coordinates without accidentally extrapolating."""
+    if float(da.longitude.max()) > 180:
+        da = da.assign_coords(longitude=((da.longitude + 180) % 360) - 180)
+    da = da.sortby("latitude").sortby("longitude")
+    # Duplicate spatial coordinates make nearest-neighbour selection ambiguous.
+    # In particular, longitude 0 and 360 can collapse to the same coordinate
+    # after normalizing to [-180, 180). Reject rather than silently choosing.
+    for axis in ("latitude", "longitude"):
+        coords = np.asarray(da[axis].values)
+        if not np.isfinite(coords).all() or np.unique(coords).size != coords.size:
+            raise ValueError(f"ERA5 source has duplicate/nonfinite {axis} coordinates")
+    # nearest-neighbour selection must not extrapolate outside source coverage.
+    if (float(LATS.min()) < float(da.latitude.min()) or
+            float(LATS.max()) > float(da.latitude.max()) or
+            float(LONS.min()) < float(da.longitude.min()) or
+            float(LONS.max()) > float(da.longitude.max())):
+        raise ValueError("ERA5 source grid does not cover the requested region")
+    return da.sel(
+        latitude=LATS, longitude=LONS, method="nearest"
+    )
+
+
+def daily_field(da, divisor=1.0):
+    """Keep 366 day-of-year climatology slices; average the 6-hour slots."""
+    regional = select_region(da)
+    if "hour" not in regional.dims:
+        raise ValueError("ERA5 climatology lacks 6-hour time-of-day dimension")
+    # A finite average of only three hours is not a valid daily normal.
+    # Require the actual 00/06/12/18 UTC slots, not merely four samples.
+    if "dayofyear" not in regional.dims:
+        raise ValueError("ERA5 climatology lacks dayofyear dimension")
+    hours = np.asarray(regional["hour"].values)
+    days = np.asarray(regional["dayofyear"].values)
+    if (hours.shape != (4,) or not np.array_equal(np.sort(hours), [0, 6, 12, 18]) or
+            days.shape != (366,) or not np.array_equal(days, np.arange(1, 367))):
+        raise ValueError("ERA5 climatology has incomplete or invalid time coordinates")
+    # xarray.mean skips NaN by default; that would silently turn an incomplete
+    # four-slot climatological day into a seemingly complete daily normal.
+    # Require all source slots at each grid cell before calculating its mean.
+    if not bool(xr.apply_ufunc(np.isfinite, regional, dask='allowed').all().compute()):
+        raise ValueError("ERA5 climatology has missing/nonfinite source slots")
+    daily = (regional.mean("hour", skipna=False) / divisor).compute()
+    values = np.asarray(daily.values, dtype=np.float32)
+    if values.shape != (366, len(LATS), len(LONS)):
+        raise ValueError(f"Unexpected ERA5 climatology shape: {values.shape}")
+    if not np.isfinite(values).all():
+        raise ValueError("ERA5 climatology has missing/nonfinite regional values")
+    return values
+
+
+def build(ds):
+    out = {"lat": LATS, "lon": LONS}
+    geopotential = ds["geopotential"]
+    for level in (500, 700, 850):
+        values = daily_field(geopotential.sel(level=level), 9.80665)
+        if not (0 < values.min() and values.max() < 20000):
+            raise ValueError(f"Unphysical Z{level} climatology")
+        out[f"z{level}"] = values.astype(np.float16)
+    pressure = daily_field(ds["mean_sea_level_pressure"], 100.0)
+    if not (800 < pressure.min() and pressure.max() < 1150):
+        raise ValueError("MSLP climatology unit/physical range mismatch")
+    out["msl"] = pressure.astype(np.float16)
+    # The surface 2m temperature is required for ME/EU temperature anomalies.
+    # Store in Celsius to match the forecast pipeline; do not infer a
+    # temperature climatology from Iranian station normals.
+    t2m = daily_field(ds["2m_temperature"])
+    if not (170 < t2m.min() and t2m.max() < 350):
+        raise ValueError("ERA5 2m temperature is not in expected Kelvin range")
+    out["t2m"] = (t2m - 273.15).astype(np.float16)
+    return out
+
+
+def main():
+    ds = xr.open_zarr(URL, storage_options={"token": "anon"}, chunks=None)
+    print(dict(ds.sizes), list(ds.data_vars), flush=True)
+    os.makedirs(os.path.dirname(OUT), exist_ok=True)
+    result = build(ds)
+    np.savez_compressed(OUT, **result)
+    print("saved", OUT, os.path.getsize(OUT), "bytes", sorted(result), flush=True)
+
+
+if __name__ == "__main__":
+    main()
