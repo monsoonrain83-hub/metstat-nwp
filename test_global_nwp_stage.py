@@ -20,6 +20,25 @@ class GlobalNWPTests(unittest.TestCase):
             for p,v in [('z500',5400.0),('mslp',101300.0)]:
                 z=Path(td)/(p+'.webp')
                 self.assertTrue(g.render(np.full((61,120),v,np.float32),p,z)['finite_fraction']>0.9)
+    def test_native_field_survives_missing_or_failed_coarse_source(self):
+        class Fake:
+            def __init__(self, dom, exists, error=False):
+                self.dom,self.present,self.error=dom,exists,error
+            def exists(self,run,valid):return self.present
+            def read(self,run,valid,fields):
+                if self.error:raise OSError('archive temporarily unavailable')
+                return {fields[0]:np.ones((2,3),np.float32)}
+        now=datetime(2026,11,21,0,tzinfo=timezone.utc)
+        hi=Fake('ecmwf_ifs',True)
+        for coarse in (Fake('ecmwf_ifs025',False),Fake('ecmwf_ifs025',True,True)):
+            errors=[]
+            found=g.read_independent_sources((coarse,hi),now,now,
+                                             ['temperature_2m'],errors)
+            self.assertIn('ecmwf_ifs',found)
+            self.assertNotIn('ecmwf_ifs025',found)
+            self.assertEqual(found['ecmwf_ifs']['temperature_2m'].shape,(2,3))
+        self.assertEqual(len(errors),1)
+
     def test_metadata_bbox_and_time(self):
         dt=datetime(2026,11,21,12,tzinfo=timezone.utc)
         v=datetime(2026,11,22,12,tzinfo=timezone.utc)
