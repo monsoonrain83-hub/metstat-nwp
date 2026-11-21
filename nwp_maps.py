@@ -47,7 +47,7 @@ MEW, MEH = int((ME_EXT[1] - ME_EXT[0]) * PXD), int((ME_EXT[3] - ME_EXT[2]) * PXD
 # r65: کادر «اروپا» (فقط ترازهای بالا و فشار سطح دریا): اروپا، غرب روسیه، شمال کاسپین، مصر/لیبی و بخشی از دریای عرب
 EU_EXT = (-12.0, 68.0, 12.0, 62.0); EU_PXD = 16
 EUW, EUH = int((EU_EXT[1] - EU_EXT[0]) * EU_PXD), int((EU_EXT[3] - EU_EXT[2]) * EU_PXD)
-EU_PIDS = ('z850', 'z700', 'z500', 'z500a', 'z850a', 'z700a', 'w500', 'w300', 'w250', 'w200', 'sfc', 'w10')
+EU_PIDS = ('z850', 'z700', 'z500', 'z500a', 'z850a', 'z700a', 'w500', 'w300', 'w250', 'w200', 'sfc', 'w10', 'tanom', 'tanom5')
 MODELS = {
     'ecmwf':  dict(name='ECMWF 28km', label='ECMWF IFS 28km (0.25°)', dom=['ecmwf_ifs025'], prov='ECMWF', hz={'00': 360, '12': 360, '06': 144, '18': 144}, res='0.25°', cyc='00/06/12/18'),
     'ecmwf9': dict(name='ECMWF 9km', label='ECMWF IFS 9km (HRES)', dom=['ecmwf_ifs'], prov='ECMWF', hz={'00': 360, '12': 360, '06': 144, '18': 144}, res='0.1° (9 km)', cyc='00/06/12/18'),   # فقط پارامترهای سطحی؛ ترازهای فشاری در HRES نیست
