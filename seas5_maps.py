@@ -123,8 +123,12 @@ def main():
             log(f'  ✗ SEAS5 {run}: فقط {len(fields)}/{len(VARS)} متغیر دریافت شد؛ انتشار ناقص ممنوع است')
             continue
         published = publish(up, fields, y, m, run)
-        if any(published.get(k, 0) < (10 if k == 'ecmwfseas' else 6) for k in SEAS_MODELS):
-            log(f'  ✗ SEAS5 {run}: فایل‌های تازه کمتر از حداقل مورد انتظار: {published}')
+        if a.host:
+            missing = [k for k in SEAS_MODELS if host_run(a.host, k) != run]
+        else:
+            missing = [k for k in SEAS_MODELS if published.get(k, 0) < (10 if k == 'ecmwfseas' else 6)]
+        if missing:
+            log(f'  ✗ SEAS5 {run}: بعد از انتشار، وضعیت یا تعداد فایل‌ها در هاست ناقص است: {missing}; added={published}')
             return 2
         return 0
     log('✗ SEAS5: برای هیچ‌کدام از دو ماه اخیر داده‌ای گرفته نشد'); return 2
