@@ -130,6 +130,9 @@ def main():
         if mk == 'ec46m':
             try: publish_weekly_absolute(up,t0,lo,la,pr,tm)
             except Exception as exc: failed.append('ecwkabs'); log(f'✗ EC46 هفتگی مطلق: {exc}')
+    if total_maps == 0 and not a.mock:
+        failed.append('no-new-ec46-maps')
+        log('✗ EC46: هیچ نقشه تازه‌ای تولید نشد؛ نتیجه موفق گزارش نمی‌شود')
     if failed: log('✗ پردازش ناقص: '+','.join(failed))
     sys.exit(2 if failed else 0)
 
