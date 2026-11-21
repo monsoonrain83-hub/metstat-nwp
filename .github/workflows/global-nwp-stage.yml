@@ -80,6 +80,7 @@ jobs:
         run: |
           git config user.name "metstat-world-bot"
           git config user.email "metstat-world-bot@users.noreply.github.com"
+          cp world_publish_freshness.py /tmp/metstat-world-publish-freshness.py
           git fetch origin world-data || true
           if git show-ref --verify --quiet refs/remotes/origin/world-data; then
             git switch -C world-data origin/world-data
@@ -90,7 +91,7 @@ jobs:
             git switch --orphan world-data
             git rm -r --cached . > /dev/null 2>&1 || true
           fi
-          python world_publish_freshness.py world /tmp/metstat-world-build/world
+          python /tmp/metstat-world-publish-freshness.py world /tmp/metstat-world-build/world
           rm -rf world
           cp -a /tmp/metstat-world-build/world ./world
           git add world
