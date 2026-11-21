@@ -1,0 +1,44 @@
+name: MetStat real global NWP raster stage
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths: [global_nwp_stage.py, test_global_nwp_stage.py, .github/workflows/global-nwp-stage.yml]
+  schedule:
+    - cron: "15 2,8,14,20 * * *"
+permissions:
+  contents: read
+concurrency:
+  group: global-nwp-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: false
+jobs:
+  world:
+    name: World ${{ matrix.model }} native raster
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        model: [gfs, ecmwf, gem]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install real source readers
+        run: |
+          pip install -r requirements.txt
+          pip install "omfiles[fsspec]" s3fs
+      - name: Unit and orientation checks
+        run: python -m unittest test_global_nwp_stage -v
+      - name: Fetch actual full-globe model fields and render
+        run: python global_nwp_stage.py --model "${{ matrix.model }}" --out "global_artifacts/${{ matrix.model }}" --lead 24
+      - name: Archive real products and manifest (not fake placeholders)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: world-${{ matrix.model }}-${{ github.run_number }}
+          path: global_artifacts/${{ matrix.model }}/
+          if-no-files-found: error
+          retention-days: 7
