@@ -73,6 +73,26 @@ class GlobalNWPTests(unittest.TestCase):
                          ['2026-11-22T00:00', '2026-12-06T00:00'])
         self.assertEqual(cycles[1]['reference_time'], '2026-11-20T12:00')
 
+    def test_manifest_root_is_true_selected_high_resolution_source(self):
+        from datetime import timedelta
+        t=datetime(2026,11,21,0,tzinfo=timezone.utc)
+        v=t+timedelta(hours=240)
+        fields={'t2m':{'field_source_domain':'ecmwf_ifs','nominal_resolution':'9 km'},
+                'z500':{'field_source_domain':'ecmwf_ifs025','nominal_resolution':'28 km'}}
+        mixed=g.product_manifest('ecmwf',t,v,'ecmwf_ifs025',fields)
+        self.assertEqual(mixed['source_domain'],'mixed-per-field')
+        self.assertEqual(mixed['schema'],2)
+        self.assertTrue(mixed['generated_at_utc'].endswith('Z'))
+        high=g.product_manifest('ecmwf',t,v,'ecmwf_ifs025',{'t2m':fields['t2m']})
+        self.assertEqual(high['source_domain'],'ecmwf_ifs')
+
+    def test_rendered_webp_file_hash_matches_bytes(self):
+        import hashlib
+        with tempfile.TemporaryDirectory() as td:
+            dest=Path(td)/'real.webp'
+            g.render(np.full((32,64),273.15,dtype=np.float32),'t2m',dest)
+            self.assertEqual(len(hashlib.sha256(dest.read_bytes()).hexdigest()),64)
+
     def test_metadata_bbox_and_time(self):
         dt=datetime(2026,11,21,12,tzinfo=timezone.utc)
         v=datetime(2026,11,22,12,tzinfo=timezone.utc)
