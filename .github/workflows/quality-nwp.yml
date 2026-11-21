@@ -49,6 +49,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_geopotential_time_labels.py' -v
       - name: "Geopotential anomaly integrity at 500/700/850hPa"
         run: python -m unittest discover -s tests -p 'test_z_anomaly_integrity.py' -v
+      - name: "Geopotential unit metadata must use dam, never dm"
+        run: python -m unittest discover -s tests -p 'test_geopotential_metadata_dam.py' -v
       - name: "Europe daily and five-day ERA5 anomaly publication scope"
         run: python -m unittest discover -s tests -p 'test_eu_temperature_anomalies.py' -v
       - name: "Regional anomaly rendering must use ERA5 on native grid"
