@@ -72,6 +72,13 @@ class TestERA5TemperatureClimatology(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "time coordinates"):
                 C.build(ds)
 
+    def test_reject_infinite_source_slot_before_averaging(self):
+        ds, lat, lon = self.sample()
+        ds["2m_temperature"].values[0, 0, 0, 0] = np.inf
+        with patch.object(C, "LATS", lat), patch.object(C, "LONS", lon):
+            with self.assertRaisesRegex(ValueError, "missing/nonfinite source slots"):
+                C.build(ds)
+
     def test_reject_celsius_mislabeled_as_kelvin(self):
         ds, lat, lon = self.sample(temp=20.0)
         with patch.object(C, "LATS", lat), patch.object(C, "LONS", lon):
