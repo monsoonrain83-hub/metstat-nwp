@@ -105,6 +105,7 @@ def acquire(model, outdir, requested_lead=24):
             # On GFS, the coarse pressure-level archive may omit T2m. The
             # independent GFS013 surface archive contains the actual field.
             # Resample nearest onto the precisely georeferenced 0.25° world grid.
+            gfs_surface_fallback = False
             if model == 'gfs' and 'temperature_2m' not in data:
                 try:
                     surface=N.S3Source('ncep_gfs013',fs)
@@ -115,6 +116,7 @@ def acquire(model, outdir, requested_lead=24):
                             ilon=np.clip(np.rint((src.lo0+np.arange(src.nx)*src.dx-surface.lo0)/surface.dx).astype(int),0,surface.nx-1)
                             ilat=np.clip(np.rint((src.la0+np.arange(src.ny)*src.dy-surface.la0)/surface.dy).astype(int),0,surface.ny-1)
                             data['temperature_2m']=raw[np.ix_(ilat,ilon)]
+                            gfs_surface_fallback=True
                             print('GFS_REAL_SURFACE_FALLBACK ncep_gfs013 -> 0.25deg',flush=True)
                 except Exception as e:errors.append('GFS T2m alternate source: '+str(e)[:120])
             products={}
@@ -129,7 +131,10 @@ def acquire(model, outdir, requested_lead=24):
                 try:
                     fname=f'{model}_{p}_{valid:%Y%m%d%H}.webp'
                     stats=render(arr,p,outdir/fname)
-                    products[p]={'file':fname,'variable':key,'units':units,**stats}
+                    products[p]={'file':fname,'variable':key,'units':units,
+                                 'field_source_domain':('ncep_gfs013' if p=='t2m' and gfs_surface_fallback else dom),
+                                 'resampling':('nearest-neighbor native 0.117deg to 0.25deg' if p=='t2m' and gfs_surface_fallback else 'native model grid'),
+                                 **stats}
                 except Exception as e:errors.append(f'{p}: {e}')
             if products:
                 man=product_manifest(model,run,valid,dom,products)
