@@ -24,6 +24,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Hindcast reference month
+        id: clim_month
+        run: echo "month=$(date -u +'%m')" >> "$GITHUB_OUTPUT"
+      - name: Cache SEAS5 same-system 500hPa hindcast climatology
+        uses: actions/cache@v4
+        with:
+          path: data/cache/seas5_z500_hc51_*.npz
+          key: seas5-hc51-z500-v1-${{ steps.clim_month.outputs.month }}
       - name: install
         run: pip install -r requirements.txt && pip install xarray netCDF4 cdsapi cfgrib eccodes
       - name: SEAS5 monthly + seasonal maps

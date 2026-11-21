@@ -124,7 +124,7 @@ def group_of(pid):
     if p in ('rh', 'pw'): return 'humidity'
     if p in ('ki', 'cape', 'si', 'gdi', 'refl', 'li', 'cin', 'tt', 'ko', 'shw', 'lr75', 'lr85', 'sh06', 'sh85', 'swt', 'fzl', 'hgz'): return 'convection'
     if p in ('gust', 'w500', 'w300'): return 'wind'
-    if p in ('sfc', 'z850', 'z700', 'z500'): return 'pressure'
+    if p in ('sfc', 'z850', 'z700', 'z500', 'z500a', 'z700a', 'z850a'): return 'pressure'
     if p == 'sigwx': return 'sigwx'
     return None            # بقیه (مثلاً نقشه‌های ثانویهٔ همرفت/آذرخش) در گام بعد بر اساس haz تعیین می‌شوند
 

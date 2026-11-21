@@ -1,0 +1,34 @@
+name: metstat-monthly-multimodel
+# Quantitative anomaly blend only: ECMWF SEAS5 60% + independent fresh CPC members 40%.
+# No IRI, no NMME ensemble mean double counting and no seasonal multimodel.
+on:
+  schedule:
+    - cron: "35 15 * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Rebuild monthly multimodel even when already published"
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: monthly-mm
+  cancel-in-progress: false
+jobs:
+  monthly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements.txt && pip install xarray netCDF4 cdsapi cfgrib eccodes
+      - name: Monthly weighted anomalies
+        env:
+          CDSAPI_URL: https://cds.climate.copernicus.eu/api
+          CDSAPI_KEY: ${{ secrets.CDSAPI_KEY }}
+        run: python monthly_mm_maps.py --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}" ${{ inputs.force && '--force' || '' }}

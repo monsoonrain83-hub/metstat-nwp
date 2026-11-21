@@ -1,0 +1,8 @@
+/* Compact desktop-style toolbar; no responsive single-column mode. */
+.metstat-geo-toolbar{display:flex;flex-flow:row nowrap;align-items:end;gap:5px;width:100%;min-height:34px;max-height:42px;box-sizing:border-box;overflow-x:auto;padding:3px 4px;direction:rtl}
+.metstat-geo-label{display:flex;flex:1 1 0;min-width:95px;max-width:230px;flex-direction:column;gap:1px;font:inherit;font-size:10px;line-height:12px}
+.metstat-geo-select{display:block;box-sizing:border-box;width:100%;height:23px;min-height:23px;padding:0 5px;font:inherit;font-size:11px;border:1px solid #8995a3;border-radius:4px;background:var(--panel-bg,#fff);color:var(--text-color,#17212b)}
+.metstat-geo-select:disabled{opacity:.45;cursor:not-allowed}
+.metstat-geo-select:focus-visible,.metstat-geo-favorite:focus-visible{outline:2px solid #2278c9;outline-offset:1px}
+.metstat-geo-favorite{height:24px;min-width:26px;padding:0 4px;font-size:18px;line-height:20px;cursor:pointer;border:1px solid #8995a3;border-radius:4px;background:transparent;color:inherit}
+[lang=en] .metstat-geo-toolbar{direction:ltr}

@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - run: pip install ruff bandit numpy scipy pillow requests matplotlib
+      - run: pip install ruff bandit numpy scipy pillow requests matplotlib xarray
       - name: "Ruff — فقط خطاهای واقعی (F: نام تعریف‌نشده، E9: نحو)"
         run: ruff check --select F821,F811,F823,E9 .
       - name: "Bandit — فقط شدت بالا"
@@ -25,6 +25,55 @@ jobs:
           find out9 -type f -name 't2m_*' -size +0c -print | grep -q .
       - name: "Regression — multimodel policy and preservation of pending fields"
         run: python -m unittest discover -s tests -p 'test_mm_*.py' -v
+      - name: "Daily multimodel 180h and 00/12Z policy (offline)"
+        run: python -m unittest discover -s tests -p 'test_daily_mm_180.py' -v
+      - name: "GFS upper-air same-cycle integrity (offline)"
+        run: python -m unittest discover -s tests -p 'test_same_cycle_upper.py' -v
+      - name: "NWP progress manifest contract (offline)"
+        run: python -m unittest discover -s tests -p 'test_nwp_progress_contract.py' -v
+      - name: "Run completion horizon (offline)"
+        run: python -m unittest discover -s tests -p 'test_run_completion_horizon.py' -v
+      - name: "ARPEGE Middle East product scope (offline)"
+        run: python -m unittest discover -s tests -p 'test_arpege_scope.py' -v
+      - name: "ERA5 regional temperature climatology regression (offline)"
+        run: python -m unittest discover -s tests -p 'test_era5_clim.py' -v
+      - name: "ERA5 spatial coordinate collision regression (offline)"
+        run: python -m unittest discover -s tests -p 'test_era5_spatial_coords.py' -v
+      - name: "ERA5 calendar and regional sampling regression (offline)"
+        run: python -m unittest discover -s tests -p 'test_era5_sampling.py' -v
+      - name: "Five-select geographic toolbar interactions and favorites"
+        run: node tests/test_geo_toolbar.cjs
+      - name: "Five-level geographic zoom navigation state engine"
+        run: node tests/test_geo_nav.cjs
+      - name: "Geopotential valid-time snapshot labelling"
+        run: python -m unittest discover -s tests -p 'test_geopotential_time_labels.py' -v
+      - name: "Geopotential anomaly integrity at 500/700/850hPa"
+        run: python -m unittest discover -s tests -p 'test_z_anomaly_integrity.py' -v
+      - name: "Geopotential unit metadata must use dam, never dm"
+        run: python -m unittest discover -s tests -p 'test_geopotential_metadata_dam.py' -v
+      - name: "Europe daily and five-day ERA5 anomaly publication scope"
+        run: python -m unittest discover -s tests -p 'test_eu_temperature_anomalies.py' -v
+      - name: "Regional anomaly rendering must use ERA5 on native grid"
+        run: python -m unittest discover -s tests -p 'test_regional_anomaly_rendering.py' -v
+      - name: "Regional ERA5 T2m anomaly reference and missing-data gating"
+        run: python -m unittest discover -s tests -p 'test_regional_tanom_era5.py' -v
+      - name: "Weekly MM smoke — only matched ECMWF/CFS periods"
+        run: |
+          python wk_maps.py --mock --out /tmp/metstat-wk-test --only ecwk,cfswk
+          find /tmp/metstat-wk-test/mmwk -type f -name 'wta_*.webp' -size +0c -print | grep -q .
+          find /tmp/metstat-wk-test/mmwk -type f -name 'wpa_*.webp' -size +0c -print | grep -q .
+      - name: "Monthly MM smoke — real-source gating via mock only"
+        run: |
+          python monthly_mm_maps.py --mock --out /tmp/metstat-mo-test
+          find /tmp/metstat-mo-test/mmmo -type f -name 'lrta_*.webp' -size +0c -print | grep -q .
+          find /tmp/metstat-mo-test/mmmo -type f -name 'lrpa_*.webp' -size +0c -print | grep -q .
+      - name: "SEAS5 mock — monthly and seasonal 500hPa anomaly publication"
+        run: |
+          python seas5_maps.py --mock --out /tmp/metstat-seas5-test
+          find /tmp/metstat-seas5-test/ecmwfseas -type f -name 'lz5a_*.webp' -size +0c -print | grep -q .
+          find /tmp/metstat-seas5-test/ecmwfseass -type f -name 'lz5a_*.webp' -size +0c -print | grep -q .
+      - name: "Committed ERA5 artifact integrity (real NPZ, not mock)"
+        run: python -m unittest discover -s tests -p 'test_committed_era5_artifact.py' -v
       - name: "نشت کلید"
         run: |
           if grep -rInE "(upload_key|relay_secret|api[_-]?key)[\"' ]*[:=][\"' ]*[A-Za-z0-9_\-]{16,}" --include=*.py --include=*.yml --include=*.php .; then echo "کلید در سورس دیده شد"; exit 1; fi
