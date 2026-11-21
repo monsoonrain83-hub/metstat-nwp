@@ -2,7 +2,10 @@ name: metstat-ec46
 on:
   schedule:
     - cron: "40 11 * * *"
-  workflow_dispatch:
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths: [ec46_maps.py, test_ec46_weekly_absolute.py, .github/workflows/ec46.yml]
 concurrency:
   group: ec46
   cancel-in-progress: false
@@ -20,5 +23,7 @@ jobs:
           sudo apt-get update -y && sudo apt-get install -y libeccodes-dev || true
           pip install eccodes s3fs requests numpy scipy pillow matplotlib netCDF4
           python -c "import eccodes; print('eccodes', eccodes.__version__)"
+      - name: Verify physical weekly aggregation
+        run: python -m unittest test_ec46_weekly_absolute -v
       - name: ec46 maps
         run: python ec46_maps.py --host "${{ secrets.MX_HOST }}" --key "${{ secrets.MX_KEY }}"
