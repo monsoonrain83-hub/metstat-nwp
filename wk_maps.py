@@ -108,7 +108,9 @@ def ec_weekly(mock=False):
                 time.sleep(0.5)
             if not ok: break
         if ok and got: log(f'  EC46 هفتگی: مدل {model or "پیش‌فرض"}؛ واحدها {unit}'); break
-    if not got or not t_: return None
+    if not ok or not got or not t_ or any(len(got.get(k, {})) != n for k in ('temperature_2m_anomaly', 'precipitation_anomaly')):
+        log(f'  ✗ EC46: grid incomplete ({len(got.get("temperature_2m_anomaly", {}))}/{n} temperature points); no patchy map published')
+        return None
     W = min(6, len(t_)); ta = np.full((W, n), np.nan, np.float32); pa = ta.copy()
     for i, v in got['temperature_2m_anomaly'].items(): ta[:, i] = v[:W]
     for i, v in got['precipitation_anomaly'].items(): pa[:, i] = v[:W]
@@ -167,13 +169,23 @@ def cfs_weekly(mock=False):
     return run, lo, la, np.stack(TA).astype(np.float32), np.stack(PA).astype(np.float32)
 
 def make_weekly(up, mk, R, a):
-    t0, lo, la, ta, pa = R; run = t0.replace(hour=0, minute=0, second=0, microsecond=0)
-    r = begin(up, mk, run); have = set(r.get('have', [])); made = 0
+    t0, lo, la, ta, pa = R
+    # EC46's weekly time[0] marks a weekly forecast window, NOT the daily model issue.
+    # Use the UTC retrieval day as a clearly defined daily publication key; preserve
+    # the source-valid week times below. This prevents stale maps all week long.
+    run = (datetime.now(UTC) if mk == 'ecwk' and not a.mock else t0).replace(hour=0, minute=0, second=0, microsecond=0)
+    r = begin(up, mk, run)
+    if str(r.get('run')) != f'{run:%Y%m%d%H}':
+        raise RuntimeError(f'{mk}: server begin rejected run {run:%Y%m%d%H}: {str(r)[:180]}')
+    have = set(r.get('have', [])); made = 0
     for w in range(ta.shape[0]):
-        vt = run + timedelta(days=7 * (w + 1)); lead = 24 * 7 * (w + 1)          # زمان معتبر = پایان هفته
+        vt = t0 + timedelta(days=7 * (w + 1)); lead = int(round((vt - run).total_seconds() / 3600))  # valid time from forecast interval, not upload day
         made += put(up, mk, run, 'wta', vt, lead, L.regrid(ta[w], lo, la), have)
         made += put(up, mk, run, 'wpa', vt, lead, L.regrid(pa[w], lo, la), have)
-    up.wait(); up.call('end', js={'model': mk, 'run': f'{run:%Y%m%d%H}'}); log(f'✓ {mk}: {made} نقشه'); return made
+    up.wait()
+    done = up.call('end', js={'model': mk, 'run': f'{run:%Y%m%d%H}'})
+    if not done.get('ok'): raise RuntimeError(f'{mk}: host end failed {done}')
+    log(f'✓ {mk}: {made} نقشه تازه، شماره اجرا {run:%Y%m%d%H}'); return made
 
 # ---------------------------------------------------------------- ۳) IRI فصلی سه‌دهکی
 IRI = 'https://iridl.ldeo.columbia.edu/SOURCES/.IRI/.FD/.NMME_Seasonal_Forecast/'
@@ -226,20 +238,23 @@ def main():
     ap = argparse.ArgumentParser(); ap.add_argument('--host'); ap.add_argument('--key', default=''); ap.add_argument('--out'); ap.add_argument('--mock', action='store_true'); ap.add_argument('--only', default='ecwk,cfswk,iri')
     a = ap.parse_args()
     if not a.host and not a.out: sys.exit('--host یا --out لازم است')
-    up = N.Uploader(a.host, a.key, a.out); only = set(a.only.split(',')); tot = 0
+    up = N.Uploader(a.host, a.key, a.out); only = set(a.only.split(',')); tot = 0; failures = []
     if 'ecwk' in only:
         try:
             R = ec_weekly(a.mock); tot += make_weekly(up, 'ecwk', R, a) if R else 0
-            if not R: log('✗ ecwk: انومالی هفتگی از Open-Meteo گرفته نشد (نام متغیر یا مدل را در لاگ ببینید)')
-        except Exception as e: log(f'✗ ecwk: {e}')
+            if not R:
+                failures.append('ecwk')
+                log('✗ ecwk: انومالی هفتگی از Open-Meteo گرفته نشد؛ نقشه قبلی حفظ شد')
+        except Exception as e: failures.append('ecwk'); log(f'✗ ecwk: {e}')
     if 'cfswk' in only:
         try:
             R = cfs_weekly(a.mock); tot += make_weekly(up, 'cfswk', R, a) if R else 0
-            if not R: log('✗ cfswk: ساخته نشد')
-        except Exception as e: log(f'✗ cfswk: {e}')
+            if not R: failures.append('cfswk'); log('✗ cfswk: ساخته نشد')
+        except Exception as e: failures.append('cfswk'); log(f'✗ cfswk: {e}')
     if 'iri' in only:
         try: tot += make_iri(up, a)
-        except Exception as e: log(f'✗ iri: {e}')
-    log(f'پایان: {tot} نقشه'); sys.exit(0)
+        except Exception as e: failures.append('iri'); log(f'✗ iri: {e}')
+    log(f'پایان: {tot} نقشه؛ خطاهای منبع: {failures}')
+    sys.exit(2 if failures else 0)
 
 if __name__ == '__main__': main()
