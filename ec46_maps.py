@@ -126,7 +126,7 @@ def main():
             cum = cum + np.nan_to_num(p); o = dict(p24=(np.maximum(p, 0), lo, la), ptot=(cum.copy(), lo, la))
             if np.isfinite(tm[k - 1]).any(): o['t2m'] = (tm[k - 1], lo, la)
             prods[k] = o
-        n = E.make_model(up, mk, t0, prods, a); log(f'پایان {mk}: {n} نقشه')
+        n = E.make_model(up, mk, t0, prods, a); total_maps += n; log(f'پایان {mk}: {n} نقشه')
         if mk == 'ec46m':
             try: publish_weekly_absolute(up,t0,lo,la,pr,tm)
             except Exception as exc: failed.append('ecwkabs'); log(f'✗ EC46 هفتگی مطلق: {exc}')
