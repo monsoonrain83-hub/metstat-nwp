@@ -1,0 +1,61 @@
+name: MetStat model freshness and automatic retry
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths: [model_freshness.py, test_model_freshness.py, .github/workflows/model-freshness.yml]
+  schedule:
+    - cron: "35 3,9,15,21 * * *"
+permissions:
+  actions: write
+  contents: read
+concurrency:
+  group: metstat-model-freshness
+  cancel-in-progress: false
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run publication/clock/per-parameter regression tests
+        run: python -m unittest test_model_freshness -v
+      - name: Audit live published manifest, not workflow-success status
+        id: audit
+        run: python model_freshness.py --report model_freshness_report.json
+      - name: Show stale/missing products prominently
+        run: |
+          echo "## Model publication freshness" >> "$GITHUB_STEP_SUMMARY"
+          echo "Source: https://wtafkik.ir/online/data/manifest.json" >> "$GITHUB_STEP_SUMMARY"
+          echo '~~~json' >> "$GITHUB_STEP_SUMMARY"
+          cat model_freshness_report.json >> "$GITHUB_STEP_SUMMARY"
+          echo '~~~' >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ steps.audit.outputs.healthy }}" != "true" ]; then
+            echo "::warning::One or more weekly, monthly or seasonal model products missing or stale; initiating conditional retry"
+          fi
+      - name: Queue repairs only when a workflow is not already running
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TASKS: ${{ steps.audit.outputs.workflow_names }}
+        run: |
+          IFS=, read -ra LIST <<< "$TASKS"
+          for wf in "${LIST[@]}"; do
+            [ -n "$wf" ] || continue
+            active=$(gh run list --repo "$GITHUB_REPOSITORY" -w "$wf" -L 8 --json status                  -q '[.[]|select(.status=="in_progress" or .status=="queued" or .status=="waiting")]|length')
+            if [ "$active" = "0" ]; then
+              echo "::notice::Stale/missing model products: dispatching $wf"
+              gh workflow run "$wf" --repo "$GITHUB_REPOSITORY" --ref main
+            else
+              echo "::notice::$wf already has $active running/queued jobs; no duplicate started"
+            fi
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: model-freshness-diagnostic
+          path: model_freshness_report.json
+          if-no-files-found: warn
+          retention-days: 14
