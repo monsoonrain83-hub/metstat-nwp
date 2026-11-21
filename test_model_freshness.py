@@ -13,6 +13,12 @@ class TestModelFreshness(unittest.TestCase):
   report=audit(self.sample(),datetime(2026,11,21,18,tzinfo=timezone.utc))
   self.assertTrue(report['healthy'])
   self.assertEqual(report['suggested_workflow_dispatches'],[])
+ def test_real_host_v2_items_have_no_run_property(self):
+  s=self.sample()
+  for x in s['items']:x.pop('run',None)
+  result=audit(s,datetime(2026,11,21,18,tzinfo=timezone.utc))
+  self.assertTrue(result['healthy'])
+  self.assertEqual(result['models']['ecwk']['variable_counts']['wta'],4)
  def test_missing_parameter_triggers_correct_workflow(self):
   s=self.sample();s['items']=[x for x in s['items'] if not (x['m']=='ecwk' and x['p']=='wpa')]
   r=audit(s,datetime(2026,11,21,18,tzinfo=timezone.utc))
