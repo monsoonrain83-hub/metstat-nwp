@@ -65,6 +65,13 @@ jobs:
         run: |
           python pack_global_products.py /tmp/metstat-world-downloads /tmp/metstat-world-build/world
           cp host/assets/world_country_bounds.json /tmp/metstat-world-build/world/country_bounds.json
+      - name: Provide cPanel copy-ready world data bundle and Natural Earth bounds
+        uses: actions/upload-artifact@v4
+        with:
+          name: world-site-data-${{ github.run_number }}
+          path: /tmp/metstat-world-build/world/
+          if-no-files-found: error
+          retention-days: 7
       - name: Push ONLY to world-data branch, never modify website or main
         run: |
           git config user.name "metstat-world-bot"
