@@ -98,6 +98,45 @@ def read_independent_sources(sources, run, valid, fields, errors):
             errors.append(f'{candidate.dom}: {str(exc)[:150]}')
     return result
 
+def cycle_candidates(*sources):
+    """Union actual cycle/valid-hour metadata across independently available grids.
+
+    Neither 28km metadata nor high-resolution metadata is a prerequisite for
+    trying the other grid. Merge only IDENTICAL UTC initialization timestamps;
+    never re-label a field with a different cycle or valid time.
+    """
+    merged = {}
+    for source in sources:
+        if source is None:
+            continue
+        try:
+            items = source.runs()
+        except Exception:
+            continue
+        for item in items or []:
+            if not isinstance(item, dict) or not item.get('reference_time'):
+                continue
+            try:
+                run = resolve_cycle(item)
+            except (ValueError, TypeError, KeyError):
+                continue
+            times = merged.setdefault(run, set())
+            for token in item.get('valid_times', []) or []:
+                if not isinstance(token, str):
+                    continue
+                try:
+                    vt = datetime.strptime(token[:16], '%Y-%m-%dT%H:%M').replace(tzinfo=UTC)
+                except ValueError:
+                    continue
+                if 0 <= (vt - run).total_seconds() <= 384 * 3600:
+                    times.add(vt.strftime('%Y-%m-%dT%H:%M'))
+    return [
+        {'reference_time': run.strftime('%Y-%m-%dT%H:%M'),
+         'valid_times': sorted(times)}
+        for run, times in sorted(merged.items(), reverse=True) if times
+    ]
+
+
 def acquire(model, outdir, requested_lead=24):
     import s3fs
     dom = DOMAINS[model]
@@ -113,7 +152,7 @@ def acquire(model, outdir, requested_lead=24):
         high_domain = SOURCE_PRIORITY[model][0][0]
         hi_src = N.S3Source(high_domain, fs)
         hi_src.i0=0;hi_src.i1=hi_src.nx;hi_src.j0=0;hi_src.j1=hi_src.ny
-    runs = [x for x in src.runs() if x and x.get('reference_time')]
+    runs = cycle_candidates(src, hi_src)
     if not runs:raise RuntimeError(model+': source has no current cycle')
     runs.sort(key=lambda m:m['reference_time'],reverse=True)
     outdir.mkdir(parents=True,exist_ok=True)
