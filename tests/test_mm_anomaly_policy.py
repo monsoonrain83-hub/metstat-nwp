@@ -128,8 +128,8 @@ class TestDailyAnomalyPolicy(unittest.TestCase):
         p = blend.build_params()
         for pid in ('z500a', 'z700a', 'z850a', 'tanom', 'tanom5'):
             self.assertIn(pid, p)
-            self.assertEqual(MM.max_anomaly_lead(pid), 384)
-        self.assertEqual(MM.max_anomaly_lead('p24'), 120)
+            self.assertEqual(MM.max_anomaly_lead(pid), 180)
+        self.assertEqual(MM.max_anomaly_lead('p24'), 180)
         w, _, _ = W.weights('pressure', run_date(), ['ecmwf', 'gfs'], pid='z700a')
         self.assertAlmostEqual(w['ecmwf'], 0.6)
         self.assertAlmostEqual(w['gfs'], 0.4)
