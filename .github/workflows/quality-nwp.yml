@@ -35,6 +35,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_run_completion_horizon.py' -v
       - name: "ARPEGE Middle East product scope (offline)"
         run: python -m unittest discover -s tests -p 'test_arpege_scope.py' -v
+      - name: "Committed ERA5 artifact integrity (real NPZ, not mock)"
+        run: python -m unittest discover -s tests -p 'test_committed_era5_artifact.py' -v
       - name: "ERA5 regional temperature climatology regression (offline)"
         run: python -m unittest discover -s tests -p 'test_era5_clim.py' -v
       - name: "ERA5 spatial coordinate collision regression (offline)"
