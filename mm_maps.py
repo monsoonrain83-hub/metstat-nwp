@@ -26,9 +26,8 @@ MM_EXTENDED_ANOM = MM_UPPER_ANOM | frozenset(('tanom', 'tanom5'))
 
 
 def max_anomaly_lead(pid):
-    # Existing non-anomaly multimodel stays limited to five days.
-    # New requested anomaly products extend to the input models' horizon.
-    return 384 if pid in MM_EXTENDED_ANOM else 120
+    # All daily multimodel products are restricted to +180h for 00Z/12Z runs.
+    return 180
 
 
 def mm_extend_params(PARAMS):
