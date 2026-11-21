@@ -6,6 +6,7 @@ Each artifact includes the native global equirectangular raster and manifest wit
 true geographic envelope, model, cycle, valid-time, variable and source licence.
 """
 import argparse
+import hashlib
 import json
 import math
 import os
@@ -62,8 +63,14 @@ def render(field, param, dest):
             'min':round(float(np.nanmin(a)),2),'max':round(float(np.nanmax(a)),2)}
 
 def product_manifest(model, run, valid, dom, result):
-    return {'schema':1,'model':model,'source_domain':dom,'source':'Open-Meteo data_spatial / model owner',
+    # Root source must never claim coarse 28km when a high-resolution raster
+    # was actually rendered; variable-level source is authoritative.
+    sources={v.get('field_source_domain') for v in result.values()
+             if v.get('field_source_domain')}
+    root_source=next(iter(sources)) if len(sources)==1 else ('mixed-per-field' if sources else dom)
+    return {'schema':2,'model':model,'source_domain':root_source,'source':'Open-Meteo data_spatial / model owner',
             'license':'CC BY 4.0; attribution Open-Meteo and originating NWP center',
+            'generated_at_utc':datetime.now(UTC).strftime('%Y-%m-%dT%H:%M:%SZ'),
             'init_utc':run.strftime('%Y-%m-%dT%H:%M:%SZ'),
             'valid_utc':valid.strftime('%Y-%m-%dT%H:%M:%SZ'),
             'projection':'EPSG:4326 equirectangular','bbox_wgs84':[-180.0,-90.0,180.0,90.0],
@@ -199,14 +206,26 @@ def acquire(model, outdir, requested_lead=24):
                 chosen_src=source_instances[chosen_domain]
                 try:
                     fname=f'{model}_{p}_{valid:%Y%m%d%H}.webp'
-                    stats=render(arr,p,outdir/fname)
+                    raster_path=outdir/fname
+                    stats=render(arr,p,raster_path)
+                    # Hash the actual rendered bytes, not an unverified source URL.
+                    output_sha256=hashlib.sha256(raster_path.read_bytes()).hexdigest()
+                    source_bounds=[chosen_src.lo0,chosen_src.la0,
+                        chosen_src.lo0+chosen_src.dx*(chosen_src.nx-1),
+                        chosen_src.la0+chosen_src.dy*(chosen_src.ny-1)]
                     products[p]={'file':fname,'variable':key,'units':units,
+                                 'sha256':output_sha256,
+                                 'logical_model':model,
+                                 'init_utc':run.strftime('%Y-%m-%dT%H:%M:%SZ'),
+                                 'valid_utc':valid.strftime('%Y-%m-%dT%H:%M:%SZ'),
+                                 'lead_hours':int((valid-run).total_seconds()/3600),
+                                 'source_grid_bbox_centers_wgs84':source_bounds,
                                  'field_source_domain':chosen_domain,
                                  'nominal_resolution':nominal_resolution,
                                  'source_grid':[chosen_src.nx,chosen_src.ny],
                                  'source_grid_origin':[chosen_src.lo0,chosen_src.la0],
                                  'source_grid_spacing':[chosen_src.dx,chosen_src.dy],
-                                 'resampling':'native-source-grid',
+                                 'resampling':('octahedral-O1280-to-regular-grid' if chosen_domain=='ecmwf_ifs' else 'native-source-grid'),
                                  **stats}
                 except Exception as e: errors.append(f'{p}: {e}')
             if products:
