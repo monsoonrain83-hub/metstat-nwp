@@ -1468,7 +1468,12 @@ class Engine:
         s.up.wait()
         if made and not s.sink_only: s.up.call('sync', js={'model': mkey, 'run': rid})
         if made: log(f'■ {M["name"]} {rid}: +{made} نقشه ({time.time() - t0:.0f} ثانیه)')
-        complete = st.done_i >= len(vts) - 1 and meta.get('completed', True)
+        # A source can list only currently published valid_times while reporting
+        # completed=True. Never mark a run finished before its configured horizon.
+        # This prevents premature blue/completed state (e.g. GFS at +336h).
+        available_horizon = max((int((v - run).total_seconds() // 3600) for v in vts), default=-1)
+        complete = (st.done_i >= len(vts) - 1 and bool(meta.get('completed', False))
+                    and available_horizon >= hz)
         if complete and not getattr(st, 'ended', False) and not s.sink_only:
             s.up.call('end', js={'model': mkey, 'run': rid}); st.ended = True
         return made > 0
