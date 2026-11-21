@@ -1061,6 +1061,11 @@ def jalali_month_pos(d):
     if doy < 186: return doy / 31 - 0.5
     return 6 + (doy - 186) / 30 - 0.5
 def clim_at(region, d):
+    # Iranian station-regression normals are only valid for the Iran/Fars grids.
+    # Regional temperature anomalies require an independently gridded ERA5
+    # reference; never extrapolate Iranian station coefficients over ME/EU.
+    if region.key in ('me', 'eu'):
+        return _era5_at('t2m', region, d)
     if CLIM is None: return None
     co = CLIM[region.key + '_coef']; rs = CLIM[region.key + '_res'].astype(np.float32)
     m = jalali_month_pos(d); a = int(math.floor(m)) % 12; b = (a + 1) % 12; u = m - math.floor(m)
