@@ -1,0 +1,33 @@
+name: Export world geographic references for local map integration
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths: [host/assets/world_country_bounds.json, host/assets/world_capitals.json, host/assets/world_borders.json, .github/workflows/world-geo-export.yml]
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate real geographic datasets
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          bounds=json.loads(Path('host/assets/world_country_bounds.json').read_text())
+          borders=json.loads(Path('host/assets/world_borders.json').read_text())
+          caps=json.loads(Path('host/assets/world_capitals.json').read_text())
+          assert len(bounds['bboxes'])>160
+          assert len(borders['borders'])>160
+          assert len(caps['capitals'])>190
+          print('Natural Earth countries/capitals/borders:',len(bounds['bboxes']),len(borders['borders']),len(caps['capitals']))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: real-world-boundaries-and-capitals
+          path: host/assets/world_*.json
+          if-no-files-found: error
+          retention-days: 7
