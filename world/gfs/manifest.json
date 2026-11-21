@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "model": "gfs",
+  "source_domain": "ncep_gfs025",
+  "source": "Open-Meteo data_spatial / model owner",
+  "license": "CC BY 4.0; attribution Open-Meteo and originating NWP center",
+  "init_utc": "2026-11-21T12:00:00Z",
+  "valid_utc": "2026-11-22T12:00:00Z",
+  "projection": "EPSG:4326 equirectangular",
+  "bbox_wgs84": [
+    -180.0,
+    -90.0,
+    180.0,
+    90.0
+  ],
+  "longitude_orientation": "west_to_east",
+  "latitude_orientation": "north_to_south",
+  "fields": {
+    "t2m": {
+      "file": "gfs/t2m.webp",
+      "variable": "temperature_2m",
+      "units": "°C",
+      "field_source_domain": "ncep_gfs013",
+      "resampling": "nearest-neighbor native 0.117deg to 0.25deg",
+      "width": 1440,
+      "height": 721,
+      "finite_fraction": 1.0,
+      "min": -43.25,
+      "max": 44.7,
+      "sha256": "5035ff22f85df2fdbffe4064169e56d0a5e9cdf67ab583ec79134f5035317135"
+    },
+    "z500": {
+      "file": "gfs/z500.webp",
+      "variable": "geopotential_height_500hPa",
+      "units": "dam",
+      "field_source_domain": "ncep_gfs025",
+      "resampling": "native model grid",
+      "width": 1440,
+      "height": 721,
+      "finite_fraction": 1.0,
+      "min": 488.3,
+      "max": 597.5,
+      "sha256": "e25a4a328dbf970ab537dca0bfa7e6914b022ad287384b77d8d6d4e01cbcac02"
+    },
+    "mslp": {
+      "file": "gfs/mslp.webp",
+      "variable": "pressure_msl",
+      "units": "hPa",
+      "field_source_domain": "ncep_gfs025",
+      "resampling": "native model grid",
+      "width": 1440,
+      "height": 721,
+      "finite_fraction": 1.0,
+      "min": 954.5,
+      "max": 1045.7,
+      "sha256": "dd46ec42c2af77f7889ee69267bc6936e2ad133c494d3ac44f83562d7c322f45"
+    }
+  },
+  "full_globe": true,
+  "mock": false
+}
