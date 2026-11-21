@@ -106,19 +106,24 @@ def acquire(model, outdir, requested_lead=24):
     for meta in runs:
         run = resolve_cycle(meta)
         for valid in valid_candidates(meta, run, requested_lead)[:5]:
-            if not src.exists(run,valid):continue
-            try: data = src.read(run, valid, sorted(v[0] for v in FIELDS.values()))
-            except Exception as e:
-                errors.append(str(e)[:120]);continue
+            # Source availability is independent: a missing 0.25-degree field
+            # must not prevent using a verified 9/13km field at the same cycle.
+            # Never mix runs or substitute a different valid time.
+            data, high_data = {}, {}
+            for candidate, target in ((src, 'coarse'), (hi_src, 'high')):
+                if candidate is None: continue
+                try:
+                    if not candidate.exists(run,valid): continue
+                    values = candidate.read(run,valid,sorted(v[0] for v in FIELDS.values()))
+                    if not isinstance(values,dict):
+                        raise ValueError('source returned no field dictionary')
+                    if target == 'coarse': data = values
+                    else: high_data = values
+                except Exception as e:
+                    errors.append(f'{candidate.dom}: {str(e)[:150]}')
+            if not data and not high_data: continue
             # A source is selectable only after actual field read + shape and
             # coverage QC. Prefer each variable at native 9/13km independently.
-            high_data = {}
-            if hi_src is not None and hi_src.exists(run,valid):
-                try:
-                    high_data = hi_src.read(run,valid,sorted(v[0] for v in FIELDS.values()))
-                except Exception as e:
-                    errors.append('HIGHRES '+hi_src.dom+': '+str(e)[:150])
-                    high_data = {}
             products={}
             for p,(key,units,lo,hi) in FIELDS.items():
                 verified = {}
