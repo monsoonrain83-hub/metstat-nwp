@@ -12,7 +12,7 @@ class TestGeopotentialTimeSemantics(unittest.TestCase):
                 self.assertIn('لحظه‌ای', p['fa'])
                 self.assertNotIn('daily mean', p['en'].lower())
                 self.assertNotIn('six-hourly', p['en'].lower())
-                self.assertEqual(p['unit'], 'dm')
+                self.assertEqual(p['unit'], 'dam')  # decametre (10 m), not decimetre (0.1 m)
 
     def test_temperature_anomalies_are_means_not_snapshots(self):
         self.assertEqual(N.PARAMS['tanom']['kind'], 'day')
