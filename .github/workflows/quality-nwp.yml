@@ -27,6 +27,10 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_mm_*.py' -v
       - name: "Unified ECMWF/GFS resolution and world raster tests"
         run: python -m unittest -v test_nwp_unified_resolution test_global_nwp_stage
+      - name: "EC46 weekly batch integrity regressions"
+        run: python -m unittest test_ec46_integrity -v
+      - name: "EC46 daily API batch integrity regression"
+        run: python -m unittest -v test_ec46_daily_integrity
       - name: "نشت کلید"
         run: |
           if grep -rInE "(upload_key|relay_secret|api[_-]?key)[\"' ]*[:=][\"' ]*[A-Za-z0-9_\-]{16,}" --include=*.py --include=*.yml --include=*.php .; then echo "کلید در سورس دیده شد"; exit 1; fi

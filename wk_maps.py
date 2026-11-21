@@ -68,6 +68,36 @@ def regrid_nearest(arr, lon, lat):
 
 # ---------------------------------------------------------------- ۱) ECMWF EC46 هفتگی (Open-Meteo)
 SAPI = 'https://seasonal-api.open-meteo.com/v1/seasonal'
+
+def validate_ec46_batch(payload, expected_count, baseline_times=None):
+    """Reject truncated/misaligned Open-Meteo point batches before publishing."""
+    points = payload if isinstance(payload, list) else [payload]
+    if len(points) != expected_count:
+        raise ValueError(f'EC46 point count {len(points)} != {expected_count}')
+    expected = baseline_times
+    values = []
+    for point in points:
+        weekly = point.get('weekly') or {}
+        times = weekly.get('time')
+        if not isinstance(times, list) or not times:
+            raise ValueError('EC46 missing weekly time axis')
+        if expected is None: expected = times
+        if times != expected:
+            raise ValueError('EC46 mismatched weekly time axis')
+        fields = {}
+        for key in ('temperature_2m_anomaly', 'precipitation_anomaly'):
+            raw = weekly.get(key)
+            if raw is None:
+                members = [np.asarray([np.nan if x is None else x for x in v], float)
+                           for k,v in weekly.items() if k.startswith(key+'_member')]
+                raw = np.nanmean(members, axis=0) if members else None
+            if raw is None or len(raw) != len(expected):
+                raise ValueError('EC46 incomplete '+key)
+            fields[key] = np.asarray([np.nan if x is None else x for x in raw],float)
+            if not np.isfinite(fields[key]).any():
+                raise ValueError('EC46 empty '+key)
+        values.append(fields)
+    return expected, values
 def ec_weekly(mock=False):
     import requests
     STEP = 1.5; lo = np.arange(CROP[0], CROP[1] + 1e-6, STEP); la = np.arange(CROP[2], CROP[3] + 1e-6, STEP); LON, LAT = np.meshgrid(lo, la); fl, fa = LON.ravel(), LAT.ravel(); n = len(fl)
@@ -94,18 +124,18 @@ def ec_weekly(mock=False):
                 time.sleep(4 * (k + 1))
             if j is None: ok = False; break
             if time.time() > tdead: ok = False; break
+            try:
+                batch_times, batch_values = validate_ec46_batch(j, len(fa[s:s+B]), t_)
+            except (ValueError, TypeError) as e:
+                log(f'  ✗ EC46 invalid batch offset {s}: {e}')
+                ok = False
+                break
+            t_ = batch_times
             for i, o in enumerate(j if isinstance(j, list) else [j]):
-                w = o.get('weekly') or {}; unit.update(o.get('weekly_units') or {})
-                if not w.get('time'): ok = False; break
-                t_ = t_ or w['time']
+                unit.update(o.get('weekly_units') or {})
                 for key in ('temperature_2m_anomaly', 'precipitation_anomaly'):
-                    v = w.get(key)
-                    if v is None:      # اعضای جدا: میانگین اعضا
-                        mem = [np.array([np.nan if x is None else x for x in w[k_]], float) for k_ in w if k_.startswith(key + '_member')]
-                        v = np.nanmean(mem, 0) if mem else None
-                    if v is None: ok = False; break
-                    got.setdefault(key, {})[s + i] = np.array([np.nan if x is None else x for x in v], float)
-                time.sleep(0.5)
+                    got.setdefault(key,{})[s+i] = batch_values[i][key]
+            time.sleep(0.5)
             if not ok: break
         if ok and got: log(f'  EC46 هفتگی: مدل {model or "پیش‌فرض"}؛ واحدها {unit}'); break
     if not ok or not got or not t_ or any(len(got.get(k, {})) != n for k in ('temperature_2m_anomaly', 'precipitation_anomaly')):

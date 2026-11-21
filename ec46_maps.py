@@ -27,6 +27,32 @@ def fetch(lats, lons, tries=3, model='ecmwf_ec46_ensemble_mean'):
         time.sleep(4 * (k + 1))
     return None
 
+def validate_daily_batch(res, expected, days=46):
+    """Reject partial, reordered or malformed Open-Meteo EC46 point batches."""
+    if not isinstance(res, list) or len(res) != expected:
+        raise ValueError(f'EC46 point count {len(res) if isinstance(res,list) else 0}/{expected}')
+    reference = None
+    for i, point in enumerate(res):
+        if not isinstance(point, dict) or not isinstance(point.get('daily'), dict):
+            raise ValueError(f'EC46 missing daily point {i}')
+        d = point['daily']
+        times = d.get('time')
+        if not isinstance(times, list) or len(times) != days or len(set(times)) != days:
+            raise ValueError(f'EC46 invalid time axis at point {i}')
+        if reference is None:
+            reference = times
+        elif times != reference:
+            raise ValueError(f'EC46 mismatched time axis at point {i}')
+        for key in ('precipitation_sum', 'temperature_2m_mean'):
+            values = d.get(key)
+            if not isinstance(values, list) or len(values) != days:
+                raise ValueError(f'EC46 incomplete {key} at point {i}')
+            if not any(v is not None and isinstance(v, (int,float)) and math.isfinite(v) for v in values):
+                raise ValueError(f'EC46 empty {key} at point {i}')
+            if any(v is not None and (not isinstance(v,(int,float)) or not math.isfinite(v)) for v in values):
+                raise ValueError(f'EC46 nonfinite {key} at point {i}')
+    return reference
+
 def collect(mock=False, model='ecmwf_ec46_ensemble_mean'):
     lo = np.arange(LO0, LO1 + 1e-6, STEP); la = np.arange(LA0, LA1 + 1e-6, STEP)
     LON, LAT = np.meshgrid(lo, la); fl, fa = LON.ravel(), LAT.ravel(); n = len(fl); nd = 46
@@ -40,6 +66,11 @@ def collect(mock=False, model='ecmwf_ec46_ensemble_mean'):
         nonlocal t0
         res = fetch(fa[s:s + B], fl[s:s + B], tries=4, model=model)
         if not res: return False
+        try:
+            validate_daily_batch(res, len(fa[s:s + B]), nd)
+        except ValueError as exc:
+            log(f'  ✗ EC46 invalid batch offset {s}: {exc}')
+            return False
         for i, o in enumerate(res):
             d = o.get('daily') or {}; t = d.get('time') or []
             if not t: continue
