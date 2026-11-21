@@ -56,9 +56,10 @@ MODELS = {
     'icon':   dict(name='ICON', label='ICON-EU 7 km + ICON 13 km', dom=['dwd_icon'], hires='dwd_icon_eu', prov='DWD', hz={'00': 180, '12': 180, '06': 120, '18': 120}, res='7 km (اروپا) / 13 km', cyc='00/06/12/18'),
     'ukmo':   dict(name='UKMO', label='UKMO Global 10 km', dom=['ukmo_global_deterministic_10km'], prov='Met Office', hz=168, res='10 km', cyc='00/12', only_cyc=(0, 12)),   # r113: فقط ران ۰۰ و ۱۲ (ران‌های ۰۶ و ۱۸ کوتاه‌اند)
     'gem':    dict(name='GEM', label='GEM GDPS 15 km', dom=['cmc_gem_gdps_15km', 'cmc_gem_gdps'], prov='ECCC', hz=240, res='15 km', cyc='00/12'),
+    'arpege': dict(name='ARPEGE', label='Meteo-France ARPEGE Global', dom=['meteofrance_arpege_world'], prov='Meteo-France', hz=102, res='global', cyc='00/06/12/18'),
 }
 # r83: حذف اختیاری مدل از تولید (فضای هاست): NWP_DROP_MODELS=arpege  (r109: پیش‌فرض arpege حذف است؛ برای نگه‌داشتن: NWP_DROP_MODELS=none). پوشهٔ قدیمی را روی هاست دستی پاک کنید.
-for _m in [x.strip() for x in os.environ.get('NWP_DROP_MODELS', 'arpege').split(',') if x.strip()]: MODELS.pop(_m, None)
+for _m in [x.strip() for x in os.environ.get('NWP_DROP_MODELS', 'none').split(',') if x.strip()]: MODELS.pop(_m, None)
 REGIONS = {'iran': dict(geo=(-1506.432, 35.07327, 1611.463, -40.47955), en='Iran', fa='ایران'),
            'fars': dict(geo=(-4387.15, 89.808, 3366.55, -103.991), en='Fars', fa='فارس')}
 FX0, FX1, FY0, FY1 = 2, 757, 2, 614
@@ -84,7 +85,7 @@ for pid, hh, ev, mx, v in SN_WIN:
 I_EC = ['ecmwf']; I_ECZ = ['ecmwf', 'gfs', 'gem']; I_ECA = ['ecmwf']; I_ECG = ['ecmwf', 'gfs', 'gfs25']
 I_CV = ['ecmwf', 'gfs', 'gfs25', 'icon', 'ukmo']      # مدل‌هایی که CAPE دارند (نتیجهٔ probe)؛ شاخص‌های ترازی از ترازهای فشاری همان مدل
 PARAMS.update({
-    't2m':   dict(kind='inst', sc='temp', models=I_ECA, unit='°C', en='Temperature 2m (°C)', fa='دمای ۲ متری', lapse=True),
+    't2m':   dict(kind='inst', sc='temp', models=I_ECA + ['arpege'], unit='°C', en='Temperature 2m (°C)', fa='دمای ۲ متری', lapse=True),
     'tsoil': dict(kind='inst', sc='temp', models=I_ECA, unit='°C', en='Soil temperature near surface (°C)', fa='دمای خاک نزدیک سطح'),
     'tmax':  dict(kind='day', sc='temp', models=I_ECA, unit='°C', en='Max. temperature 2m, 24h (°C)', fa='دمای بیشینه ۲۴ ساعته', lapse=True),
     'tmin':  dict(kind='day', sc='temp', models=I_ECA, unit='°C', en='Min. temperature 2m, 24h (°C)', fa='دمای کمینه ۲۴ ساعته', lapse=True),
@@ -104,7 +105,7 @@ PARAMS.update({
     'sfc':   dict(kind='inst', sc='rh', models=I_EC, unit='%', en='MSLP (hPa), RH 2m (%) & wind 10m', fa='فشار سطح دریا، رطوبت و باد سطحی', cont='msl', barbs='10m'),
     'z850':  dict(kind='inst', sc='rh', models=I_EC, unit='%', en='Geopotential 850 hPa (gpdm) & RH 850 hPa (%)', fa='ارتفاع ژئوپتانسیل و رطوبت ۸۵۰ هکتوپاسکال', cont='gh850'),
     'z700':  dict(kind='inst', sc='rh', models=I_EC, unit='%', en='Geopotential 700 hPa (gpdm) & RH 700 hPa (%)', fa='ارتفاع ژئوپتانسیل و رطوبت ۷۰۰ هکتوپاسکال', cont='gh700'),
-    'z500':  dict(kind='inst', sc='rh', models=I_EC, unit='%', en='Geopotential 500 hPa (gpdm) & RH 500 hPa (%)', fa='ارتفاع ژئوپتانسیل و رطوبت ۵۰۰ هکتوپاسکال', cont='gh500'),
+    'z500':  dict(kind='inst', sc='rh', models=I_EC + ['arpege'], unit='%', en='Geopotential 500 hPa (gpdm) & RH 500 hPa (%)', fa='ارتفاع ژئوپتانسیل و رطوبت ۵۰۰ هکتوپاسکال', cont='gh500'),
     'w500':  dict(kind='inst', sc='windu', models=I_EC, unit='km/h', en='Wind 500 hPa (km/h)', fa='سرعت و جهت باد ۵۰۰ هکتوپاسکال', barbs='500hPa'),
     'w300':  dict(kind='inst', sc='windu', models=I_EC, unit='km/h', en='Wind 300 hPa (km/h)', fa='سرعت و جهت باد ۳۰۰ هکتوپاسکال', barbs='300hPa', me=dict(sc='windup', unit='kt', k=1.94384 / 3.6)),
 })
@@ -1517,6 +1518,8 @@ class Engine:
                 if s.sink_only and not (s.mm and pid in s.mm.pmm): continue                     # نقشه‌های ثانویه پایین‌تر (sec_step) ساخته می‌شوند
                 if P.get('me_only') and rk not in ('me', 'eu'): continue
                 if rk == 'eu' and pid not in EU_PIDS: continue
+                # ARPEGE is a limited Middle-East product: no global/IR/Fars/Europe or convection.
+                if s.key == 'arpege' and (rk != 'me' or pid not in ('p24', 't2m', 'z500')): continue
                 job = s.plan(P, st, vt, lead, dt_h, want_all)
                 if not job: continue
                 fname = f'{rk}/{pid}_{vt:%Y%m%d%H}.' + ('webp' if rk in ('me', 'eu') else 'png')
