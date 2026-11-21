@@ -9,7 +9,7 @@ function chain(index,id){const seen=new Set(),out=[];while(id){if(seen.has(id))t
 function validBounds(b){return Array.isArray(b)&&b.length===4&&b.every(Number.isFinite)&&b[0]<b[2]&&b[1]<b[3]&&b[0]>=-180&&b[2]<=180&&b[1]>=-90&&b[3]<=90;}
 function create(nodes,opts={}){
  const index=Object.create(null);for(const n of nodes){if(!n||!n.id||!LEVELS.includes(n.level)||index[n.id])throw Error('Invalid/duplicate geographic node');index[n.id]=n;}
- for(const n of nodes){if(!validBounds(n.bounds))throw Error('Invalid bounds: '+n.id);const ancestors=chain(index,n.id);if(ancestors.length>1){const p=ancestors[ancestors.length-2];}if((n.level==='province'||n.level==='county')&&!ancestors.some(x=>x.level==='country'&&x.id==='iran'))throw Error('Province/county only supported in Iran');if(ancestors.length>1){const p=ancestors[ancestors.length-2];if(LEVELS.indexOf(n.level)!==LEVELS.indexOf(p.level)+1)throw Error('Invalid hierarchy: '+n.id);}}
+ for(const n of nodes){if(!validBounds(n.bounds))throw Error('Invalid bounds: '+n.id);const ancestors=chain(index,n.id);if((n.level==='province'||n.level==='county')&&!ancestors.some(x=>x.level==='country'&&x.id==='iran'))throw Error('Province/county only supported in Iran');if(ancestors.length>1){const p=ancestors[ancestors.length-2];if(LEVELS.indexOf(n.level)!==LEVELS.indexOf(p.level)+1)throw Error('Invalid hierarchy: '+n.id);}}
  const initial=opts.favorite&&index[opts.favorite]?opts.favorite:(opts.locale==='fa'&&index.iran?'iran':(index.world?'world':nodes[0]?.id));let selected=initial;
  function select(id){if(!index[id])return false;selected=id;return true;}
  function ancestors(){return chain(index,selected);}
