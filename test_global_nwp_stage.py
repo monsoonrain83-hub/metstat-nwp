@@ -39,6 +39,40 @@ class GlobalNWPTests(unittest.TestCase):
             self.assertEqual(found['ecmwf_ifs']['temperature_2m'].shape,(2,3))
         self.assertEqual(len(errors),1)
 
+    def test_cycle_candidates_do_not_depend_on_coarse_metadata(self):
+        class Fake:
+            def __init__(self, entries=None, broken=False):
+                self.entries, self.broken = entries or [], broken
+            def runs(self):
+                if self.broken:
+                    raise OSError('temporarily unavailable metadata')
+                return self.entries
+
+        high = Fake([{'reference_time':'2026-11-21T00:00:00Z',
+                      'valid_times':['2026-11-22T00:00', '2026-12-06T00:00']}])
+        for coarse in (Fake(), Fake(broken=True)):
+            cycles = g.cycle_candidates(coarse, high)
+            self.assertEqual(len(cycles), 1)
+            self.assertEqual(cycles[0]['reference_time'], '2026-11-21T00:00')
+            self.assertEqual(g.valid_candidates(cycles[0],
+                datetime(2026,11,21,tzinfo=timezone.utc), 360)[0],
+                datetime(2026,12,6,tzinfo=timezone.utc))
+
+    def test_union_same_cycle_valid_hours_without_mixing_different_cycles(self):
+        coarse = type('Source', (), {'runs':lambda self: [
+            {'reference_time':'2026-11-21T00:00:00Z',
+             'valid_times':['2026-11-22T00:00', 'not-a-time']},
+            {'reference_time':'2026-11-20T12:00:00Z',
+             'valid_times':['2026-11-21T12:00']} ]})()
+        high = type('Source', (), {'runs':lambda self: [
+            {'reference_time':'2026-11-21T00:00:00Z',
+             'valid_times':['2026-12-06T00:00','2026-11-22T00:00']} ]})()
+        cycles = g.cycle_candidates(coarse, high)
+        self.assertEqual(len(cycles), 2)
+        self.assertEqual(cycles[0]['valid_times'],
+                         ['2026-11-22T00:00', '2026-12-06T00:00'])
+        self.assertEqual(cycles[1]['reference_time'], '2026-11-20T12:00')
+
     def test_metadata_bbox_and_time(self):
         dt=datetime(2026,11,21,12,tzinfo=timezone.utc)
         v=datetime(2026,11,22,12,tzinfo=timezone.utc)
