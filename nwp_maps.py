@@ -1142,13 +1142,34 @@ def load_era5c():
     except Exception as e: log(f'اقلیم ERA5 خوانده نشد ({e})')
     return ERA5C or None
 def _era5_at(key, R, d):
+    """Interpolate ERA5 normals only where the reference grid really covers R."""
     C = load_era5c()
     if C is None or key not in C: return None
-    A = C[key]; n = A.shape[0]; x = ((d.timetuple().tm_yday - 1) + d.hour / 24.0) % 365.0 * (n / 365.0)
-    a = int(math.floor(x)) % n; b = (a + 1) % n; u = x - math.floor(x); f = A[a] * (1 - u) + A[b] * u
-    lon = np.where(R.lon < 0, R.lon, R.lon)
-    fi = (lon - C['lon'][0]) / (C['lon'][1] - C['lon'][0]); fj = (R.lat - C['lat'][0]) / (C['lat'][1] - C['lat'][0])
-    return map_coordinates(f, np.array([fj, fi]), order=1, mode='nearest', prefilter=False).astype(np.float32)
+    A = C[key]
+    if A.ndim != 3 or A.shape[1:] != (len(C['lat']), len(C['lon'])): return None
+    if len(C['lat']) < 2 or len(C['lon']) < 2: return None
+    if not np.isfinite(R.lat).all() or not np.isfinite(R.lon).all(): return None
+    if (np.min(R.lon) < np.min(C['lon']) or np.max(R.lon) > np.max(C['lon']) or
+            np.min(R.lat) < np.min(C['lat']) or np.max(R.lat) > np.max(C['lat'])):
+        return None  # never silently clamp outside the climatology domain
+    # Day 366 must not be folded onto the start of December; leap years
+    # and non-leap years map their calendar dates to the 366-slice normal.
+    day = d.timetuple().tm_yday - 1
+    if n := A.shape[0]:
+        if n != 366: return None
+    else:
+        return None
+    if not (d.year % 4 == 0 and (d.year % 100 != 0 or d.year % 400 == 0)) and day >= 59:
+        day += 1
+    x = day + d.hour / 24.0
+    a = int(math.floor(x)) % n; b = (a + 1) % n
+    u = x - math.floor(x)
+    f = A[a] * (1 - u) + A[b] * u
+    fi = (R.lon - C['lon'][0]) / (C['lon'][1] - C['lon'][0])
+    fj = (R.lat - C['lat'][0]) / (C['lat'][1] - C['lat'][0])
+    return map_coordinates(f, np.array([fj, fi]), order=1, mode='nearest',
+                           prefilter=False).astype(np.float32)
+
 def z_clim_at(R, d, lvl=500):
     E = _era5_at(f'z{lvl}', R, d)
     if E is not None: return E
