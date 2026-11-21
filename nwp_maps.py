@@ -1843,7 +1843,15 @@ class Engine:
                     C = None if any(c is None for c in Cs) else np.mean(Cs, 0)
                 else: C = clim_at(R, vt - timedelta(hours=12))
                 if C is None: return None
-                return (T - C, dict(note='Anomaly vs. 1991–2020 IRIMO station normals (Iran only)'))
+                # Fail closed: a partially missing ERA5 normal or a mismatched
+                # spatial grid must never produce a misleading anomaly map.
+                if (np.shape(T) != np.shape(C) or
+                        not np.isfinite(T).all() or not np.isfinite(C).all()):
+                    return None
+                reference = ('ERA5 gridded daily climatology 1990–2019 (ME/EU)'
+                             if R.key in ('me', 'eu') else
+                             'IRIMO station normals 1991–2020 (Iran/Fars)')
+                return (T - C, dict(note='Temperature anomaly vs. ' + reference))
             return (T, {})
         if P.get('secidx'):
             c = getattr(st, '_sf', None)
