@@ -1429,7 +1429,7 @@ class Engine:
             if M.get('upper'): srcs['upper'] = s.src(M['upper'])
             st = s.state[mkey] = RunState(mkey, run, srcs)
             r = {} if s.sink_only else s.up.call('begin', js={'model': mkey, 'run': rid, 'name': M['name'], 'label': M['label'],
-                                       'info': dict(tclass='daily', res=M.get('res', ''), cyc=M.get('cyc', ''), prov=M['prov']),
+                                       'info': dict(tclass='daily', res=M.get('res', ''), cyc=M.get('cyc', ''), prov=M['prov'], horizon=hz),
                                        'cats': [dict(id=i, fa=fa, o=o) for i, fa, o in CATS], 'scales': scales_payload(),
                                        'params': {k: dict(fa=v['fa'], unit=v['unit'], cat=v['cat'], o=v['ord'], sc=(v.get('me') or {}).get('sc', v['sc']),
                                                           mu=(v.get('me') or {}).get('unit', v['unit']), alt=v.get('alt', ''), me=int(bool(v.get('me_only'))), ln=int(bool(v.get('cont') or v.get('barbs') or v.get('ln'))))
