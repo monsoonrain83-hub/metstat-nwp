@@ -18,7 +18,7 @@ class ArpegePolicyTests(unittest.TestCase):
                  "mkey == 'arpege'" in ast.unparse(n.test)]
         self.assertEqual(len(gates), 1)
         self.assertIn("rk != 'me'", ast.unparse(gates[0].test))
-        for pid in ("p24", "t2m", "z500"):
+        for pid in ("p24", "pacc", "t2m", "z500"):
             self.assertIn(repr(pid), ast.unparse(gates[0].test))
         self.assertTrue(any(isinstance(n, ast.Continue) for n in ast.walk(gates[0])))
 
