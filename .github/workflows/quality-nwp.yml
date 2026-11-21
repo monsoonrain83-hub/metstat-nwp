@@ -35,8 +35,6 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_run_completion_horizon.py' -v
       - name: "ARPEGE Middle East product scope (offline)"
         run: python -m unittest discover -s tests -p 'test_arpege_scope.py' -v
-      - name: "Committed ERA5 artifact integrity (real NPZ, not mock)"
-        run: python -m unittest discover -s tests -p 'test_committed_era5_artifact.py' -v
       - name: "ERA5 regional temperature climatology regression (offline)"
         run: python -m unittest discover -s tests -p 'test_era5_clim.py' -v
       - name: "ERA5 spatial coordinate collision regression (offline)"
@@ -72,6 +70,8 @@ jobs:
           python seas5_maps.py --mock --out /tmp/metstat-seas5-test
           find /tmp/metstat-seas5-test/ecmwfseas -type f -name 'lz5a_*.webp' -size +0c -print | grep -q .
           find /tmp/metstat-seas5-test/ecmwfseass -type f -name 'lz5a_*.webp' -size +0c -print | grep -q .
+      - name: "Committed ERA5 artifact integrity (real NPZ, not mock)"
+        run: python -m unittest discover -s tests -p 'test_committed_era5_artifact.py' -v
       - name: "نشت کلید"
         run: |
           if grep -rInE "(upload_key|relay_secret|api[_-]?key)[\"' ]*[:=][\"' ]*[A-Za-z0-9_\-]{16,}" --include=*.py --include=*.yml --include=*.php .; then echo "کلید در سورس دیده شد"; exit 1; fi
