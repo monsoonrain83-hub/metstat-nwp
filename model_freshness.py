@@ -24,12 +24,12 @@ def parse_run(s):
 def audit(man,now=None):
  now=now or datetime.now(UTC);models=man.get('models') or {};items=man.get('items') or []
  result={};flows=set()
- print('MANIFEST_DEBUG', 'items_count='+str(len(items)), 'first_item='+str(items[0] if items else 'none')[:480],
-       'models='+','.join(sorted(models)[:25]), flush=True)
  for m,(max_age,variables,wf) in RULES.items():
   obj=models.get(m) or {};run=obj.get('run');dt=parse_run(run)
   age=None if dt is None else round((now-dt).total_seconds()/3600,1)
-  counter=Counter(x.get('p') for x in items if x.get('m')==m and x.get('run')==run)
+  # Live host manifest v2 omits run on each item: its items list is
+  # by definition for the current model run (older items go to items_prev).
+  counter=Counter(x.get('p') for x in items if x.get('m')==m and (not x.get('run') or str(x.get('run'))==str(run)))
   gaps={v:[counter[v],required] for v,required in variables.items() if counter[v]<required}
   problems=[]
   if not obj:problems.append('model_missing')
