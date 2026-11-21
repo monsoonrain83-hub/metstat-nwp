@@ -1799,9 +1799,8 @@ class Engine:
     def make(s, P, pid, st, D, R, vt, lead, dt_h):
         mkey = st.model; d = D.get('main', {}); src = st.srcs['main']
         I = lambda a, order=1: R.interp(src, a, order)
-        if R.key == 'me' and pid.startswith('tanom'):                    # اقلیم ایستگاهی فقط روی کادر ایران تعریف است
-            o = s.make(P, pid, st, D, R.iran, vt, lead, dt_h)
-            return None if o is None else (R.from_iran(o[0]), {})
+        # ME/EU anomalies must be calculated on their own grids against ERA5.
+        # Never stretch Iranian station-based anomalies across the Middle East.
         if P['kind'] == 'win':
             f = s.blend(st, R, lambda nm: s.acc(st, nm, P['var'], vt, P['h']) if nm in st.hist else None)
             if f is None: return None
