@@ -23,5 +23,6 @@ function mount({container,nav,locale='fa',onBounds,storage,storageKey='metstat.f
  function mapClick(lon,lat){if(typeof resolveMapClick!=='function')return false;const hits=resolveMapClick(lon,lat,nav.state());if(!Array.isArray(hits)||!nav.hit(hits))return false;render();onBounds(nav.state().bounds,nav.state());return true;}
  container.appendChild(root);render();return {element:root,controls,change,zoomOut,zoomIn,mapClick,render,destroy(){root.remove();}};
 }
-return {mount};
+function savedFavorite(storage,key='metstat.favorite.region'){try{return storage?.getItem(key)||null;}catch(_e){return null;}}
+return {mount,savedFavorite};
 });
