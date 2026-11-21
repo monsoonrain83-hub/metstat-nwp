@@ -62,6 +62,14 @@ def collect(mock=False, model='ecmwf_ec46_ensemble_mean'):
     collect.members = [m_.reshape((nd,) + LON.shape) for m_ in MEM.values()]
     return t0, lo, la, pr.reshape((nd,) + LON.shape), tm.reshape((nd,) + LON.shape)
 
+def weekly_values(pr,tm,week_index):
+    a,b=week_index*7,(week_index+1)*7
+    if b>min(pr.shape[0],tm.shape[0]):return None
+    if min(float(np.isfinite(pr[a:b]).all(axis=0).mean()),float(np.isfinite(tm[a:b]).all(axis=0).mean()))<.95:
+        return None
+    return (np.maximum(np.nansum(pr[a:b],axis=0),0).astype(np.float32),
+            np.nanmean(tm[a:b],axis=0).astype(np.float32))
+
 def publish_weekly_absolute(up, run, lo, la, pr, tm):
     """Seven-day totals/means from actual EC46 daily forecasts.
     These are ABSOLUTE predictions, never represented as anomalies.
@@ -79,13 +87,13 @@ def publish_weekly_absolute(up, run, lo, la, pr, tm):
     have=set(begin.get('have',[]))
     made=0
     for w in range(min(pr.shape[0],tm.shape[0])//7):
-        a,b=w*7,(w+1)*7
-        if min(float(np.isfinite(pr[a:b]).all(axis=0).mean()),float(np.isfinite(tm[a:b]).all(axis=0).mean()))<0.95:
+        aggregate=weekly_values(pr,tm,w)
+        if aggregate is None:
             log(f'  ✗ EC46 weekly absolute {w+1}: incomplete daily source, skip 7-day aggregation')
             continue
-        rain=np.maximum(np.nansum(pr[a:b],axis=0),0).astype(np.float32)
-        temp=np.nanmean(tm[a:b],axis=0).astype(np.float32)
-        vt=run+timedelta(days=b)
+        rain,temp=aggregate
+        vt=run+timedelta(days=(w+1)*7)
+        b=(w+1)*7
         for pid,value in (('wp7',rain),('wtm',temp)):
             field=E.L.regrid(value,lo,la)
             made+=W.put(up,'ecwkabs',run,pid,vt,24*b,field,have)
