@@ -1215,6 +1215,11 @@ def needed_vars(mkey, pids, kind):
     v = {'precipitation', 'snowfall_water_equivalent'}
     if mkey in ('ecmwf', 'ecmwf9', 'ukmo', 'gfs', 'gem') or MM_ON or any(pid in pids for pid in ('tanom', 'tanom5')): v |= {'temperature_2m'}
     if MM_ON: v |= {'wind_direction_10m', 'wind_speed_10m', 'pressure_msl', 'relative_humidity_2m', 'wind_gusts_10m'}
+    if mkey == 'arpege':
+        # ARPEGE is published only for ME p24/pacc/t2m/z500. Explicitly fetch
+        # the 500-hPa fields: z500 needs geopotential contours AND RH shading.
+        # Missing source variables remain missing; never synthesize them.
+        v |= {'temperature_2m', 'geopotential_height_500hPa', 'relative_humidity_500hPa'}
     if mkey in ('ecmwf', 'ecmwf9'): v |= {'temperature_2m_max', 'temperature_2m_min'}
     if kind == 'all':
         # Load actual source fields for requested anomaly products; absent data are
