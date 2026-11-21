@@ -35,6 +35,15 @@ def daily_field(da, divisor=1.0):
     regional = select_region(da)
     if "hour" not in regional.dims:
         raise ValueError("ERA5 climatology lacks 6-hour time-of-day dimension")
+    # A finite average of only three hours is not a valid daily normal.
+    # Require the actual 00/06/12/18 UTC slots, not merely four samples.
+    if "dayofyear" not in regional.dims:
+        raise ValueError("ERA5 climatology lacks dayofyear dimension")
+    hours = np.asarray(regional["hour"].values)
+    days = np.asarray(regional["dayofyear"].values)
+    if (hours.shape != (4,) or not np.array_equal(np.sort(hours), [0, 6, 12, 18]) or
+            days.shape != (366,) or not np.array_equal(days, np.arange(1, 367))):
+        raise ValueError("ERA5 climatology has incomplete or invalid time coordinates")
     # xarray.mean skips NaN by default; that would silently turn an incomplete
     # four-slot climatological day into a seemingly complete daily normal.
     # Require all source slots at each grid cell before calculating its mean.
