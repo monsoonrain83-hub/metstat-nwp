@@ -25,6 +25,8 @@ jobs:
           find out9 -type f -name 't2m_*' -size +0c -print | grep -q .
       - name: "Regression — multimodel policy and preservation of pending fields"
         run: python -m unittest discover -s tests -p 'test_mm_*.py' -v
+      - name: "ARPEGE Middle East product scope (offline)"
+        run: python -m unittest discover -s tests -p 'test_arpege_scope.py' -v
       - name: "ERA5 regional temperature climatology regression (offline)"
         run: python -m unittest discover -s tests -p 'test_era5_clim.py' -v
       - name: "ERA5 spatial coordinate collision regression (offline)"
