@@ -47,7 +47,7 @@ def daily_field(da, divisor=1.0):
     # xarray.mean skips NaN by default; that would silently turn an incomplete
     # four-slot climatological day into a seemingly complete daily normal.
     # Require all source slots at each grid cell before calculating its mean.
-    if not bool(regional.notnull().all().compute()):
+    if not bool(xr.apply_ufunc(np.isfinite, regional, dask='allowed').all().compute()):
         raise ValueError("ERA5 climatology has missing/nonfinite source slots")
     daily = (regional.mean("hour", skipna=False) / divisor).compute()
     values = np.asarray(daily.values, dtype=np.float32)
