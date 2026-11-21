@@ -41,6 +41,20 @@ class TestERA5Sampling(unittest.TestCase):
         self.region.lon[:] = 42.
         self.assertIsNone(self.sample(datetime(2025, 3, 1, tzinfo=timezone.utc)))
 
+    def test_duplicate_longitude_rejected(self):
+        self.normal['lon'] = np.array([40., 40.], dtype=np.float32)
+        self.region.lon[:] = 40.
+        self.assertIsNone(self.sample(datetime(2025, 3, 1, tzinfo=timezone.utc)))
+
+    def test_irregular_latitude_spacing_rejected(self):
+        self.normal['lat'] = np.array([10., 11., 13.], dtype=np.float32)
+        self.normal['t2m'] = np.zeros((366, 3, 2), dtype=np.float32)
+        self.assertIsNone(self.sample(datetime(2025, 3, 1, tzinfo=timezone.utc)))
+
+    def test_nonfinite_grid_coordinate_rejected(self):
+        self.normal['lon'] = np.array([40., np.nan], dtype=np.float32)
+        self.assertIsNone(self.sample(datetime(2025, 3, 1, tzinfo=timezone.utc)))
+
     def test_missing_field_is_not_fabricated(self):
         with patch.object(N, 'load_era5c', return_value=self.normal):
             self.assertIsNone(N._era5_at('not_present', self.region,
