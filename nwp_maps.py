@@ -1495,15 +1495,18 @@ class Engine:
                 vars_ = {'precipitation', 'snowfall_water_equivalent', 'temperature_2m'}
                 if not src.exists(run, vt): continue
             if name == 'upper':
-                for rr in (run, run - timedelta(hours=6), run - timedelta(hours=12)):     # اجرای 0.25° ممکن است دیرتر از 0.13° منتشر شود → آخرین اجرای موجود
-                    if not src.exists(rr, vt): continue
+                # Preserve cycle identity: a GFS 0.25-degree pressure field from
+                # an earlier initialization is NOT a valid substitute for the
+                # current 0.13-degree run, even at the same valid time.
+                # Missing same-cycle upper fields suppress dependent products.
+                if src.exists(run, vt):
                     try:
-                        D[name] = src.read(rr, vt, sorted(vars_))
-                        if rr != run and not getattr(st, 'up_note', False): st.up_note = True; log(f'  ترازهای فشاری {src.dom}: اجرای {run:%Y%m%d%H} هنوز نیست؛ از اجرای {rr:%Y%m%d%H} استفاده می‌شود')
-                    except Exception as e: log(f'  ترازهای فشاری {src.dom} {vt:%Y%m%d%H} خوانده نشد ({type(e).__name__}: {e})')
-                    break
-                else:
-                    if not getattr(st, 'up_miss', False): st.up_miss = True; log(f'  ترازهای فشاری {src.dom} برای {vt:%Y%m%d%H} در هیچ‌کدام از سه اجرای اخیر پیدا نشد')
+                        D[name] = src.read(run, vt, sorted(vars_))
+                    except Exception as e:
+                        log(f'  ترازهای فشاری {src.dom} {run:%Y%m%d%H}/{vt:%Y%m%d%H} خوانده نشد ({type(e).__name__}: {e})')
+                elif not getattr(st, 'up_miss', False):
+                    st.up_miss = True
+                    log(f'  ترازهای فشاری {src.dom} برای ران {run:%Y%m%d%H} و اعتبار {vt:%Y%m%d%H} هنوز منتشر نشده؛ از ران قدیمی استفاده نمی‌شود')
                 continue
             D[name] = src.read(run, vt, sorted(vars_))
         # جمع‌های تجمعی روی شبکهٔ اصلی هر منبع
