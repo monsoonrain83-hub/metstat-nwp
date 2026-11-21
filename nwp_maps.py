@@ -1527,7 +1527,7 @@ class Engine:
                 if P.get('me_only') and rk not in ('me', 'eu'): continue
                 if rk == 'eu' and pid not in EU_PIDS: continue
                 # ARPEGE is a limited Middle-East product: no global/IR/Fars/Europe or convection.
-                if mkey == 'arpege' and (rk != 'me' or pid not in ('p24', 't2m', 'z500')): continue
+                if mkey == 'arpege' and (rk != 'me' or pid not in ('p24', 'pacc', 't2m', 'z500')): continue
                 job = s.plan(P, st, vt, lead, dt_h, want_all)
                 if not job: continue
                 fname = f'{rk}/{pid}_{vt:%Y%m%d%H}.' + ('webp' if rk in ('me', 'eu') else 'png')
