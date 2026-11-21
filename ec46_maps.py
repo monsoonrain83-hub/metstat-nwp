@@ -109,7 +109,7 @@ def main():
     if not a.host and not a.out: sys.exit('--host یا --out لازم است')
     if a.mock: N.z500_clim_at = lambda R, d: None
     up = N.Uploader(a.host, a.key, a.out)
-    MEMB = []; failed=[]
+    MEMB = []; failed=[]; total_maps = 0
     for mk, om in (('ec46c', 'ecmwf_ec46'), ('ec46m', 'ecmwf_ec46_ensemble_mean')):
         if mk == 'ec46c' and a.mock: continue
         R = collect(a.mock, om)
