@@ -3,7 +3,7 @@
  * never guesses counties, borders, or map coverage. */
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.MetStatGeoNav=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
-const LEVELS=['continent','region','country','province','county'];
+const LEVELS=['world','continent','region','country','province','county'];
 function node(index,id){return index[id]||null;}
 function chain(index,id){const seen=new Set(),out=[];while(id){if(seen.has(id))throw Error('Geographic hierarchy cycle');seen.add(id);const n=node(index,id);if(!n)throw Error('Unknown geographic node: '+id);out.unshift(n);id=n.parent||null;}return out;}
 function validBounds(b){return Array.isArray(b)&&b.length===4&&b.every(Number.isFinite)&&b[0]<b[2]&&b[1]<b[3]&&b[0]>=-180&&b[2]<=180&&b[1]>=-90&&b[3]<=90;}
@@ -16,7 +16,7 @@ function create(nodes,opts={}){
  function children(id=selected){return nodes.filter(n=>n.parent===id);}
  function zoomOut(){const p=node(index,selected)?.parent;if(!p)return false;selected=p;return true;}
  function zoomIn(id){const options=children();const target=id?options.find(n=>n.id===id):options.length===1?options[0]:null;if(!target)return false;selected=target.id;return true;}
- function menu(level){const i=LEVELS.indexOf(level);if(i<0)throw Error('Unknown level');const path=ancestors();if(i===0)return nodes.filter(n=>n.level==='continent');const parent=path.find(n=>LEVELS.indexOf(n.level)===i-1);return parent?children(parent.id):[];}
+ function menu(level){const i=LEVELS.indexOf(level);if(i<0)throw Error('Unknown level');const path=ancestors();if(level==='continent')return nodes.filter(n=>n.level==='continent');if(level==='world')return nodes.filter(n=>n.level==='world');const parent=path.find(n=>LEVELS.indexOf(n.level)===i-1);return parent?children(parent.id):[];}
  function state(){return {selected,level:index[selected]?.level||null,path:ancestors().map(n=>n.id),bounds:index[selected]?.bounds||null};}
  function hit(ids){for(let i=ids.length-1;i>=0;i--)if(index[ids[i]]&&chain(index,ids[i]).some(n=>n.id===selected)){return select(ids[i]);}return false;}
  return {select,zoomOut,zoomIn,menu,children,state,hit,levels:LEVELS.slice()};
