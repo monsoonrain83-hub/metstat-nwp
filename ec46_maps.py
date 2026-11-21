@@ -62,17 +62,50 @@ def collect(mock=False, model='ecmwf_ec46_ensemble_mean'):
     collect.members = [m_.reshape((nd,) + LON.shape) for m_ in MEM.values()]
     return t0, lo, la, pr.reshape((nd,) + LON.shape), tm.reshape((nd,) + LON.shape)
 
+def publish_weekly_absolute(up, run, lo, la, pr, tm):
+    """Seven-day totals/means from actual EC46 daily forecasts.
+    These are ABSOLUTE predictions, never represented as anomalies.
+    """
+    import wk_maps as W
+    W.MODELS['ecwkabs'] = dict(label='ECMWF EC46 — هفتگی: بارش و دمای مطلق (نه آنومالی)',
+                              name='ECMWF-EC46-WEEKLY-ABS',res='نمونه‌برداری ۱٫۵ درجه؛ درون‌یابی صرفاً برای نمایش',
+                              cyc='روزانه',prov='ECMWF EC46 · Open-Meteo (CC BY 4.0)',tclass='weekly')
+    W.PARAMS['wp7'] = ('بارش تجمعی هفت‌روزه EC46 (میلی‌متر، مطلق)', 'mm','pr',11,E.PARAMS['p24'][4])
+    W.PARAMS['wtm'] = ('میانگین هفتگی دمای ۲ متر EC46 (درجه سلسیوس، مطلق)','°C','tp',21,E.PARAMS['t2m'][4])
+    W.MPAR['ecwkabs'] = ('wp7','wtm')
+    begin=W.begin(up,'ecwkabs',run)
+    if str(begin.get('run'))!=f'{run:%Y%m%d%H}':
+        raise RuntimeError('weekly EC46 host begin failed: '+str(begin)[:160])
+    have=set(begin.get('have',[]))
+    made=0
+    for w in range(min(pr.shape[0],tm.shape[0])//7):
+        a,b=w*7,(w+1)*7
+        if min(float(np.isfinite(pr[a:b]).all(axis=0).mean()),float(np.isfinite(tm[a:b]).all(axis=0).mean()))<0.95:
+            log(f'  ✗ EC46 weekly absolute {w+1}: incomplete daily source, skip 7-day aggregation')
+            continue
+        rain=np.maximum(np.nansum(pr[a:b],axis=0),0).astype(np.float32)
+        temp=np.nanmean(tm[a:b],axis=0).astype(np.float32)
+        vt=run+timedelta(days=b)
+        for pid,value in (('wp7',rain),('wtm',temp)):
+            field=E.L.regrid(value,lo,la)
+            made+=W.put(up,'ecwkabs',run,pid,vt,24*b,field,have)
+    up.wait()
+    ended=up.call('end',js={'model':'ecwkabs','run':f'{run:%Y%m%d%H}'})
+    if not ended.get('ok'):raise RuntimeError('weekly EC46 host end failed: '+str(ended)[:200])
+    log(f'✓ ECMWF EC46 weekly absolute (NOT anomalies): {made} new maps')
+    return made
+
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument('--host'); ap.add_argument('--key', default=''); ap.add_argument('--out'); ap.add_argument('--mock', action='store_true')
     a = ap.parse_args()
     if not a.host and not a.out: sys.exit('--host یا --out لازم است')
     if a.mock: N.z500_clim_at = lambda R, d: None
     up = N.Uploader(a.host, a.key, a.out)
-    MEMB = []
+    MEMB = []; failed=[]
     for mk, om in (('ec46c', 'ecmwf_ec46'), ('ec46m', 'ecmwf_ec46_ensemble_mean')):
         if mk == 'ec46c' and a.mock: continue
         R = collect(a.mock, om)
-        if not R: log(f'✗ {mk}: داده‌ای از Open-Meteo گرفته نشد'); continue
+        if not R: failed.append(mk); log(f'✗ {mk}: داده‌ای از Open-Meteo گرفته نشد'); continue
         t0, lo, la, pr, tm = R; log(f'▶ {mk}: شروع {t0:%Y-%m-%d} ، {pr.shape[0]} روز')
         if mk == 'ec46c': MEMB = list(getattr(collect, 'members', []) or []); log(f'  اعضای جدا در پاسخ Open-Meteo: {len(MEMB)}')
         usepmm = mk == 'ec46m' and len(MEMB) >= 10
@@ -86,6 +119,10 @@ def main():
             if np.isfinite(tm[k - 1]).any(): o['t2m'] = (tm[k - 1], lo, la)
             prods[k] = o
         n = E.make_model(up, mk, t0, prods, a); log(f'پایان {mk}: {n} نقشه')
-    sys.exit(0)
+        if mk == 'ec46m':
+            try: publish_weekly_absolute(up,t0,lo,la,pr,tm)
+            except Exception as exc: failed.append('ecwkabs'); log(f'✗ EC46 هفتگی مطلق: {exc}')
+    if failed: log('✗ پردازش ناقص: '+','.join(failed))
+    sys.exit(2 if failed else 0)
 
 if __name__ == '__main__': main()
