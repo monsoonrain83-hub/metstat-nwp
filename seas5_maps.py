@@ -20,7 +20,19 @@ AREA = [45, 17, 9, 68]       # N, W, S, E — کادر ME_EXT (۲۰–۶۵°E، 
 LEADS = 6
 # (نام CDS، شناسه پارامتر سایت، برچسب، واحد، دستهٔ سایت، مقیاس رنگ)
 VARS = {'t2a':   ('2m_temperature_anomaly',             'lrta', 'انومالی دمای ۲ متری (°C)',                 '°C',   'tp', 'lrta'),
-        'tpara': ('total_precipitation_anomalous_rate', 'lrpa', 'انومالی بارش (میلی‌متر در روز)',            'mm/d', 'pr', 'lrpa')}
+        'tpara': ('total_precipitation_anomalous_rate', 'lrpa', 'انومالی بارش (میلی‌متر در روز)',            'mm/d', 'pr', 'lrpa'),
+        'mslpa': ('mean_sea_level_pressure_anomaly', 'lrslpa', 'انومالی فشار سطح دریا (hPa)', 'hPa', 'sf', 'mslpa'),
+        'z500a': ('geopotential_anomaly', 'lrz500a', 'انومالی ارتفاع ژئوپتانسیل ۵۰۰ هکتوپاسکال (dam)', 'dam', 'ul', 'z500a')}
+# CDS provides MSLP anomaly on single levels and geopotential anomaly on pressure levels.
+# Separate datasets and explicit unit conversions are required.
+PRESSURE_LEVELS = {'z500a': 500}
+OPTIONAL_VARS = frozenset({'mslpa', 'z500a'})
+EN_LABELS = {
+    't2a': '2 m temperature anomaly (°C)',
+    'tpara': 'Precipitation anomaly (mm/day)',
+    'mslpa': 'Mean sea level pressure anomaly (hPa)',
+    'z500a': '500 hPa geopotential height anomaly (dam)',
+}
 SEAS_MODELS = {'ecmwfseas':  dict(tclass='monthly',  span=1, cyc='ماهانه (گام ۱ ماهه)',          fa='ECMWF SEAS5 (ماهانه)'),
                'ecmwfseass': dict(tclass='seasonal', span=3, cyc='فصلی (میانگین ۳ ماهه)',       fa='ECMWF SEAS5 (فصلی)')}
 
@@ -30,13 +42,20 @@ def host_run(host, key):
     try:
         import requests
         m = requests.get(host.rstrip('/') + '/data/manifest.json', timeout=60, headers={'User-Agent': 'MetStat-seas5/1.0'}).json()['models']
-        return (m.get(key) or {}).get('run')
+        item = m.get(key) or {}
+        return item.get('run') if item.get('status') == 'complete' else None
     except Exception as e:
         log(f'  ⓘ manifest هاست خوانده نشد ({type(e).__name__}) — بدون بررسی تکراری‌بودن ادامه می‌دهم'); return None
 
-def retrieve(c, cds_var, y, m, path):
-    c.retrieve(DS, {'originating_centre': 'ecmwf', 'system': '51', 'variable': [cds_var], 'product_type': ['ensemble_mean'], 'year': [str(y)], 'month': [f'{m:02d}'],
-                    'leadtime_month': [str(i) for i in range(1, LEADS + 1)], 'area': AREA, 'data_format': 'netcdf'}, path)
+def retrieve(c, cds_var, y, m, path, pressure_level=None):
+    params = {'originating_centre': 'ecmwf', 'system': '51', 'variable': [cds_var], 'product_type': ['ensemble_mean'],
+              'year': [str(y)], 'month': [f'{m:02d}'],
+              'leadtime_month': [str(i) for i in range(1, LEADS + 1)], 'area': AREA, 'data_format': 'netcdf'}
+    dataset = DS
+    if pressure_level is not None:
+        dataset = 'seasonal-postprocessed-pressure-levels'
+        params['pressure_level'] = [str(pressure_level)]
+    c.retrieve(dataset, params, path)
 
 def read_cds(path):
     """→ data(lead, lat, lon)، lon، lat، offs (ماه‌های پس از ماه شروع)، units"""
@@ -57,19 +76,31 @@ def read_cds(path):
 def convert(vn, data, units):
     """به واحد نمایش سایت. t2a: انومالی K = °C (بدون تبدیل)؛ tpara: m s-1 (ستون آب) → mm/day."""
     u = units.replace(' ', '').lower()
+    if vn == 'mslpa':
+        if u in ('pa', 'pascal', 'pascals'): return data / 100.0
+        if u in ('hpa', 'mbar', 'mb'): return data
+        raise RuntimeError(f'Unknown MSLP anomaly unit: {units!r}')
+    if vn == 'z500a':
+        if u in ('m**2s**-2', 'm2s-2', 'm2/s2', 'm**2/s**2', 'm^2s^-2', 'm2s^-2', 'm²s⁻²'):
+            return data / (9.80665 * 10.0)  # geopotential anomaly → geopotential height anomaly, dam
+        if u in ('m', 'metre', 'meter', 'metres', 'meters'): return data / 10.0
+        if u in ('dam', 'dm'): return data
+        raise RuntimeError(f'Unknown 500 hPa geopotential anomaly unit: {units!r}')
     if vn == 'tpara':
         if u in ('ms-1', 'ms**-1', 'm/s', 'ms^-1'): return data * 1000.0 * 86400.0
         raise RuntimeError(f'واحد بارش ناشناخته: «{units}» (انتظار m s-1)')
     if u not in ('k', 'kelvin', 'degc', '°c', 'c'): raise RuntimeError(f'واحد دما ناشناخته: «{units}» (انتظار K)')
     return data
 
-def begin_payload(mk, run):
+def begin_payload(mk, run, available=None):
+    available = set(VARS if available is None else available)
     M = SEAS_MODELS[mk]
     return {'model': mk, 'run': run, 'name': mk.upper(), 'label': M['fa'],
             'info': dict(tclass=M['tclass'], res='1°', cyc=M['cyc'], prov='ECMWF SEAS5 / Copernicus C3S'),
             'cats': [dict(id=i, fa=f, o=o) for i, f, o in N.CATS],
-            'scales': {k: dict(c=styles.SC[k]['colors'], e=[None if abs(x) == math.inf else x for x in styles.SC[k]['edges']], lo=True, hi=True) for k in ('lrta', 'lrpa')},
-            'params': {v[1]: dict(fa=v[2], unit=v[3], cat=v[4], o=90 + i, sc=v[5], mu=v[3], alt='', me=1, ln=0) for i, v in enumerate(VARS.values())}}
+            'scales': {k: dict(c=styles.SC[k]['colors'], e=[None if abs(x) == math.inf else x for x in styles.SC[k]['edges']], lo=True, hi=True) for k in ('lrta', 'lrpa', 'mslpa', 'z500a')},
+            'params': {v[1]: dict(fa=v[2], en=EN_LABELS[vn], unit=v[3], cat=v[4], o=90 + i, sc=v[5], mu=v[3], alt='', me=1, ln=0)
+                       for i, (vn, v) in enumerate(VARS.items()) if vn in available}}
 
 def publish(up, fields, y0, m0, run):
     """fields: {vn: (data_mm(lead,lat,lon) در واحد سایت، lon، lat، offs)} → هر دو مدل (ماهانه + فصلی)"""
@@ -79,7 +110,7 @@ def publish(up, fields, y0, m0, run):
         for vn, (arr, lon, lat, offs) in fields.items():
             pid, sc = VARS[vn][1], VARS[vn][5]
             if not started:
-                up.call('begin', js=begin_payload(mk, run)); started = True
+                up.call('begin', js=begin_payload(mk, run, fields)); started = True
             for k in range(len(arr) - M['span'] + 1):
                 a = arr[k:k + M['span']]
                 if offs[k:k + M['span']] != list(range(offs[k], offs[k] + M['span'])): continue            # فقط ماه‌های پیاپی
@@ -109,12 +140,23 @@ def main():
             for vn, v in VARS.items():
                 with tempfile.TemporaryDirectory() as td:
                     p = os.path.join(td, f'{vn}.nc')
-                    try: retrieve(c, v[0], y, m, p)
-                    except Exception as e: log(f'  ✗ {vn} {y}-{m:02d}: {type(e).__name__}: {str(e)[:300]}'); break      # این ماه هنوز منتشر نشده → ماه قبل
+                    try:
+                        if vn in PRESSURE_LEVELS: retrieve(c, v[0], y, m, p, pressure_level=PRESSURE_LEVELS[vn])
+                        else: retrieve(c, v[0], y, m, p)
+                    except Exception as e:
+                        log(f'  ✗ {vn} {y}-{m:02d}: {type(e).__name__}: {str(e)[:300]}')
+                        if vn in OPTIONAL_VARS: continue  # optional fields must never block the two established products
+                        fields = {}  # never publish an incomplete temperature/precipitation cycle
+                        break
                     try: d, lon, lat, offs, units = read_cds(p); fields[vn] = (convert(vn, d, units), lon, lat, offs); log(f'  {vn}: shape={d.shape} offs={offs} units="{units}"')
-                    except Exception as e: log(f'  ✗ خواندن {vn}: {type(e).__name__}: {e}'); fields = {}; break
-        if not fields: continue
-        if len(fields) < len(VARS): log('  ⚠ فقط بخشی از پارامترها آمد؛ همان‌ها آپلود می‌شود')
+                    except Exception as e:
+                        log(f'  ✗ خواندن {vn}: {type(e).__name__}: {e}')
+                        if vn in OPTIONAL_VARS: continue
+                        fields = {}; break
+        if not {'t2a', 'tpara'}.issubset(fields):
+            log(f'  ✗ SEAS5 {run}: temperature/precipitation missing, no partial cycle published')
+            continue
+        if len(fields) < len(VARS): log('  ⚠ فقط پارامترهای پایه آمدند؛ پارامترهای اختیاری ناموجود منتشر نمی‌شوند')
         publish(up, fields, y, m, run); return 0
     log('✗ SEAS5: برای هیچ‌کدام از دو ماه اخیر داده‌ای گرفته نشد'); return 0
 
