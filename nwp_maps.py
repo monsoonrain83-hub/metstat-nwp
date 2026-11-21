@@ -1154,6 +1154,14 @@ def _era5_at(key, R, d):
     A = C[key]
     if A.ndim != 3 or A.shape[1:] != (len(C['lat']), len(C['lon'])): return None
     if len(C['lat']) < 2 or len(C['lon']) < 2: return None
+    # map_coordinates assumes a strictly ascending, evenly spaced source grid.
+    # Reject malformed climatology coordinates rather than sampling a wrong cell.
+    lat, lon = np.asarray(C['lat']), np.asarray(C['lon'])
+    for axis in (lat, lon):
+        steps = np.diff(axis)
+        if (not np.isfinite(axis).all() or not np.all(steps > 0) or
+                not np.allclose(steps, steps[0], rtol=1e-5, atol=1e-6)):
+            return None
     if not np.isfinite(R.lat).all() or not np.isfinite(R.lon).all(): return None
     if (np.min(R.lon) < np.min(C['lon']) or np.max(R.lon) > np.max(C['lon']) or
             np.min(R.lat) < np.min(C['lat']) or np.max(R.lat) > np.max(C['lat'])):
