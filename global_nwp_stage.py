@@ -83,6 +83,21 @@ def valid_candidates(meta, run, requested_lead=24):
         if 0 <= hours <= 384:out.append((abs(hours-requested_lead),vt))
     return [v for _,v in sorted(out)]
 
+def read_independent_sources(sources, run, valid, fields, errors):
+    """Fetch each actual source independently; failure of one cannot hide another."""
+    result = {}
+    for candidate in sources:
+        if candidate is None: continue
+        try:
+            if not candidate.exists(run, valid): continue
+            values = candidate.read(run, valid, fields)
+            if not isinstance(values, dict):
+                raise ValueError('source returned no field dictionary')
+            result[candidate.dom] = values
+        except Exception as exc:
+            errors.append(f'{candidate.dom}: {str(exc)[:150]}')
+    return result
+
 def acquire(model, outdir, requested_lead=24):
     import s3fs
     dom = DOMAINS[model]
@@ -109,18 +124,10 @@ def acquire(model, outdir, requested_lead=24):
             # Source availability is independent: a missing 0.25-degree field
             # must not prevent using a verified 9/13km field at the same cycle.
             # Never mix runs or substitute a different valid time.
-            data, high_data = {}, {}
-            for candidate, target in ((src, 'coarse'), (hi_src, 'high')):
-                if candidate is None: continue
-                try:
-                    if not candidate.exists(run,valid): continue
-                    values = candidate.read(run,valid,sorted(v[0] for v in FIELDS.values()))
-                    if not isinstance(values,dict):
-                        raise ValueError('source returned no field dictionary')
-                    if target == 'coarse': data = values
-                    else: high_data = values
-                except Exception as e:
-                    errors.append(f'{candidate.dom}: {str(e)[:150]}')
+            source_fields = read_independent_sources(
+                (src, hi_src), run, valid, sorted(v[0] for v in FIELDS.values()), errors)
+            data = source_fields.get(src.dom, {})
+            high_data = source_fields.get(hi_src.dom, {}) if hi_src else {}
             if not data and not high_data: continue
             # A source is selectable only after actual field read + shape and
             # coverage QC. Prefer each variable at native 9/13km independently.
