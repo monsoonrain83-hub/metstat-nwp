@@ -27,6 +27,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_mm_*.py' -v
       - name: "Daily multimodel 180h and 00/12Z policy (offline)"
         run: python -m unittest discover -s tests -p 'test_daily_mm_180.py' -v
+      - name: "GFS upper-air same-cycle integrity (offline)"
+        run: python -m unittest discover -s tests -p 'test_same_cycle_upper.py' -v
       - name: "NWP progress manifest contract (offline)"
         run: python -m unittest discover -s tests -p 'test_nwp_progress_contract.py' -v
       - name: "Run completion horizon (offline)"
