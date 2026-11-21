@@ -2,7 +2,10 @@ name: metstat-weekly-iri
 on:
   schedule:
     - cron: "20 13 * * *"
-  workflow_dispatch:
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths: [wk_maps.py, .github/workflows/wk.yml]
 concurrency:
   group: wk
   cancel-in-progress: false
