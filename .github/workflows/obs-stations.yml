@@ -4,15 +4,26 @@ on:
   schedule: [{ cron: "17 3 * * 1" }]
   push: { branches: [obs-stage1], paths: [".github/workflows/obs-stations.yml", "obs_stations.py"] }
 permissions: { contents: write }
+concurrency:
+  group: obs-stations
+  cancel-in-progress: false
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - run: python obs_stations.py
-      - run: |
-          git config user.name obs-bot; git config user.email obs-bot@users.noreply.github.com
-          git add data/obs/stations.json; git commit -m "obs: stations" || exit 0; git push
+      - name: Generate and validate observation station registry
+        run: |
+          python obs_stations.py
+          python tools/obs_station_publish.py
+      - name: Safely publish on main only (preserve concurrent obs-ingest writes)
+        if: github.ref == 'refs/heads/main'
+        run: python tools/obs_station_publish.py --commit
+      - name: Development branch does not publish
+        if: github.ref != 'refs/heads/main'
+        run: echo "Dry-run only; no production station file changed."
