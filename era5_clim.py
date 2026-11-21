@@ -19,6 +19,13 @@ def select_region(da):
     if float(da.longitude.max()) > 180:
         da = da.assign_coords(longitude=((da.longitude + 180) % 360) - 180)
     da = da.sortby("latitude").sortby("longitude")
+    # Duplicate spatial coordinates make nearest-neighbour selection ambiguous.
+    # In particular, longitude 0 and 360 can collapse to the same coordinate
+    # after normalizing to [-180, 180). Reject rather than silently choosing.
+    for axis in ("latitude", "longitude"):
+        coords = np.asarray(da[axis].values)
+        if not np.isfinite(coords).all() or np.unique(coords).size != coords.size:
+            raise ValueError(f"ERA5 source has duplicate/nonfinite {axis} coordinates")
     # nearest-neighbour selection must not extrapolate outside source coverage.
     if (float(LATS.min()) < float(da.latitude.min()) or
             float(LATS.max()) > float(da.latitude.max()) or
