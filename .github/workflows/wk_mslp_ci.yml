@@ -1,0 +1,21 @@
+name: EC46 weekly MSLP anomaly offline tests
+on:
+  pull_request:
+    paths: ["wk_maps.py", "tests/test_wk_ec46_mslp.py", "tests/test_wk_cfs_height.py", ".github/workflows/wk_mslp_ci.yml"]
+  push:
+    branches: [main]
+    paths: ["wk_maps.py", "tests/test_wk_ec46_mslp.py", ".github/workflows/wk_mslp_ci.yml"]
+permissions: { contents: read }
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install numpy scipy pillow requests matplotlib
+      - name: Compile and verify optional field, catalog and fallback
+        run: |
+          python -m py_compile wk_maps.py tests/test_wk_ec46_mslp.py tests/test_wk_cfs_height.py
+          python -m unittest discover -s tests -p 'test_wk_*.py' -v

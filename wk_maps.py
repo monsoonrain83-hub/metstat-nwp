@@ -39,18 +39,26 @@ MODELS = {
 PARAMS = {  # id: (فارسی، واحد، دسته، ترتیب، مقیاس)
     'wta': ('انومالی هفتگی دمای ۲ متری (°C)', '°C', 'tp', 20, 'wkta'),
     'wpa': ('انومالی هفتگی بارش (میلی‌متر در هفته)', 'mm', 'pr', 10, 'wkpa'),
+    'wslpa': ('آنومالی هفتگی فشار متوسط سطح دریا (hPa)', 'hPa', 'sf', 22, 'mslpa'),
+    'wz500a': ('اختلاف هفتگی ارتفاع ژئوپتانسیل ۵۰۰ نسبت به ERA5/NCEP (دکامتر؛ بدون حذف اریبی مدل)', 'dam', 'ul', 23, 'z500a'),
     'tpp': ('پیش‌بینی فصلی بارش — دهک غالب و احتمال (٪)', '%', 'pr', 11, 'terp'),
     'tpt': ('پیش‌بینی فصلی دما — دهک غالب و احتمال (٪)', '%', 'tp', 21, 'tert'),
 }
 MPAR = {'ecwk': ('wta', 'wpa'), 'cfswk': ('wta', 'wpa'), 'iri': ('tpp', 'tpt')}
+PARAM_EN = {'wta': 'Weekly 2 m temperature anomaly (°C)',
+            'wpa': 'Weekly precipitation anomaly (mm/week)',
+            'wslpa': 'Weekly mean sea level pressure anomaly (hPa)',
+            'wz500a': 'Weekly 500 hPa height deviation vs ERA5/NCEP (dam; CFS bias not corrected)',
+            'tpp': 'Seasonal precipitation tercile probability (%)',
+            'tpt': 'Seasonal temperature tercile probability (%)'}
 
-def begin(up, mk, run):
-    M = MODELS[mk]; ps = MPAR[mk]
+def begin(up, mk, run, extra=()):
+    M = MODELS[mk]; ps = MPAR[mk] + tuple(extra)
     return up.call('begin', js={'model': mk, 'run': f'{run:%Y%m%d%H}', 'name': M['name'], 'label': M['label'],
         'info': dict(tclass=M['tclass'], res=M['res'], cyc=M['cyc'], prov=M['prov']), 'cats': [dict(id=i, fa=f, o=o) for i, f, o in N.CATS],
         'scales': {PARAMS[p][4]: dict(c=styles.SC[PARAMS[p][4]]['colors'], e=[None if abs(x) == INF else x for x in styles.SC[PARAMS[p][4]]['edges']],
                                       lo=styles.SC[PARAMS[p][4]]['edges'][0] == -INF, hi=styles.SC[PARAMS[p][4]]['edges'][-1] == INF) for p in ps},
-        'params': {p: dict(fa=PARAMS[p][0], unit=PARAMS[p][1], cat=PARAMS[p][2], o=PARAMS[p][3], sc=PARAMS[p][4], mu=PARAMS[p][1], alt='', me=1, ln=0) for p in ps}})
+        'params': {p: dict(fa=PARAMS[p][0], en=PARAM_EN[p], unit=PARAMS[p][1], cat=PARAMS[p][2], o=PARAMS[p][3], sc=PARAMS[p][4], mu=PARAMS[p][1], alt='', me=1, ln=0) for p in ps}})
 
 def put(up, mk, run, pid, vt, lead_h, field, have, nearest=False):
     fn = f'me/{pid}_{vt:%Y%m%d%H}.webp'
@@ -68,19 +76,25 @@ def regrid_nearest(arr, lon, lat):
 
 # ---------------------------------------------------------------- ۱) ECMWF EC46 هفتگی (Open-Meteo)
 SAPI = 'https://seasonal-api.open-meteo.com/v1/seasonal'
-def ec_weekly(mock=False):
+def ec_weekly(mock=False, include_mslp=False):
     import requests
     STEP = 1.5; lo = np.arange(CROP[0], CROP[1] + 1e-6, STEP); la = np.arange(CROP[2], CROP[3] + 1e-6, STEP); LON, LAT = np.meshgrid(lo, la); fl, fa = LON.ravel(), LAT.ravel(); n = len(fl)
     if mock:
         t0 = datetime(2026, 10, 19, tzinfo=UTC); W = 6
         ta = np.stack([np.sin(LON / 7 + k) * 2.5 + (LAT - 30) * 0.05 for k in range(W)]).astype(np.float32); pa = np.stack([np.cos(LAT / 4 - k) * 12 for k in range(W)]).astype(np.float32)
+        if include_mslp:
+            slpa = np.stack([np.sin(LON / 8 + k) * 4 for k in range(W)]).astype(np.float32)
+            return t0, lo, la, ta, pa, slpa
         return t0, lo, la, ta, pa
-    vars_ = 'temperature_2m_anomaly,precipitation_anomaly'; got = {}; t_ = None; unit = {}
+    core_vars = 'temperature_2m_anomaly,precipitation_anomaly'
+    optional_var = 'pressure_msl_anomaly'  # documented Open-Meteo EC46 weekly anomaly
+    opt_enabled = bool(include_mslp)
+    got = {}; t_ = None; unit = {}
     tdead = time.time() + 900                                  # r82: بودجهٔ زمانی کل دریافت EC46؛ بعد از ۱۰ دقیقه رها می‌شود (قبلاً ساعت‌ها در ReadTimeout می‌ماند)
     for model in ('ecmwf_ec46_ensemble_mean', 'ecmwf_ec46', None):
         got.clear(); ok = True; B = 10                           # r85: دسته‌های کوچک‌تر (۲۵ نقطه × اعضا از IP گیت‌هاب ReadTimeout می‌داد)
         for s in range(0, n, B):
-            p = dict(latitude=','.join(f'{x:.2f}' for x in fa[s:s + B]), longitude=','.join(f'{x:.2f}' for x in fl[s:s + B]), weekly=vars_, timezone='GMT')
+            p = dict(latitude=','.join(f'{x:.2f}' for x in fa[s:s + B]), longitude=','.join(f'{x:.2f}' for x in fl[s:s + B]), weekly=core_vars + (',' + optional_var if opt_enabled else ''), timezone='GMT')
             if model: p['models'] = model
             j = None
             for k in range(2):
@@ -89,6 +103,14 @@ def ec_weekly(mock=False):
                     r = requests.get(SAPI, params=p, timeout=(15, 120))
                     if r.status_code == 200: j = r.json(); break
                     log(f'  EC46 هفتگی HTTP {r.status_code}: {r.text[:160]}')
+                    if r.status_code == 400 and opt_enabled:
+                        # An older provider release may lack MSLPA. Preserve the
+                        # two established temperature/precipitation products.
+                        opt_enabled = False
+                        got.pop(optional_var, None)
+                        p['weekly'] = core_vars
+                        log('  EC46 MSLP anomaly unavailable; retry without optional variable')
+                        continue
                     if r.status_code == 400: break
                 except Exception as e: log(f'  {type(e).__name__}')
                 time.sleep(4 * (k + 1))
@@ -105,6 +127,14 @@ def ec_weekly(mock=False):
                         v = np.nanmean(mem, 0) if mem else None
                     if v is None: ok = False; break
                     got.setdefault(key, {})[s + i] = np.array([np.nan if x is None else x for x in v], float)
+                if opt_enabled and ok:
+                    v = w.get(optional_var)
+                    if v is None:
+                        opt_enabled = False
+                        got.pop(optional_var, None)
+                    else:
+                        got.setdefault(optional_var, {})[s + i] = np.array(
+                            [np.nan if x is None else x for x in v], float)
                 time.sleep(0.5)
             if not ok: break
         if ok and got: log(f'  EC46 هفتگی: مدل {model or "پیش‌فرض"}؛ واحدها {unit}'); break
@@ -115,7 +145,22 @@ def ec_weekly(mock=False):
     pu = str(unit.get('precipitation_anomaly', 'mm'))
     if 'day' in pu or '/d' in pu: pa *= 7.0                               # mm/day → mm/week
     t0 = datetime.strptime(t_[0][:10], '%Y-%m-%d').replace(tzinfo=UTC)
-    return t0, lo, la, ta.reshape((W,) + LON.shape), pa.reshape((W,) + LON.shape)
+    base = (t0, lo, la, ta.reshape((W,) + LON.shape), pa.reshape((W,) + LON.shape))
+    # Only advertise this parameter when every point and week has usable data.
+    if opt_enabled and len(got.get(optional_var, {})) == n:
+        slp = np.full((W, n), np.nan, np.float32)
+        for i, v in got[optional_var].items():
+            slp[:, i] = v[:W]
+        u = str(unit.get(optional_var, '')).replace(' ', '').lower()
+        if u in ('pa', 'pascal', 'pascals'):
+            slp = slp / 100.0
+        elif u not in ('hpa', 'mb', 'mbar', 'millibar'):
+            log(f'  EC46 MSLP anomaly unit not verified: {u!r}; skip optional product')
+            return base
+        if np.isfinite(slp).all():
+            return base + (slp.reshape((W,) + LON.shape),)
+        log('  EC46 MSLP anomaly missing grid cells; optional product omitted')
+    return base
 
 # ---------------------------------------------------------------- ۲) CFSv2 هفتگی − اقلیم NCEP R1
 CLIM_URLS = {'t': ['https://downloads.psl.noaa.gov/Datasets/ncep.reanalysis.derived/surface_gauss/air.2m.mon.ltm.1991-2020.nc', 'https://downloads.psl.noaa.gov/Datasets/ncep.reanalysis.derived/surface_gauss/air.2m.mon.ltm.nc'],
@@ -145,7 +190,7 @@ def clim_on(C, doy, lo, la):
     from scipy.interpolate import RegularGridInterpolator
     I = RegularGridInterpolator((lat, lon), f, bounds_error=False, fill_value=np.nan); LO, LA = np.meshgrid(np.asarray(lo) % 360, la)
     return I(np.stack([LA.ravel(), LO.ravel()], 1)).reshape(LA.shape).astype(np.float32)
-def cfs_weekly(mock=False):
+def cfs_weekly(mock=False, include_z500=False):
     if mock:
         t0 = datetime(2026, 10, 21, tzinfo=UTC); lo = np.arange(CROP[0], CROP[1] + 0.1, 0.5); la = np.arange(CROP[2], CROP[3] + 0.1, 0.5); X, Y = np.meshgrid(lo, la)
         return t0, lo, la, np.stack([np.cos(X / 6 - k) * 3 for k in range(5)]).astype(np.float32), np.stack([np.sin(Y / 3 + k) * 15 for k in range(5)]).astype(np.float32)
@@ -155,7 +200,9 @@ def cfs_weekly(mock=False):
     raw = E.cfs_collect(fs, run, 35, True); P = E.cfs_products(raw, 35)
     Ct, Cp = ltm('t'), ltm('p')
     if Ct is None or Cp is None: log('✗ CFS هفتگی: اقلیم NCEP خوانده نشد'); return None
-    lo = la = None; TA, PA = [], []
+    lo = la = None; TA, PA, ZA = [], [], []
+    zgrid = None
+    zready = bool(include_z500)
     for w in range(5):
         days = [d for d in range(7 * w + 1, 7 * w + 8) if d in P and 't2m' in P[d] and 'p24' in P[d]]
         if len(days) < 7: break
@@ -163,16 +210,58 @@ def cfs_weekly(mock=False):
         t = np.mean([P[d]['t2m'][0] for d in days], 0); p = np.sum([P[d]['p24'][0] for d in days], 0)
         mid = run + timedelta(days=7 * w + 4); doy = mid.timetuple().tm_yday
         TA.append(t - clim_on(Ct, doy, lo, la)); PA.append(p - 7 * clim_on(Cp, doy, lo, la))
+        # CFS ensemble already fetches actual 500 hPa GRIB values each day.
+        # This is a reference-climatology departure, NOT a bias-corrected
+        # CFS hindcast anomaly. Do not publish if any day/reference is absent.
+        try:
+            if zready:
+                if not all('z5' in P[d] for d in days):
+                    zready = False
+                else:
+                    zlo, zla = P[days[0]]['z5'][1:3]
+                    if zgrid is None:
+                        zx, zy = np.meshgrid(zlo, zla)
+                        from types import SimpleNamespace
+                        zgrid = (zlo, zla, SimpleNamespace(lon=zx, lat=zy))
+                    if not np.array_equal(zlo, zgrid[0]) or not np.array_equal(zla, zgrid[1]):
+                        zready = False
+                    else:
+                        clim = [N.z500_clim_at(zgrid[2], run + timedelta(days=d)) for d in days]
+                        if any(c is None for c in clim):
+                            zready = False
+                        else:
+                            zmean = np.mean([P[d]['z5'][0] for d in days], axis=0)
+                            za = (zmean - np.mean(clim, axis=0)) / 10.0  # m -> dam
+                            if not np.isfinite(za).all():
+                                zready = False
+                            else:
+                                ZA.append(np.asarray(za, np.float32))
+        except Exception as err:
+            zready = False
+            log(f'  CFS weekly Z500 reference unavailable: {type(err).__name__}: {err}; base products retained')
     if not TA: return None
-    return run, lo, la, np.stack(TA).astype(np.float32), np.stack(PA).astype(np.float32)
+    base = (run, lo, la, np.stack(TA).astype(np.float32), np.stack(PA).astype(np.float32))
+    if zready and len(ZA) == len(TA) and zgrid is not None:
+        return base + ({'field': np.stack(ZA), 'lon': zgrid[0], 'lat': zgrid[1]},)
+    return base
 
 def make_weekly(up, mk, R, a):
-    t0, lo, la, ta, pa = R; run = t0.replace(hour=0, minute=0, second=0, microsecond=0)
-    r = begin(up, mk, run); have = set(r.get('have', [])); made = 0
+    t0, lo, la, ta, pa = R[:5]
+    slpa = R[5] if mk == 'ecwk' and len(R) == 6 else None
+    z500 = R[5] if mk == 'cfswk' and len(R) == 6 and isinstance(R[5], dict) else None
+    run = t0.replace(hour=0, minute=0, second=0, microsecond=0)
+    extra = (('wslpa',) if slpa is not None else ()) + (('wz500a',) if z500 is not None else ())
+    r = begin(up, mk, run, extra=extra)
+    have = set(r.get('have', [])); made = 0
     for w in range(ta.shape[0]):
         vt = run + timedelta(days=7 * (w + 1)); lead = 24 * 7 * (w + 1)          # زمان معتبر = پایان هفته
         made += put(up, mk, run, 'wta', vt, lead, L.regrid(ta[w], lo, la), have)
         made += put(up, mk, run, 'wpa', vt, lead, L.regrid(pa[w], lo, la), have)
+        if slpa is not None:
+            made += put(up, mk, run, 'wslpa', vt, lead, L.regrid(slpa[w], lo, la), have)
+        if z500 is not None:
+            made += put(up, mk, run, 'wz500a', vt, lead,
+                        L.regrid(z500['field'][w], z500['lon'], z500['lat']), have)
     up.wait(); up.call('end', js={'model': mk, 'run': f'{run:%Y%m%d%H}'}); log(f'✓ {mk}: {made} نقشه'); return made
 
 # ---------------------------------------------------------------- ۳) IRI فصلی سه‌دهکی
@@ -223,18 +312,18 @@ def make_iri(up, a):
     up.wait(); up.call('end', js={'model': 'iri', 'run': f'{issue:%Y%m%d%H}'}); log(f'✓ iri: {made} نقشه'); return made
 
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument('--host'); ap.add_argument('--key', default=''); ap.add_argument('--out'); ap.add_argument('--mock', action='store_true'); ap.add_argument('--only', default='ecwk,cfswk,iri')
+    ap = argparse.ArgumentParser(); ap.add_argument('--host'); ap.add_argument('--key', default=''); ap.add_argument('--out'); ap.add_argument('--mock', action='store_true'); ap.add_argument('--only', default='ecwk,cfswk,iri'); ap.add_argument('--ec-mslp', action='store_true', help='Opt-in verified ECMWF EC46 weekly MSLP anomaly'); ap.add_argument('--cfs-z500', action='store_true', help='Opt-in CFS weekly 500 hPa departure vs reference climatology')
     a = ap.parse_args()
     if not a.host and not a.out: sys.exit('--host یا --out لازم است')
     up = N.Uploader(a.host, a.key, a.out); only = set(a.only.split(',')); tot = 0
     if 'ecwk' in only:
         try:
-            R = ec_weekly(a.mock); tot += make_weekly(up, 'ecwk', R, a) if R else 0
+            R = ec_weekly(a.mock, include_mslp=a.ec_mslp); tot += make_weekly(up, 'ecwk', R, a) if R else 0
             if not R: log('✗ ecwk: انومالی هفتگی از Open-Meteo گرفته نشد (نام متغیر یا مدل را در لاگ ببینید)')
         except Exception as e: log(f'✗ ecwk: {e}')
     if 'cfswk' in only:
         try:
-            R = cfs_weekly(a.mock); tot += make_weekly(up, 'cfswk', R, a) if R else 0
+            R = cfs_weekly(a.mock, include_z500=a.cfs_z500); tot += make_weekly(up, 'cfswk', R, a) if R else 0
             if not R: log('✗ cfswk: ساخته نشد')
         except Exception as e: log(f'✗ cfswk: {e}')
     if 'iri' in only:
