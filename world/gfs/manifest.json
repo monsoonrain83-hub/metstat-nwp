@@ -21,20 +21,46 @@
       "variable": "temperature_2m",
       "units": "°C",
       "field_source_domain": "ncep_gfs013",
-      "resampling": "nearest-neighbor native 0.117deg to 0.25deg",
-      "width": 1440,
-      "height": 721,
+      "nominal_resolution": "13 km",
+      "source_grid": [
+        3072,
+        1536
+      ],
+      "source_grid_origin": [
+        -180,
+        -89.912126125
+      ],
+      "source_grid_spacing": [
+        0.1171875,
+        0.11714935
+      ],
+      "resampling": "native-source-grid",
+      "width": 3072,
+      "height": 1536,
       "finite_fraction": 1.0,
-      "min": -43.25,
-      "max": 44.7,
-      "sha256": "5035ff22f85df2fdbffe4064169e56d0a5e9cdf67ab583ec79134f5035317135"
+      "min": -43.4,
+      "max": 45.0,
+      "sha256": "c8110b84f64369d840fb6dd3532d07d2a5762da8fd75d8d565ef40a039c08ffd"
     },
     "z500": {
       "file": "gfs/z500.webp",
       "variable": "geopotential_height_500hPa",
       "units": "dam",
       "field_source_domain": "ncep_gfs025",
-      "resampling": "native model grid",
+      "nominal_resolution": "28 km",
+      "source_grid": [
+        1440,
+        721
+      ],
+      "source_grid_origin": [
+        -180,
+        -90
+      ],
+      "source_grid_spacing": [
+        0.25,
+        0.25
+      ],
+      "resampling": "native-source-grid",
       "width": 1440,
       "height": 721,
       "finite_fraction": 1.0,
@@ -47,7 +73,20 @@
       "variable": "pressure_msl",
       "units": "hPa",
       "field_source_domain": "ncep_gfs025",
-      "resampling": "native model grid",
+      "nominal_resolution": "28 km",
+      "source_grid": [
+        1440,
+        721
+      ],
+      "source_grid_origin": [
+        -180,
+        -90
+      ],
+      "source_grid_spacing": [
+        0.25,
+        0.25
+      ],
+      "resampling": "native-source-grid",
       "width": 1440,
       "height": 721,
       "finite_fraction": 1.0,

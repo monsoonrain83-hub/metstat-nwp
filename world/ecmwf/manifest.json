@@ -20,21 +20,47 @@
       "file": "ecmwf/t2m.webp",
       "variable": "temperature_2m",
       "units": "°C",
-      "field_source_domain": "ecmwf_ifs025",
-      "resampling": "native model grid",
-      "width": 1440,
-      "height": 721,
+      "field_source_domain": "ecmwf_ifs",
+      "nominal_resolution": "9 km",
+      "source_grid": [
+        3600,
+        1801
+      ],
+      "source_grid_origin": [
+        -180,
+        -90
+      ],
+      "source_grid_spacing": [
+        0.1,
+        0.1
+      ],
+      "resampling": "native-source-grid",
+      "width": 3600,
+      "height": 1801,
       "finite_fraction": 1.0,
-      "min": -46.4,
-      "max": 47.1,
-      "sha256": "c2fdb4210ad090f85bd9e10164228a1babff5d1af9d3a5314d1360468bac4553"
+      "min": -47.52,
+      "max": 47.15,
+      "sha256": "527790e70118482312741d949f05c0f4adaf8ac9be4d12cfe1988021a6e87769"
     },
     "z500": {
       "file": "ecmwf/z500.webp",
       "variable": "geopotential_height_500hPa",
       "units": "dam",
       "field_source_domain": "ecmwf_ifs025",
-      "resampling": "native model grid",
+      "nominal_resolution": "28 km",
+      "source_grid": [
+        1440,
+        721
+      ],
+      "source_grid_origin": [
+        -180,
+        -90
+      ],
+      "source_grid_spacing": [
+        0.25,
+        0.25
+      ],
+      "resampling": "native-source-grid",
       "width": 1440,
       "height": 721,
       "finite_fraction": 1.0,
@@ -46,14 +72,27 @@
       "file": "ecmwf/mslp.webp",
       "variable": "pressure_msl",
       "units": "hPa",
-      "field_source_domain": "ecmwf_ifs025",
-      "resampling": "native model grid",
-      "width": 1440,
-      "height": 721,
+      "field_source_domain": "ecmwf_ifs",
+      "nominal_resolution": "9 km",
+      "source_grid": [
+        3600,
+        1801
+      ],
+      "source_grid_origin": [
+        -180,
+        -90
+      ],
+      "source_grid_spacing": [
+        0.1,
+        0.1
+      ],
+      "resampling": "native-source-grid",
+      "width": 3600,
+      "height": 1801,
       "finite_fraction": 1.0,
-      "min": 954.5,
-      "max": 1045.9,
-      "sha256": "279157de7c450810f135721e001cf64350b7e882ebc0307f5a5b81530b05ebc3"
+      "min": 954.43,
+      "max": 1049.37,
+      "sha256": "3850a6f04a7573fb38cab1b7a0249f2a024895d6dbc49b4b8120537ed5385e70"
     }
   },
   "full_globe": true,

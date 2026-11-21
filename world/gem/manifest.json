@@ -21,7 +21,20 @@
       "variable": "temperature_2m",
       "units": "°C",
       "field_source_domain": "cmc_gem_gdps_15km",
-      "resampling": "native model grid",
+      "nominal_resolution": "15 km",
+      "source_grid": [
+        2400,
+        1201
+      ],
+      "source_grid_origin": [
+        -180,
+        -90
+      ],
+      "source_grid_spacing": [
+        0.15,
+        0.15
+      ],
+      "resampling": "native-source-grid",
       "width": 2400,
       "height": 1201,
       "finite_fraction": 1.0,
@@ -34,7 +47,20 @@
       "variable": "pressure_msl",
       "units": "hPa",
       "field_source_domain": "cmc_gem_gdps_15km",
-      "resampling": "native model grid",
+      "nominal_resolution": "15 km",
+      "source_grid": [
+        2400,
+        1201
+      ],
+      "source_grid_origin": [
+        -180,
+        -90
+      ],
+      "source_grid_spacing": [
+        0.15,
+        0.15
+      ],
+      "resampling": "native-source-grid",
       "width": 2400,
       "height": 1201,
       "finite_fraction": 1.0,
