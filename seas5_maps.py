@@ -30,7 +30,12 @@ def host_run(host, key):
     try:
         import requests
         m = requests.get(host.rstrip('/') + '/data/manifest.json', timeout=60, headers={'User-Agent': 'MetStat-seas5/1.0'}).json()['models']
-        return (m.get(key) or {}).get('run')
+        info = m.get(key) or {}
+        minimum = 10 if key == 'ecmwfseas' else 6
+        if info.get('status') != 'complete' or int(info.get('done') or 0) < minimum:
+            log(f'  ⚠ {key}: incomplete on host — status={info.get("status")} count={info.get("done")} expected at least {minimum}; regenerate')
+            return None
+        return info.get('run')
     except Exception as e:
         log(f'  ⓘ manifest هاست خوانده نشد ({type(e).__name__}) — بدون بررسی تکراری‌بودن ادامه می‌دهم'); return None
 
@@ -114,8 +119,14 @@ def main():
                     try: d, lon, lat, offs, units = read_cds(p); fields[vn] = (convert(vn, d, units), lon, lat, offs); log(f'  {vn}: shape={d.shape} offs={offs} units="{units}"')
                     except Exception as e: log(f'  ✗ خواندن {vn}: {type(e).__name__}: {e}'); fields = {}; break
         if not fields: continue
-        if len(fields) < len(VARS): log('  ⚠ فقط بخشی از پارامترها آمد؛ همان‌ها آپلود می‌شود')
-        publish(up, fields, y, m, run); return 0
-    log('✗ SEAS5: برای هیچ‌کدام از دو ماه اخیر داده‌ای گرفته نشد'); return 0
+        if len(fields) < len(VARS):
+            log(f'  ✗ SEAS5 {run}: فقط {len(fields)}/{len(VARS)} متغیر دریافت شد؛ انتشار ناقص ممنوع است')
+            continue
+        published = publish(up, fields, y, m, run)
+        if any(published.get(k, 0) < (10 if k == 'ecmwfseas' else 6) for k in SEAS_MODELS):
+            log(f'  ✗ SEAS5 {run}: فایل‌های تازه کمتر از حداقل مورد انتظار: {published}')
+            return 2
+        return 0
+    log('✗ SEAS5: برای هیچ‌کدام از دو ماه اخیر داده‌ای گرفته نشد'); return 2
 
 if __name__ == '__main__': sys.exit(main())
