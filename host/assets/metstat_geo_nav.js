@@ -18,7 +18,7 @@ function create(nodes,opts={}){
  function zoomIn(id){const options=children();const target=id?options.find(n=>n.id===id):options.length===1?options[0]:null;if(!target)return false;selected=target.id;return true;}
  function menu(level){const i=LEVELS.indexOf(level);if(i<0)throw Error('Unknown level');const path=ancestors();if(level==='continent')return nodes.filter(n=>n.level==='continent');if(level==='world')return nodes.filter(n=>n.level==='world');const parent=path.find(n=>LEVELS.indexOf(n.level)===i-1);return parent?children(parent.id):[];}
  function state(){return {selected,level:index[selected]?.level||null,path:ancestors().map(n=>n.id),bounds:index[selected]?.bounds||null};}
- function hit(ids){for(let i=ids.length-1;i>=0;i--)if(index[ids[i]]&&chain(index,ids[i]).some(n=>n.id===selected)){return select(ids[i]);}return false;}
+ function hit(ids){if(!Array.isArray(ids))return false;const eligible=ids.filter(id=>index[id]&&chain(index,id).some(n=>n.id===selected));if(!eligible.length)return false;eligible.sort((a,b)=>LEVELS.indexOf(index[b].level)-LEVELS.indexOf(index[a].level));return select(eligible[0]);}
  return {select,zoomOut,zoomIn,menu,children,state,hit,levels:LEVELS.slice()};
 }
 return {create,LEVELS};
