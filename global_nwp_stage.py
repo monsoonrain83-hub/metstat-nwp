@@ -102,6 +102,21 @@ def acquire(model, outdir, requested_lead=24):
             try: data = src.read(run, valid, sorted(v[0] for v in FIELDS.values()))
             except Exception as e:
                 errors.append(str(e)[:120]);continue
+            # On GFS, the coarse pressure-level archive may omit T2m. The
+            # independent GFS013 surface archive contains the actual field.
+            # Resample nearest onto the precisely georeferenced 0.25° world grid.
+            if model == 'gfs' and 'temperature_2m' not in data:
+                try:
+                    surface=N.S3Source('ncep_gfs013',fs)
+                    surface.i0=0;surface.i1=surface.nx;surface.j0=0;surface.j1=surface.ny
+                    if surface.exists(run,valid):
+                        raw=surface.read(run,valid,['temperature_2m']).get('temperature_2m')
+                        if raw is not None and raw.shape==(surface.ny,surface.nx):
+                            ilon=np.clip(np.rint((src.lo0+np.arange(src.nx)*src.dx-surface.lo0)/surface.dx).astype(int),0,surface.nx-1)
+                            ilat=np.clip(np.rint((src.la0+np.arange(src.ny)*src.dy-surface.la0)/surface.dy).astype(int),0,surface.ny-1)
+                            data['temperature_2m']=raw[np.ix_(ilat,ilon)]
+                            print('GFS_REAL_SURFACE_FALLBACK ncep_gfs013 -> 0.25deg',flush=True)
+                except Exception as e:errors.append('GFS T2m alternate source: '+str(e)[:120])
             products={}
             for p,(key,units,lo,hi) in FIELDS.items():
                 arr=data.get(key)
