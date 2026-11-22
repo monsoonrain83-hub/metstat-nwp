@@ -22,7 +22,11 @@ DOMAINS = {
     'gfs': 'ncep_gfs025',          # globally 0.25°, distinct from regional GFS013
     'ecmwf': 'ecmwf_ifs025',      # globally 0.25°
     'gem': 'cmc_gem_gdps_15km',   # globally 0.15°, may be unavailable on S3
+    'icon': 'dwd_icon',            # global 0.125° regular grid; never ICON-EU
+    'ukmo': 'ukmo_global_deterministic_10km', # global 10km source
 }
+# Nominal labels are SOURCE claims, never inferred from the requested region.
+NOMINAL_SINGLE_SOURCE = {'gem':'15 km', 'icon':'13 km', 'ukmo':'10 km'}
 FIELDS = {
     't2m': ('temperature_2m', '°C', -60.0, 50.0),
     'z500': ('geopotential_height_500hPa', 'dam', 480.0, 610.0),
@@ -256,7 +260,7 @@ def acquire(model, outdir, requested_lead=24):
                     if choice is None: continue
                     chosen_domain, nominal_resolution = choice.domain,choice.nominal_resolution
                 elif dom in verified:
-                    chosen_domain,nominal_resolution=dom,'15 km'
+                    chosen_domain,nominal_resolution=dom,NOMINAL_SINGLE_SOURCE[model]
                 else: continue
                 arr=verified[chosen_domain]
                 chosen_src=source_instances[chosen_domain]
