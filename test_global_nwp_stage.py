@@ -73,6 +73,55 @@ class GlobalNWPTests(unittest.TestCase):
                          ['2026-11-22T00:00', '2026-12-06T00:00'])
         self.assertEqual(cycles[1]['reference_time'], '2026-11-20T12:00')
 
+    def test_cycle_metadata_unifies_real_utc_instants_not_local_clock_strings(self):
+        """Coarse UTC and high-res +03:30 metadata describe ONE forecast run."""
+        class Source:
+            def __init__(self, items):
+                self.items = items
+            def runs(self):
+                return self.items
+
+        coarse = Source([{
+            'reference_time': '2026-11-21T00:00:00Z',
+            'valid_times': ['2026-11-22T00:00Z', '2026-11-22T00:00']
+        }])
+        high = Source([{
+            'reference_time': '2026-11-21T03:30:00+03:30',
+            'valid_times': ['2026-11-22T03:30:00+03:30',
+                            '2026-11-22T03:30:00+03:30',
+                            '2026-11-22T03:30:15+03:30']
+        }])
+        result = g.cycle_candidates(coarse, high)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]['reference_time'], '2026-11-21T00:00')
+        self.assertEqual(result[0]['valid_times'], ['2026-11-22T00:00'])
+        run = g.resolve_cycle(result[0])
+        self.assertEqual(g.valid_candidates(result[0], run),
+                         [datetime(2026, 11, 22, tzinfo=timezone.utc)])
+
+    def test_metadata_offset_crosses_utc_midnight(self):
+        self.assertEqual(
+            g.parse_meta_utc('2026-11-21T23:30:00-01:00'),
+            datetime(2026, 11, 22, 0, 30, tzinfo=timezone.utc))
+        self.assertEqual(
+            g.parse_meta_utc('2026-11-22T00:30'),
+            datetime(2026, 11, 22, 0, 30, tzinfo=timezone.utc))
+
+    def test_bad_metadata_time_is_rejected_not_truncated(self):
+        for bad in ('not-a-time', '2026-11-21',
+                    '2026-11-21T00:00malformed',
+                    '2026-11-21T00:00:15Z', None):
+            with self.subTest(bad=bad):
+                with self.assertRaises((ValueError, TypeError)):
+                    g.parse_meta_utc(bad)
+        class Source:
+            def runs(self):
+                return [{'reference_time': '2026-11-21T00:00Z',
+                         'valid_times': ['2026-11-22T00:00garbage',
+                                         '2026-11-22T00:00Z']}]
+        cycles = g.cycle_candidates(Source())
+        self.assertEqual(cycles[0]['valid_times'], ['2026-11-22T00:00'])
+
     def test_manifest_root_is_true_selected_high_resolution_source(self):
         from datetime import timedelta
         t=datetime(2026,11,21,0,tzinfo=timezone.utc)
