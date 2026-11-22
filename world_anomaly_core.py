@@ -4,7 +4,7 @@ This module NEVER invents climatology, regrids regional fields into world data,
 changes model forecasts or publishes products. A caller supplies one verified
 forecast raster AND its date-matched, spatially compatible climatology raster.
 """
-from datetime import datetime
+from datetime import datetime, timedelta
 import numpy as np
 
 G = 9.80665
@@ -57,10 +57,17 @@ def _physical(arr, param, units):
 def _check_metadata(model, param, valid_time, climatology_meta, forecast_meta, shape):
     if model not in FIELDS or param not in FIELDS[model]:
         raise AnomalyUnavailable('parameter not authorized for this model')
-    if valid_time.tzinfo is None:
-        raise AnomalyUnavailable('timezone-aware forecast valid time required')
+    if valid_time.tzinfo is None or valid_time.utcoffset() != timedelta(0):
+        raise AnomalyUnavailable('UTC forecast valid time required')
     if not isinstance(forecast_meta, dict) or not isinstance(climatology_meta, dict):
         raise AnomalyUnavailable('source and climatology metadata required')
+    raw_valid = forecast_meta.get('valid_utc')
+    try:
+        declared_valid = datetime.fromisoformat(raw_valid.replace('Z', '+00:00'))
+    except (TypeError, AttributeError, ValueError):
+        raise AnomalyUnavailable('missing or invalid forecast valid_utc')
+    if declared_valid.tzinfo is None or declared_valid != valid_time:
+        raise AnomalyUnavailable('forecast frame time mismatch')
     for meta in (forecast_meta, climatology_meta):
         if tuple(meta.get('bbox_wgs84', ())) != GLOBAL_BBOX:
             raise AnomalyUnavailable('regional or unverified geographic extent')
@@ -107,7 +114,7 @@ def anomaly(model, param, valid_time, forecast, climatology, forecast_meta, clim
         'source_grid_id':forecast_meta['grid_id'],
         'bbox_wgs84':list(GLOBAL_BBOX),
         'finite_fraction':float(np.isfinite(delta).mean()),
-        'publishable':True,
+        'quality_passed':True, # publisher must separately verify source bytes and licensing
     }
 
 def five_day_blocks(days):
