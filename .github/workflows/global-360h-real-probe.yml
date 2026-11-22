@@ -1,0 +1,34 @@
+name: MetStat exact +360h native ECMWF GFS availability probe
+on:
+  push:
+    branches: [probe/exact-360h-ecmwf-gfs-20261123]
+    paths: [.github/workflows/global-360h-real-probe.yml]
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  native-360:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix: {model: [ecmwf, gfs]}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: |
+          python -m pip install -r requirements.txt
+          python -m pip install "omfiles[fsspec]" s3fs
+      - name: Confirm 360h exact valid-time policy
+        run: python -m unittest -v test_global_nwp_stage
+      - name: Read exact model +360 hour global fields; NO fallback to other lead or run
+        run: python global_nwp_stage.py --model "${{ matrix.model }}" --out "probe_360/${{ matrix.model }}" --lead 360
+      - name: Archive provenance and actual images for review only
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: global-360-${{ matrix.model }}-${{ github.run_number }}
+          path: probe_360/${{ matrix.model }}/
+          if-no-files-found: error
+          retention-days: 7
