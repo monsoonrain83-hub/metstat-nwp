@@ -73,6 +73,64 @@ class GlobalNWPTests(unittest.TestCase):
                          ['2026-11-22T00:00', '2026-12-06T00:00'])
         self.assertEqual(cycles[1]['reference_time'], '2026-11-20T12:00')
 
+    def test_exact_hour_only_and_missing_lead_fail_closed(self):
+        run = datetime(2026, 11, 21, 0, tzinfo=timezone.utc)
+        meta = {'valid_times': ['2026-11-22T00:00Z', '2026-12-06T00:00Z']}
+        self.assertEqual(g.valid_candidates(meta, run, 24),
+                         [datetime(2026, 11, 22, tzinfo=timezone.utc)])
+        self.assertEqual(g.valid_candidates(meta, run, 360),
+                         [datetime(2026, 12, 6, tzinfo=timezone.utc)])
+        self.assertEqual(g.valid_candidates(meta, run, 240), [])
+        self.assertEqual(g.valid_candidates(meta, run, 361), [])
+        for value in (-1, 385, 24.5, True):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                g.valid_candidates(meta, run, value)
+
+    def test_global_geometry_rejects_regional_and_corrupt_grid(self):
+        from types import SimpleNamespace as Grid
+        real = Grid(nx=1440, ny=721, lo0=-180., la0=-90., dx=.25, dy=.25)
+        arr = np.ones((721, 1440), np.float32)
+        self.assertEqual(g.validate_global_geometry(real, arr).shape, arr.shape)
+        gfs = Grid(nx=3072, ny=1536, lo0=-180., la0=-.11714935 * 1535 / 2,
+                   dx=360 / 3072, dy=.11714935)
+        self.assertEqual(g.validate_global_geometry(
+            gfs, np.ones((1536, 3072), np.float32)).shape, (1536, 3072))
+        for bad in (
+            Grid(nx=1440, ny=721, lo0=20., la0=-90., dx=.25, dy=.25),
+            Grid(nx=1440, ny=721, lo0=-180., la0=10., dx=.25, dy=.25),
+            Grid(nx=1440, ny=721, lo0=-180., la0=-90., dx=-.25, dy=.25),
+            Grid(nx=1440, ny=721, lo0=-180., la0=-90., dx=float('nan'), dy=.25),
+        ):
+            with self.subTest(grid=bad), self.assertRaises(ValueError):
+                g.validate_global_geometry(bad, arr)
+        with self.assertRaises(ValueError):
+            g.validate_global_geometry(real, np.ones((700, 1000), np.float32))
+
+    def test_acquire_refuses_nearest_step_even_if_data_exist(self):
+        import sys
+        from types import SimpleNamespace
+        from unittest.mock import patch
+
+        class FakeSource:
+            def __init__(self, domain, fs):
+                self.dom = domain
+                self.nx, self.ny = 720, 361
+                self.lo0, self.la0, self.dx, self.dy = -180, -90, .5, .5
+            def runs(self):
+                return [{'reference_time': '2026-11-21T00:00:00Z',
+                         'valid_times': ['2026-11-22T00:00:00Z']}]
+            def exists(self, run, valid):
+                raise AssertionError('No source may be read for missing +360h')
+
+        fake_s3 = SimpleNamespace(S3FileSystem=lambda **kwargs: object())
+        with tempfile.TemporaryDirectory() as td:
+            with patch.dict(sys.modules, {'s3fs': fake_s3}), \
+                 patch.object(g.N, 'S3Source', FakeSource):
+                with self.assertRaisesRegex(RuntimeError, 'no valid global arrays'):
+                    g.acquire('ecmwf', Path(td), 360)
+            self.assertFalse((Path(td) / 'manifest.json').exists())
+            self.assertEqual(list(Path(td).glob('*.webp')), [])
+
     def test_acquire_highres_without_coarse_cycle_or_raster(self):
         """Exercise the real staging entrypoint; no S3 traffic or fake fallback."""
         import hashlib
@@ -83,8 +141,8 @@ class GlobalNWPTests(unittest.TestCase):
         class FakeSource:
             def __init__(self, domain, fs):
                 self.dom = domain
-                self.nx, self.ny = 72, 37
-                self.lo0, self.la0, self.dx, self.dy = -180, -90, 5, 5
+                self.nx, self.ny = 720, 361
+                self.lo0, self.la0, self.dx, self.dy = -180, -90, 0.5, 0.5
             def runs(self):
                 if self.dom == 'ecmwf_ifs025':
                     return []  # Coarse metadata unavailable: MUST NOT block high res.
@@ -95,7 +153,7 @@ class GlobalNWPTests(unittest.TestCase):
             def read(self, run, valid, names):
                 if self.dom != 'ecmwf_ifs':
                     raise AssertionError('Coarse archive must not be accessed')
-                return {'temperature_2m': np.full((37, 72), 280, np.float32)}
+                return {'temperature_2m': np.full((361, 720), 280, np.float32)}
 
         fake_s3 = SimpleNamespace(S3FileSystem=lambda **kwargs: object())
         with tempfile.TemporaryDirectory() as td:
@@ -126,8 +184,8 @@ class GlobalNWPTests(unittest.TestCase):
         class FakeSource:
             def __init__(self, domain, fs):
                 self.dom = domain
-                self.nx, self.ny = 72, 37
-                self.lo0, self.la0, self.dx, self.dy = -180, -90, 5, 5
+                self.nx, self.ny = 720, 361
+                self.lo0, self.la0, self.dx, self.dy = -180, -90, 0.5, 0.5
             def runs(self):
                 return [{'reference_time': '2026-11-21T00:00:00Z',
                          'valid_times': ['2026-11-22T00:00:00Z']}]
@@ -137,7 +195,7 @@ class GlobalNWPTests(unittest.TestCase):
                 field = ('temperature_2m' if self.dom == 'ecmwf_ifs'
                          else 'geopotential_height_500hPa')
                 value = 281.0 if self.dom == 'ecmwf_ifs' else 5400.0
-                return {field: np.full((37, 72), value, np.float32)}
+                return {field: np.full((361, 720), value, np.float32)}
 
         with tempfile.TemporaryDirectory() as td:
             fake_s3 = SimpleNamespace(S3FileSystem=lambda **kwargs: object())
@@ -234,7 +292,7 @@ class GlobalNWPTests(unittest.TestCase):
         start=datetime(2026,11,21,0,tzinfo=timezone.utc)
         m={'valid_times':['2026-11-21T00:00','2026-12-06T00:00']}
         self.assertEqual(g.valid_candidates(m,start,360)[0],datetime(2026,12,6,0,tzinfo=timezone.utc))
-        self.assertEqual(g.valid_candidates(m,start,361)[0],datetime(2026,12,6,0,tzinfo=timezone.utc))
+        self.assertEqual(g.valid_candidates(m,start,361), [])
 
     def test_select_lead_and_reject_bad_data(self):
         m={'valid_times':['2026-11-21T12:00','2026-11-22T12:00','2026-11-26T12:00']}
