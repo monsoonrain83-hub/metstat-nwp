@@ -73,6 +73,86 @@ class GlobalNWPTests(unittest.TestCase):
                          ['2026-11-22T00:00', '2026-12-06T00:00'])
         self.assertEqual(cycles[1]['reference_time'], '2026-11-20T12:00')
 
+    def test_acquire_highres_without_coarse_cycle_or_raster(self):
+        """Exercise the real staging entrypoint; no S3 traffic or fake fallback."""
+        import hashlib
+        import sys
+        from types import SimpleNamespace
+        from unittest.mock import patch
+
+        class FakeSource:
+            def __init__(self, domain, fs):
+                self.dom = domain
+                self.nx, self.ny = 72, 37
+                self.lo0, self.la0, self.dx, self.dy = -180, -90, 5, 5
+            def runs(self):
+                if self.dom == 'ecmwf_ifs025':
+                    return []  # Coarse metadata unavailable: MUST NOT block high res.
+                return [{'reference_time': '2026-11-21T00:00:00Z',
+                         'valid_times': ['2026-11-22T00:00:00Z']}]
+            def exists(self, run, valid):
+                return self.dom == 'ecmwf_ifs'
+            def read(self, run, valid, names):
+                if self.dom != 'ecmwf_ifs':
+                    raise AssertionError('Coarse archive must not be accessed')
+                return {'temperature_2m': np.full((37, 72), 280, np.float32)}
+
+        fake_s3 = SimpleNamespace(S3FileSystem=lambda **kwargs: object())
+        with tempfile.TemporaryDirectory() as td:
+            out = Path(td)
+            with patch.dict(sys.modules, {'s3fs': fake_s3}), \
+                 patch.object(g.N, 'S3Source', FakeSource):
+                manifest = g.acquire('ecmwf', out, 24)
+            self.assertEqual(manifest['schema'], 2)
+            self.assertEqual(manifest['source_domain'], 'ecmwf_ifs')
+            self.assertEqual(manifest['init_utc'], '2026-11-21T00:00:00Z')
+            self.assertEqual(manifest['valid_utc'], '2026-11-22T00:00:00Z')
+            self.assertEqual(set(manifest['fields']), {'t2m'})
+            field = manifest['fields']['t2m']
+            self.assertEqual(field['nominal_resolution'], '9 km')
+            self.assertEqual(field['field_source_domain'], 'ecmwf_ifs')
+            self.assertEqual(field['lead_hours'], 24)
+            self.assertEqual(field['sha256'], hashlib.sha256(
+                (out / field['file']).read_bytes()).hexdigest())
+            self.assertEqual(json.loads((out / 'manifest.json').read_text())['fields'],
+                             manifest['fields'])
+
+    def test_acquire_per_field_mixed_source_is_not_duplicated(self):
+        """One t2m from high resolution, one Z500 from validated coarse source."""
+        import sys
+        from types import SimpleNamespace
+        from unittest.mock import patch
+
+        class FakeSource:
+            def __init__(self, domain, fs):
+                self.dom = domain
+                self.nx, self.ny = 72, 37
+                self.lo0, self.la0, self.dx, self.dy = -180, -90, 5, 5
+            def runs(self):
+                return [{'reference_time': '2026-11-21T00:00:00Z',
+                         'valid_times': ['2026-11-22T00:00:00Z']}]
+            def exists(self, run, valid):
+                return True
+            def read(self, run, valid, names):
+                field = ('temperature_2m' if self.dom == 'ecmwf_ifs'
+                         else 'geopotential_height_500hPa')
+                value = 281.0 if self.dom == 'ecmwf_ifs' else 5400.0
+                return {field: np.full((37, 72), value, np.float32)}
+
+        with tempfile.TemporaryDirectory() as td:
+            fake_s3 = SimpleNamespace(S3FileSystem=lambda **kwargs: object())
+            with patch.dict(sys.modules, {'s3fs': fake_s3}), \
+                 patch.object(g.N, 'S3Source', FakeSource):
+                manifest = g.acquire('ecmwf', Path(td), 24)
+            self.assertEqual(set(manifest['fields']), {'t2m', 'z500'})
+            self.assertEqual(manifest['source_domain'], 'mixed-per-field')
+            self.assertEqual(manifest['fields']['t2m']['field_source_domain'],
+                             'ecmwf_ifs')
+            self.assertEqual(manifest['fields']['z500']['field_source_domain'],
+                             'ecmwf_ifs025')
+            self.assertEqual(manifest['fields']['z500']['nominal_resolution'],
+                             '28 km')
+
     def test_cycle_metadata_unifies_real_utc_instants_not_local_clock_strings(self):
         """Coarse UTC and high-res +03:30 metadata describe ONE forecast run."""
         class Source:
