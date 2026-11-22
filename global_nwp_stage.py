@@ -10,7 +10,7 @@ import hashlib
 import json
 import math
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw
@@ -100,18 +100,48 @@ def resolve_cycle(meta):
 
 
 def valid_candidates(meta, run, requested_lead=24):
-    out = []
-    seen = set()
+    """Return only the EXACT requested lead, never a nearest-hour substitute.
+
+    This stage publishes an explicitly requested forecast hour. If that hour
+    is missing, a different lead must not be silently rendered in its place.
+    """
+    if type(requested_lead) is not int or not 0 <= requested_lead <= 384:
+        raise ValueError('forecast lead must be an integer from 0 to 384 hours')
+    requested_valid = run + timedelta(hours=requested_lead)
     for token in meta.get('valid_times', []) or []:
         try:
-            vt = parse_meta_utc(token)
+            valid = parse_meta_utc(token)
         except (ValueError, TypeError):
             continue
-        hours = (vt - run).total_seconds() / 3600
-        if 0 <= hours <= 384 and vt not in seen:
-            seen.add(vt)
-            out.append((abs(hours - requested_lead), vt))
-    return [v for _, v in sorted(out)]
+        if valid == requested_valid:
+            return [valid]
+    return []
+
+
+def validate_global_geometry(source, raw):
+    """Reject regional or misregistered grids before claiming global coverage.
+
+    The nominal source grid must span the anti-meridian and reach both poles
+    within half-cell georeferencing tolerance; dimensions alone are not proof.
+    """
+    array = np.asarray(raw)
+    if array.ndim != 2 or array.shape != (source.ny, source.nx):
+        raise ValueError(f'wrong global grid shape: {array.shape}')
+    if source.nx < 720 or source.ny < 360:
+        raise ValueError('insufficient resolution for world raster')
+    coords = np.asarray([source.lo0, source.la0, source.dx, source.dy], dtype=float)
+    if not np.isfinite(coords).all() or source.dx <= 0 or source.dy <= 0:
+        raise ValueError('non-finite or non-monotonic global grid geometry')
+    west_edge = source.lo0 - source.dx / 2
+    east_edge = source.lo0 + (source.nx - 0.5) * source.dx
+    south_edge = source.la0 - source.dy / 2
+    north_edge = source.la0 + (source.ny - 0.5) * source.dy
+    if any(abs(actual - expected) > 0.3 for actual, expected in (
+        (west_edge, -180), (east_edge, 180),
+        (south_edge, -90), (north_edge, 90),
+    )):
+        raise ValueError('grid geographic bounds do not cover entire globe')
+    return array
 
 def read_independent_sources(sources, run, valid, fields, errors):
     """Fetch each actual source independently; failure of one cannot hide another."""
@@ -209,8 +239,11 @@ def acquire(model, outdir, requested_lead=24):
                 for source, raw in ((src, data.get(key)),
                                     (hi_src, high_data.get(key))):
                     if source is None or raw is None: continue
-                    if raw.ndim != 2 or raw.shape != (source.ny,source.nx):
-                        errors.append(f'{source.dom}/{p}: incorrect raster shape {raw.shape}');continue
+                    try:
+                        raw = validate_global_geometry(source, raw)
+                    except (ValueError, TypeError, AttributeError) as exc:
+                        errors.append(f'{source.dom}/{p}: {exc}')
+                        continue
                     if float(np.isfinite(raw).mean()) < .90:
                         errors.append(f'{source.dom}/{p}: insufficient global coverage');continue
                     try: to_units(p,raw)
