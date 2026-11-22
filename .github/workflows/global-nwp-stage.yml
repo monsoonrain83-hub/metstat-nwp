@@ -3,7 +3,7 @@ on:
   workflow_dispatch: {}
   push:
     branches: [main]
-    paths: [global_nwp_stage.py, test_global_nwp_stage.py, pack_global_products.py, host/assets/world_country_bounds.json, host/assets/world_capitals.json, host/assets/world_borders.json, .github/workflows/global-nwp-stage.yml]
+    paths: [global_nwp_stage.py, test_global_nwp_stage.py, test_world_extra_catalog.py, test_pack_global_products.py, pack_global_products.py, host/assets/world_country_bounds.json, host/assets/world_capitals.json, host/assets/world_borders.json, .github/workflows/global-nwp-stage.yml]
   schedule:
     - cron: "15 2,8,14,20 * * *"
 permissions:
@@ -20,7 +20,7 @@ jobs:
       fail-fast: false
       max-parallel: 3
       matrix:
-        model: [gfs, ecmwf, gem]
+        model: [gfs, ecmwf, gem, icon, ukmo]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -31,7 +31,7 @@ jobs:
           pip install -r requirements.txt
           pip install "omfiles[fsspec]" s3fs
       - name: Unit and orientation checks
-        run: python -m unittest test_global_nwp_stage -v
+        run: python -m unittest test_global_nwp_stage test_world_extra_catalog test_pack_global_products -v
       - name: Fetch actual full-globe model fields and render
         run: python global_nwp_stage.py --model "${{ matrix.model }}" --out "global_artifacts/${{ matrix.model }}" --lead 24
       - name: Archive real products and manifest (not fake placeholders)
@@ -92,6 +92,6 @@ jobs:
           cp -a /tmp/metstat-world-build/world ./world
           git add world
           if ! git diff --cached --quiet; then
-            git commit -m "data: global GFS ECMWF GEM actual raster run ${{ github.run_number }}"
+            git commit -m "data: global GFS ECMWF GEM ICON UKMO actual raster run ${{ github.run_number }}"
             git push origin HEAD:world-data
           fi

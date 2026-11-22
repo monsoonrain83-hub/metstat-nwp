@@ -8,7 +8,23 @@ VALID_SOURCE_DOMAINS = {
     'ecmwf': {'ecmwf_ifs', 'ecmwf_ifs025'},
     'gfs': {'ncep_gfs013', 'ncep_gfs025'},
     'gem': {'cmc_gem_gdps_15km', 'cmc_gem_gdps'},
+    'icon': {'dwd_icon'},
+    'ukmo': {'ukmo_global_deterministic_10km'},
 }
+SOURCE_RESOLUTION = {
+    'ecmwf_ifs':'9 km','ecmwf_ifs025':'28 km',
+    'ncep_gfs013':'13 km','ncep_gfs025':'28 km',
+    'cmc_gem_gdps_15km':'15 km','cmc_gem_gdps':'15 km',
+    'dwd_icon':'13 km','ukmo_global_deterministic_10km':'10 km',
+}
+MODEL_LICENSE = {
+    'ecmwf':'CC BY 4.0 with ECMWF/Open-Meteo attribution',
+    'gfs':'Open-Meteo data CC BY 4.0; NOAA NCEP attribution',
+    'gem':'Open-Meteo data CC BY 4.0; ECCC CMC attribution',
+    'icon':'CC BY 4.0 with DWD/Open-Meteo attribution',
+    'ukmo':'CC BY-SA 4.0 — UK Met Office; adaptations share alike',
+}
+
 EXPECTED_UNITS = {'t2m': '°C', 'z500': 'dam', 'mslp': 'hPa'}
 
 
@@ -37,6 +53,8 @@ def verify_manifest_field(model, param, field, man, folder):
         raise ValueError('field cycle/valid/lead mismatch: ' + model + '/' + param)
     if field.get('field_source_domain') not in VALID_SOURCE_DOMAINS[model]:
         raise ValueError('field source differs from logical model')
+    if field.get('nominal_resolution') != SOURCE_RESOLUTION[field.get('field_source_domain')]:
+        raise ValueError('source raster resolution label mismatch')
     if field.get('units') != EXPECTED_UNITS[param]:
         raise ValueError('field unit mismatch')
     # No directory traversals, absolute paths or arbitrary local file reads.
@@ -86,7 +104,7 @@ def package(src:Path,dest:Path):
         if not mp.is_file():continue
         man=json.loads(mp.read_text(encoding='utf8'))
         model=man.get('model')
-        if model not in ('gfs','ecmwf','gem') or not man.get('full_globe') or man.get('mock'):
+        if model not in ('gfs','ecmwf','gem','icon','ukmo') or not man.get('full_globe') or man.get('mock'):
             raise ValueError('untrusted or non-world manifest: '+str(mp))
         if man.get('bbox_wgs84')!=[-180.0,-90.0,180.0,90.0] or man.get('projection')!='EPSG:4326 equirectangular':
             raise ValueError('incorrect global georeferencing')
@@ -100,13 +118,13 @@ def package(src:Path,dest:Path):
             data, checksum = verify_manifest_field(model, p, x, man, folder)
             destpath=md/(p+'.webp');destpath.write_bytes(data)
             fields[p]={**x,'file':model+'/'+p+'.webp','sha256':checksum}
-        meta={**man,'fields':fields}
+        meta={**man,'fields':fields,'source_license':MODEL_LICENSE[model]}
         (md/'manifest.json').write_text(json.dumps(meta,ensure_ascii=False,indent=2),encoding='utf8')
         models[model]=meta
-    if set(models)!=set(('gfs','ecmwf','gem')):
+    if set(models)!=set(('gfs','ecmwf','gem','icon','ukmo')):
         raise RuntimeError('missing mandatory model from verified artifacts: '+repr(set(models)))
     catalog={'schema':1,'source':'real model fields through Open-Meteo data_spatial / respective NWP center',
-             'license':'CC BY 4.0 with attribution','world_bounds':[-180,-90,180,90],
+             'license':'Mixed model-specific licences; UKMO forecasts CC BY-SA 4.0; see models.source_license','world_bounds':[-180,-90,180,90],
              'image_base':'world/','models':models,'complete':True,'mock':False}
     dest.mkdir(parents=True,exist_ok=True)
     (dest/'catalog.json').write_text(json.dumps(catalog,ensure_ascii=False,indent=2),encoding='utf8')
