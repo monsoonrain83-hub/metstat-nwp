@@ -27,6 +27,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_mm_*.py' -v
       - name: "Unified ECMWF/GFS resolution and world raster tests"
         run: python -m unittest -v test_nwp_unified_resolution test_global_nwp_stage test_pack_global_products
+      - name: "Global anomaly unit and climatology fail-closed tests"
+        run: python -m unittest -v test_world_anomaly_core
       - name: "نشت کلید"
         run: |
           if grep -rInE "(upload_key|relay_secret|api[_-]?key)[\"' ]*[:=][\"' ]*[A-Za-z0-9_\-]{16,}" --include=*.py --include=*.yml --include=*.php .; then echo "کلید در سورس دیده شد"; exit 1; fi
