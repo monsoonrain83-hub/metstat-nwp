@@ -280,6 +280,36 @@ class GlobalNWPTests(unittest.TestCase):
             g.render(np.full((32,64),273.15,dtype=np.float32),'t2m',dest)
             self.assertEqual(len(hashlib.sha256(dest.read_bytes()).hexdigest()),64)
 
+    def test_extended_pressure_level_catalog_is_opt_in_and_complete(self):
+        self.assertEqual(set(g.EXTRA_FIELDS), {
+            'z850','z700','z300','z200',
+            't850','t700','t500','t300','t200',
+            'rh850','rh700','rh500','rh300','rh200'})
+        self.assertEqual(set(g.FIELDS),{'t2m','z500','mslp'})
+        self.assertEqual(g.field_spec('z200')[1],'dam')
+        self.assertEqual(g.field_spec('t850')[1],'°C')
+        with self.assertRaises(ValueError):g.field_spec('fake')
+
+    def test_850_500_200_height_units_converted(self):
+        for p,metres,dam in [('z850',1500.,150.),('z500',5800.,580.),('z200',12000.,1200.)]:
+            actual=g.to_units(p,np.full((8,12),metres,np.float32))
+            self.assertAlmostEqual(float(np.nanmedian(actual)),dam,places=2)
+        geopotential=5800.*9.80665
+        self.assertAlmostEqual(float(np.nanmedian(
+            g.to_units('z500',np.full((8,12),geopotential,np.float32)))),580.,places=2)
+        with self.assertRaises(ValueError):
+            g.to_units('z200',np.full((8,12),40.,np.float32))
+
+    def test_temperature_and_relative_humidity_units(self):
+        t=g.to_units('t700',np.full((10,15),243.15,np.float32))
+        self.assertAlmostEqual(float(np.nanmedian(t)),-30.,places=3)
+        rh=g.to_units('rh850',np.full((10,15),0.65,np.float32))
+        self.assertAlmostEqual(float(np.nanmedian(rh)),65.,places=2)
+        with self.assertRaises(ValueError):
+            g.to_units('rh500',np.full((10,15),250.,np.float32))
+        with self.assertRaises(ValueError):
+            g.to_units('t850',np.full((10,15),100.,np.float32))
+
     def test_metadata_bbox_and_time(self):
         dt=datetime(2026,11,21,12,tzinfo=timezone.utc)
         v=datetime(2026,11,22,12,tzinfo=timezone.utc)

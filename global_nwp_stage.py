@@ -28,6 +28,21 @@ FIELDS = {
     'z500': ('geopotential_height_500hPa', 'dam', 480.0, 610.0),
     'mslp': ('pressure_msl', 'hPa', 960.0, 1060.0),
 }
+# Optional global upper-air source catalog. Every field must still be present
+# in the matching cycle and pass native-array, coverage and unit checks.
+# No extended field is advertised by the publisher until actually produced.
+Z_RANGES = {850:(90.,190.),700:(230.,360.),500:(480.,610.),300:(800.,1030.),200:(1040.,1330.)}
+T_RANGES = {850:(-55.,40.),700:(-70.,25.),500:(-95.,10.),300:(-110.,-10.),200:(-115.,-15.)}
+EXTRA_FIELDS = {
+    **{f'z{p}':(f'geopotential_height_{p}hPa','dam',*Z_RANGES[p]) for p in (850,700,300,200)},
+    **{f't{p}':(f'temperature_{p}hPa','°C',*T_RANGES[p]) for p in (850,700,500,300,200)},
+    **{f'rh{p}':(f'relative_humidity_{p}hPa','%',0.,100.) for p in (850,700,500,300,200)},
+}
+def field_spec(param):
+    spec = FIELDS.get(param, EXTRA_FIELDS.get(param))
+    if spec is None: raise ValueError('unknown global parameter '+repr(param))
+    return spec
+
 PALETTE = [
     '#20278f','#244fbc','#317bd1','#53acc9','#8dcac9','#d0e3ce',
     '#f6e7a9','#f2bf72','#e99651','#d75f43','#b8313d','#751b4e',
@@ -37,12 +52,28 @@ def to_units(param, field):
     good = a[np.isfinite(a)]
     if good.size == 0: raise ValueError(param + ': all missing')
     med = float(np.median(good))
-    if param == 't2m':
+    _, _, lo, hi = field_spec(param)
+    if param == 't2m' or (param.startswith('t') and param[1:].isdigit()):
         if med > 130: a = a - 273.15
-        if not (-110 < float(np.nanmedian(a)) < 65): raise ValueError('unphysical T2m')
-    elif param == 'z500':
-        if med > 1500: a = a / 10.0
-        if not (350 < float(np.nanmedian(a)) < 670): raise ValueError('unphysical Z500')
+        val = float(np.nanmedian(a))
+        if not (max(-125., lo-(hi-lo)*0.7) < val < min(70., hi+(hi-lo)*0.7)):
+            raise ValueError('unphysical temperature level')
+    elif param.startswith('z') and param[1:].isdigit():
+        # Open-Meteo usually stores geopotential height in metres. Support
+        # documented SI geopotential m²/s² and dam, never silently relabel.
+        if med > hi*10: a = a / (9.80665*10.0)
+        elif med > hi*4: a = a / 10.0
+        val = float(np.nanmedian(a))
+        if not (lo-(hi-lo)*0.7 < val < hi+(hi-lo)*0.7):
+            raise ValueError('unphysical geopotential height level')
+    elif param.startswith('rh') and param[2:].isdigit():
+        q01,q99 = np.nanpercentile(a,[1,99])
+        # Some providers express RH as 0..1 fraction; valid global RH fields
+        # should contain a broad range of humidity, never a false 0.5% map.
+        if 0 <= q01 and q99 <= 1.01:
+            a = a*100.0
+            q01,q99 = q01*100.0,q99*100.0
+        if q01 < -2 or q99 > 102: raise ValueError('relative humidity outside 0-100%')
     elif param == 'mslp':
         if med > 3000: a = a / 100.0
         if not (850 < float(np.nanmedian(a)) < 1120): raise ValueError('unphysical MSLP')
@@ -50,7 +81,7 @@ def to_units(param, field):
 
 def render(field, param, dest):
     a = to_units(param, field)
-    lo, hi = FIELDS[param][2:]
+    lo, hi = field_spec(param)[2:]
     bins = np.floor((a - lo) / (hi - lo) * len(PALETTE))
     idx = np.clip(np.nan_to_num(bins, nan=0).astype(np.int16), 0, len(PALETTE)-1)
     pal = np.array([tuple(bytes.fromhex(c[1:])) for c in PALETTE], np.uint8)
@@ -197,9 +228,10 @@ def cycle_candidates(*sources):
     ]
 
 
-def acquire(model, outdir, requested_lead=24):
+def acquire(model, outdir, requested_lead=24, extended=False):
     import s3fs
     dom = DOMAINS[model]
+    field_catalog = {**FIELDS, **EXTRA_FIELDS} if extended else FIELDS
     fs = s3fs.S3FileSystem(anon=True, default_block_size=65536)
     src = N.S3Source(dom, fs)
     # Intentional global override of the existing regional BBOX subsetting;
@@ -224,14 +256,14 @@ def acquire(model, outdir, requested_lead=24):
             # must not prevent using a verified 9/13km field at the same cycle.
             # Never mix runs or substitute a different valid time.
             source_fields = read_independent_sources(
-                (src, hi_src), run, valid, sorted(v[0] for v in FIELDS.values()), errors)
+                (src, hi_src), run, valid, sorted({v[0] for v in field_catalog.values()}), errors)
             data = source_fields.get(src.dom, {})
             high_data = source_fields.get(hi_src.dom, {}) if hi_src else {}
             if not data and not high_data: continue
             # A source is selectable only after actual field read + shape and
             # coverage QC. Prefer each variable at native 9/13km independently.
             products={}
-            for p,(key,units,lo,hi) in FIELDS.items():
+            for p,(key,units,lo,hi) in field_catalog.items():
                 verified = {}
                 source_instances = {}
                 # Read and validate both candidate rasters separately. We NEVER
@@ -297,6 +329,7 @@ def main():
     p.add_argument('--model',choices=sorted(DOMAINS),required=True)
     p.add_argument('--out',required=True)
     p.add_argument('--lead',type=int,default=24)
+    p.add_argument('--extended',action='store_true',help='opt in to 850/700/500/300/200 hPa global fields')
     a=p.parse_args()
-    acquire(a.model,Path(a.out),a.lead)
+    acquire(a.model,Path(a.out),a.lead,a.extended)
 if __name__=='__main__': main()
