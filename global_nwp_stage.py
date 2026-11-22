@@ -77,18 +77,41 @@ def product_manifest(model, run, valid, dom, result):
             'longitude_orientation':'west_to_east','latitude_orientation':'north_to_south',
             'fields':result,'full_globe':True,'mock':False}
 
+def parse_meta_utc(token):
+    """Parse full source timestamp; normalize explicit offsets before cycle joins.
+
+    Open-Meteo's timezone-less metadata is defined as UTC. Never truncate a
+    suffix: doing so mislabels +03:30 as UTC and can merge different cycles.
+    Reject malformed or sub-minute timestamps instead of inventing an hour.
+    """
+    if not isinstance(token, str) or len(token) < 16 or token[10] != 'T':
+        raise ValueError('NWP timestamp must include an ISO date and time')
+    dt = datetime.fromisoformat(
+        token[:-1] + '+00:00' if token.endswith('Z') else token)
+    if dt.second or dt.microsecond:
+        raise ValueError('NWP timestamp must be aligned to a whole minute')
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=UTC)
+    return dt.astimezone(UTC)
+
+
 def resolve_cycle(meta):
-    return datetime.strptime(meta['reference_time'][:16],'%Y-%m-%dT%H:%M').replace(tzinfo=UTC)
+    return parse_meta_utc(meta['reference_time'])
+
 
 def valid_candidates(meta, run, requested_lead=24):
     out = []
-    for s in meta.get('valid_times',[]):
+    seen = set()
+    for token in meta.get('valid_times', []) or []:
         try:
-            vt = datetime.strptime(s[:16],'%Y-%m-%dT%H:%M').replace(tzinfo=UTC)
-        except ValueError: continue
-        hours = (vt-run).total_seconds()/3600
-        if 0 <= hours <= 384:out.append((abs(hours-requested_lead),vt))
-    return [v for _,v in sorted(out)]
+            vt = parse_meta_utc(token)
+        except (ValueError, TypeError):
+            continue
+        hours = (vt - run).total_seconds() / 3600
+        if 0 <= hours <= 384 and vt not in seen:
+            seen.add(vt)
+            out.append((abs(hours - requested_lead), vt))
+    return [v for _, v in sorted(out)]
 
 def read_independent_sources(sources, run, valid, fields, errors):
     """Fetch each actual source independently; failure of one cannot hide another."""
@@ -132,8 +155,8 @@ def cycle_candidates(*sources):
                 if not isinstance(token, str):
                     continue
                 try:
-                    vt = datetime.strptime(token[:16], '%Y-%m-%dT%H:%M').replace(tzinfo=UTC)
-                except ValueError:
+                    vt = parse_meta_utc(token)
+                except (ValueError, TypeError):
                     continue
                 if 0 <= (vt - run).total_seconds() <= 384 * 3600:
                     times.add(vt.strftime('%Y-%m-%dT%H:%M'))
