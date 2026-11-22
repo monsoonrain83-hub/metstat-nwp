@@ -6,7 +6,7 @@ from world_anomaly_core import anomaly, five_day_blocks, AnomalyUnavailable
 class WorldAnomalyTests(unittest.TestCase):
     def setUp(self):
         self.valid=datetime(2026,11,23,12,tzinfo=timezone.utc)
-        self.f={'bbox_wgs84':[-180.,-90.,180.,90.],'grid_shape':[4,8],'grid_id':'global-0.25deg','units':'K'}
+        self.f={'bbox_wgs84':[-180.,-90.,180.,90.],'grid_shape':[4,8],'grid_id':'global-0.25deg','units':'K','valid_utc':'2026-11-23T12:00:00Z'}
         self.c={**self.f,'base_period':'1991-2020','source':'ERA5 verified global 1991-2020',
                 'valid_mmdd':'11-23','valid_hour_utc':12,'verified':True}
     def test_k_to_c_anomaly_and_provenance(self):
@@ -25,6 +25,13 @@ class WorldAnomalyTests(unittest.TestCase):
         for patch in [{'bbox_wgs84':[-15,5,95,65]}, {'grid_id':'regional'}, {'valid_hour_utc':0}, {'source':''}, {'verified':False}]:
             with self.subTest(patch=patch),self.assertRaises(AnomalyUnavailable):
                 anomaly('ecmwf','t2m',self.valid,np.full((4,8),280),np.full((4,8),279),self.f,{**self.c,**patch})
+    def test_reject_wrong_source_valid_time_and_non_utc_datetime(self):
+        with self.assertRaises(AnomalyUnavailable):
+            anomaly('ecmwf','t2m',self.valid,np.full((4,8),280),np.full((4,8),279),
+                    {**self.f,'valid_utc':'2026-11-23T00:00:00Z'},self.c)
+        with self.assertRaises(AnomalyUnavailable):
+            anomaly('ecmwf','t2m',self.valid.astimezone(timezone.utc).replace(tzinfo=None),
+                    np.full((4,8),280),np.full((4,8),279),self.f,self.c)
     def test_icon_cannot_label_z850_and_missing_climate_rejected(self):
         with self.assertRaises(AnomalyUnavailable):
             anomaly('icon','z850',self.valid,np.full((4,8),1500),np.full((4,8),1500),
