@@ -4,8 +4,8 @@
   "source_domain": "cmc_gem_gdps_15km",
   "source": "Open-Meteo data_spatial / model owner",
   "license": "CC BY 4.0; attribution Open-Meteo and originating NWP center",
-  "init_utc": "2026-11-21T12:00:00Z",
-  "valid_utc": "2026-11-22T12:00:00Z",
+  "init_utc": "2026-11-22T00:00:00Z",
+  "valid_utc": "2026-11-23T00:00:00Z",
   "projection": "EPSG:4326 equirectangular",
   "bbox_wgs84": [
     -180.0,
@@ -38,9 +38,9 @@
       "width": 2400,
       "height": 1201,
       "finite_fraction": 1.0,
-      "min": -49.25,
-      "max": 42.05,
-      "sha256": "e9c48dd2e0d436a35a149fc895714599ca97f1ac328f2625c0206e3bfcc66c5d"
+      "min": -49.65,
+      "max": 38.7,
+      "sha256": "c4b2b93ca84607ca0a15cb04ffbb1febeeceaf5c9cfe43db84aee7c4d32b20c5"
     },
     "mslp": {
       "file": "gem/mslp.webp",
@@ -64,9 +64,9 @@
       "width": 2400,
       "height": 1201,
       "finite_fraction": 1.0,
-      "min": 955.7,
-      "max": 1044.4,
-      "sha256": "764673baf47780d1518113afb0fe2357d4c02aa762d22d30d678470928cec894"
+      "min": 960.5,
+      "max": 1055.4,
+      "sha256": "2e78a85c1a6f78d2551333995188a1f9fe81c1043620cd5f0fa5e17c8988b9f4"
     }
   },
   "full_globe": true,

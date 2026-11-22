@@ -4,7 +4,7 @@
   "source_domain": "ncep_gfs025",
   "source": "Open-Meteo data_spatial / model owner",
   "license": "CC BY 4.0; attribution Open-Meteo and originating NWP center",
-  "init_utc": "2026-11-21T18:00:00Z",
+  "init_utc": "2026-11-22T06:00:00Z",
   "valid_utc": "2026-11-22T18:00:00Z",
   "projection": "EPSG:4326 equirectangular",
   "bbox_wgs84": [
@@ -38,9 +38,9 @@
       "width": 3072,
       "height": 1536,
       "finite_fraction": 1.0,
-      "min": -44.85,
-      "max": 45.65,
-      "sha256": "89ab4fe7238437f712b38b825a5249e0fce178649a78e564d91974d707bfb739"
+      "min": -44.9,
+      "max": 45.2,
+      "sha256": "06076661d3a2b326854549c038359440dd53808090121c5d437d419e36b565b8"
     },
     "z500": {
       "file": "gfs/z500.webp",
@@ -64,9 +64,9 @@
       "width": 1440,
       "height": 721,
       "finite_fraction": 1.0,
-      "min": 488.3,
+      "min": 487.7,
       "max": 596.4,
-      "sha256": "ba6cd70958508a4dc1dd48e193abffa1fd4b256dbd948de5ab7fdbd52a89c513"
+      "sha256": "e381bbc07f7e69f02e409f8b55d1b9be1374cb7b404412b9693536adaf4410a0"
     },
     "mslp": {
       "file": "gfs/mslp.webp",
@@ -90,9 +90,9 @@
       "width": 1440,
       "height": 721,
       "finite_fraction": 1.0,
-      "min": 953.9,
-      "max": 1049.1,
-      "sha256": "d8f64d51ef5c227b02817ae73c7b112f6f01ff62f1ed33b576a41605f6e79be5"
+      "min": 954.5,
+      "max": 1048.9,
+      "sha256": "c7444bfefa5becdb3eff191bdfbeb04f7d5d29ce7c75d4dc62b432e89a786f02"
     }
   },
   "full_globe": true,

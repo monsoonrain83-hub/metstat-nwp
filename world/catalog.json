@@ -16,8 +16,8 @@
       "source_domain": "ecmwf_ifs025",
       "source": "Open-Meteo data_spatial / model owner",
       "license": "CC BY 4.0; attribution Open-Meteo and originating NWP center",
-      "init_utc": "2026-11-21T12:00:00Z",
-      "valid_utc": "2026-11-22T12:00:00Z",
+      "init_utc": "2026-11-22T00:00:00Z",
+      "valid_utc": "2026-11-23T00:00:00Z",
       "projection": "EPSG:4326 equirectangular",
       "bbox_wgs84": [
         -180.0,
@@ -50,9 +50,9 @@
           "width": 3600,
           "height": 1801,
           "finite_fraction": 1.0,
-          "min": -47.47,
-          "max": 42.47,
-          "sha256": "c16a62bc3a7ce85aed28f60eb743a68538c8f2b7d7dd0188846caffcb0268730"
+          "min": -47.42,
+          "max": 39.39,
+          "sha256": "35268f862f59f1bf2aa46d396ef3030aa6d4ff71178f05aed1268e1783dbe799"
         },
         "z500": {
           "file": "ecmwf/z500.webp",
@@ -76,9 +76,9 @@
           "width": 1440,
           "height": 721,
           "finite_fraction": 1.0,
-          "min": 486.6,
-          "max": 598.8,
-          "sha256": "2cc73687ce0fc1daaee403a00e5d80e32b95f2e354e522a76000eb2591fc3b53"
+          "min": 488.8,
+          "max": 597.0,
+          "sha256": "b2bc2fa81d5ee0f98465f8afb3dcec58e0ccfc3dd4e354925a33a087d0e55659"
         },
         "mslp": {
           "file": "ecmwf/mslp.webp",
@@ -102,9 +102,9 @@
           "width": 3600,
           "height": 1801,
           "finite_fraction": 1.0,
-          "min": 954.71,
-          "max": 1043.46,
-          "sha256": "d6fdb9df27e3bdf947efc41d038726567a342f6aa9ccbcaf329526001352fc65"
+          "min": 957.0,
+          "max": 1053.91,
+          "sha256": "727aceb9ae770f7038c055aa72ff5b8537c480fc70e8b7f8cfa132176a7ff9dd"
         }
       },
       "full_globe": true,
@@ -116,8 +116,8 @@
       "source_domain": "cmc_gem_gdps_15km",
       "source": "Open-Meteo data_spatial / model owner",
       "license": "CC BY 4.0; attribution Open-Meteo and originating NWP center",
-      "init_utc": "2026-11-21T12:00:00Z",
-      "valid_utc": "2026-11-22T12:00:00Z",
+      "init_utc": "2026-11-22T00:00:00Z",
+      "valid_utc": "2026-11-23T00:00:00Z",
       "projection": "EPSG:4326 equirectangular",
       "bbox_wgs84": [
         -180.0,
@@ -150,9 +150,9 @@
           "width": 2400,
           "height": 1201,
           "finite_fraction": 1.0,
-          "min": -49.25,
-          "max": 42.05,
-          "sha256": "e9c48dd2e0d436a35a149fc895714599ca97f1ac328f2625c0206e3bfcc66c5d"
+          "min": -49.65,
+          "max": 38.7,
+          "sha256": "c4b2b93ca84607ca0a15cb04ffbb1febeeceaf5c9cfe43db84aee7c4d32b20c5"
         },
         "mslp": {
           "file": "gem/mslp.webp",
@@ -176,9 +176,9 @@
           "width": 2400,
           "height": 1201,
           "finite_fraction": 1.0,
-          "min": 955.7,
-          "max": 1044.4,
-          "sha256": "764673baf47780d1518113afb0fe2357d4c02aa762d22d30d678470928cec894"
+          "min": 960.5,
+          "max": 1055.4,
+          "sha256": "2e78a85c1a6f78d2551333995188a1f9fe81c1043620cd5f0fa5e17c8988b9f4"
         }
       },
       "full_globe": true,
@@ -190,7 +190,7 @@
       "source_domain": "ncep_gfs025",
       "source": "Open-Meteo data_spatial / model owner",
       "license": "CC BY 4.0; attribution Open-Meteo and originating NWP center",
-      "init_utc": "2026-11-21T18:00:00Z",
+      "init_utc": "2026-11-22T06:00:00Z",
       "valid_utc": "2026-11-22T18:00:00Z",
       "projection": "EPSG:4326 equirectangular",
       "bbox_wgs84": [
@@ -224,9 +224,9 @@
           "width": 3072,
           "height": 1536,
           "finite_fraction": 1.0,
-          "min": -44.85,
-          "max": 45.65,
-          "sha256": "89ab4fe7238437f712b38b825a5249e0fce178649a78e564d91974d707bfb739"
+          "min": -44.9,
+          "max": 45.2,
+          "sha256": "06076661d3a2b326854549c038359440dd53808090121c5d437d419e36b565b8"
         },
         "z500": {
           "file": "gfs/z500.webp",
@@ -250,9 +250,9 @@
           "width": 1440,
           "height": 721,
           "finite_fraction": 1.0,
-          "min": 488.3,
+          "min": 487.7,
           "max": 596.4,
-          "sha256": "ba6cd70958508a4dc1dd48e193abffa1fd4b256dbd948de5ab7fdbd52a89c513"
+          "sha256": "e381bbc07f7e69f02e409f8b55d1b9be1374cb7b404412b9693536adaf4410a0"
         },
         "mslp": {
           "file": "gfs/mslp.webp",
@@ -276,9 +276,9 @@
           "width": 1440,
           "height": 721,
           "finite_fraction": 1.0,
-          "min": 953.9,
-          "max": 1049.1,
-          "sha256": "d8f64d51ef5c227b02817ae73c7b112f6f01ff62f1ed33b576a41605f6e79be5"
+          "min": 954.5,
+          "max": 1048.9,
+          "sha256": "c7444bfefa5becdb3eff191bdfbeb04f7d5d29ce7c75d4dc62b432e89a786f02"
         }
       },
       "full_globe": true,
