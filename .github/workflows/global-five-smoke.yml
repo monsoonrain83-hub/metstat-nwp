@@ -1,0 +1,70 @@
+name: MetStat five-world models integration smoke (NO deployment)
+on:
+  push:
+    branches: [feature/opt-in-world-icon-ukmo-20261123]
+    paths:
+      - global_nwp_stage.py
+      - pack_global_products.py
+      - test_pack_global_products.py
+      - .github/workflows/global-five-smoke.yml
+  workflow_dispatch: {}
+permissions:
+  contents: read
+concurrency:
+  group: five-world-smoke
+  cancel-in-progress: false
+jobs:
+  world:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        model: [gfs, ecmwf, gem, icon, ukmo]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          python -m pip install -r requirements.txt
+          python -m pip install "omfiles[fsspec]" s3fs
+      - run: python -m unittest -v test_global_nwp_stage test_world_extra_catalog test_pack_global_products
+      - run: python global_nwp_stage.py --model "${{ matrix.model }}" --out "global_artifacts/${{ matrix.model }}" --lead 24
+      - uses: actions/upload-artifact@v4
+        with:
+          name: world-${{ matrix.model }}-${{ github.run_number }}
+          path: global_artifacts/${{ matrix.model }}/
+          retention-days: 7
+          if-no-files-found: error
+  package-test:
+    needs: [world]
+    if: success()
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: world-*
+          path: /tmp/metstat-world-downloads
+      - run: |
+          python pack_global_products.py /tmp/metstat-world-downloads /tmp/metstat-world-build/world
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('/tmp/metstat-world-build/world/catalog.json')
+          c=json.loads(p.read_text())
+          assert set(c['models'])=={'gfs','ecmwf','gem','icon','ukmo'}
+          assert 'CC BY-SA 4.0' in c['models']['ukmo']['source_license']
+          print('FIVE_REAL_MODELS_VERIFIED',[(m, list(d['fields'])) for m,d in c['models'].items()])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: five-world-verified-copy-ready-${{ github.run_number }}
+          path: /tmp/metstat-world-build/world/
+          retention-days: 7
+          if-no-files-found: error
