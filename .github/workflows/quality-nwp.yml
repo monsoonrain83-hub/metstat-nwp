@@ -26,7 +26,7 @@ jobs:
       - name: "Regression — multimodel policy and preservation of pending fields"
         run: python -m unittest discover -s tests -p 'test_mm_*.py' -v
       - name: "Unified ECMWF/GFS resolution and world raster tests"
-        run: python -m unittest -v test_nwp_unified_resolution test_global_nwp_stage
+        run: python -m unittest -v test_nwp_unified_resolution test_global_nwp_stage test_pack_global_products
       - name: "Global anomaly unit and climatology fail-closed tests"
         run: python -m unittest -v test_world_anomaly_core
       - name: "نشت کلید"
