@@ -27,6 +27,8 @@ class WorldPackagingTests(unittest.TestCase):
             'ecmwf': 'ecmwf_ifs025',
             'gfs': 'ncep_gfs025',
             'gem': 'cmc_gem_gdps_15km',
+            'icon': 'dwd_icon',
+            'ukmo': 'ukmo_global_deterministic_10km',
         }
         for model, domain in native.items():
             folder = self.src / ('world-' + model)
@@ -39,7 +41,7 @@ class WorldPackagingTests(unittest.TestCase):
             field = {
                 'file': name, 'variable': 'temperature_2m',
                 'logical_model': model,
-                'units': '°C', 'nominal_resolution': '28 km',
+                'units': '°C', 'nominal_resolution': {'ecmwf':'28 km','gfs':'28 km','gem':'15 km','icon':'13 km','ukmo':'10 km'}[model],
                 'field_source_domain': domain,
                 'init_utc': self.run.strftime('%Y-%m-%dT%H:%M:%SZ'),
                 'valid_utc': self.valid.strftime('%Y-%m-%dT%H:%M:%SZ'),
@@ -64,7 +66,7 @@ class WorldPackagingTests(unittest.TestCase):
     def test_valid_real_webp_passes_through_without_change(self):
         result = package(self.src, self.dest)
         self.assertTrue(result['complete'])
-        self.assertEqual(set(result['models']), {'gfs', 'ecmwf', 'gem'})
+        self.assertEqual(set(result['models']), {'gfs', 'ecmwf', 'gem', 'icon', 'ukmo'})
         for model in result['models']:
             original = (self.src / ('world-' + model) /
                         self.manifests[model]['fields']['t2m']['file']).read_bytes()
@@ -72,6 +74,14 @@ class WorldPackagingTests(unittest.TestCase):
             self.assertEqual(published, original)
             self.assertEqual(result['models'][model]['fields']['t2m']['sha256'],
                              hashlib.sha256(published).hexdigest())
+
+    def test_ukmo_licence_is_sharealike_and_grid_is_not_mislabeled(self):
+        result = package(self.src, self.dest)
+        self.assertIn('CC BY-SA 4.0', result['models']['ukmo']['source_license'])
+        self.manifests['ukmo']['fields']['t2m']['nominal_resolution'] = '15 km'
+        self.write_manifest('ukmo')
+        with self.assertRaisesRegex(ValueError, 'resolution label mismatch'):
+            package(self.src, self.dest)
 
     def test_tampered_raster_rejected(self):
         path = self.src / 'world-gfs' / self.manifests['gfs']['fields']['t2m']['file']
