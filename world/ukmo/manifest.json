@@ -1,0 +1,132 @@
+{
+  "schema": 2,
+  "model": "ukmo",
+  "source_domain": "ukmo_global_deterministic_10km",
+  "source": "Open-Meteo data_spatial / model owner",
+  "license": "CC BY 4.0; attribution Open-Meteo and originating NWP center",
+  "generated_at_utc": "2026-11-22T21:45:32Z",
+  "init_utc": "2026-11-22T12:00:00Z",
+  "valid_utc": "2026-11-23T12:00:00Z",
+  "projection": "EPSG:4326 equirectangular",
+  "bbox_wgs84": [
+    -180.0,
+    -90.0,
+    180.0,
+    90.0
+  ],
+  "longitude_orientation": "west_to_east",
+  "latitude_orientation": "north_to_south",
+  "fields": {
+    "t2m": {
+      "file": "ukmo/t2m.webp",
+      "variable": "temperature_2m",
+      "units": "°C",
+      "sha256": "f444a546d0621df017580408e7dbe5049c635f7a8d462509a8ee012b8c079c00",
+      "logical_model": "ukmo",
+      "init_utc": "2026-11-22T12:00:00Z",
+      "valid_utc": "2026-11-23T12:00:00Z",
+      "lead_hours": 24,
+      "source_grid_bbox_centers_wgs84": [
+        -180,
+        -90,
+        179.859375,
+        89.90625
+      ],
+      "field_source_domain": "ukmo_global_deterministic_10km",
+      "nominal_resolution": "10 km",
+      "source_grid": [
+        2560,
+        1920
+      ],
+      "source_grid_origin": [
+        -180,
+        -90
+      ],
+      "source_grid_spacing": [
+        0.140625,
+        0.09375
+      ],
+      "resampling": "native-source-grid",
+      "width": 2560,
+      "height": 1920,
+      "finite_fraction": 1.0,
+      "min": -51.0,
+      "max": 41.3
+    },
+    "z500": {
+      "file": "ukmo/z500.webp",
+      "variable": "geopotential_height_500hPa",
+      "units": "dam",
+      "sha256": "4f09cb3070f4871e4a2376085faf90667579c59bb297d05bb5cedce09e5f10ee",
+      "logical_model": "ukmo",
+      "init_utc": "2026-11-22T12:00:00Z",
+      "valid_utc": "2026-11-23T12:00:00Z",
+      "lead_hours": 24,
+      "source_grid_bbox_centers_wgs84": [
+        -180,
+        -90,
+        179.859375,
+        89.90625
+      ],
+      "field_source_domain": "ukmo_global_deterministic_10km",
+      "nominal_resolution": "10 km",
+      "source_grid": [
+        2560,
+        1920
+      ],
+      "source_grid_origin": [
+        -180,
+        -90
+      ],
+      "source_grid_spacing": [
+        0.140625,
+        0.09375
+      ],
+      "resampling": "native-source-grid",
+      "width": 2560,
+      "height": 1920,
+      "finite_fraction": 1.0,
+      "min": 487.7,
+      "max": 594.4
+    },
+    "mslp": {
+      "file": "ukmo/mslp.webp",
+      "variable": "pressure_msl",
+      "units": "hPa",
+      "sha256": "204bfeaf69bac6da609cf453ea7bf4bafeb16d14c357b1c6cf53bc44368951f0",
+      "logical_model": "ukmo",
+      "init_utc": "2026-11-22T12:00:00Z",
+      "valid_utc": "2026-11-23T12:00:00Z",
+      "lead_hours": 24,
+      "source_grid_bbox_centers_wgs84": [
+        -180,
+        -90,
+        179.859375,
+        89.90625
+      ],
+      "field_source_domain": "ukmo_global_deterministic_10km",
+      "nominal_resolution": "10 km",
+      "source_grid": [
+        2560,
+        1920
+      ],
+      "source_grid_origin": [
+        -180,
+        -90
+      ],
+      "source_grid_spacing": [
+        0.140625,
+        0.09375
+      ],
+      "resampling": "native-source-grid",
+      "width": 2560,
+      "height": 1920,
+      "finite_fraction": 1.0,
+      "min": 959.7,
+      "max": 1037.5
+    }
+  },
+  "full_globe": true,
+  "mock": false,
+  "source_license": "CC BY-SA 4.0 — UK Met Office; adaptations share alike"
+}

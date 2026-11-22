@@ -4,7 +4,7 @@
   "source_domain": "cmc_gem_gdps_15km",
   "source": "Open-Meteo data_spatial / model owner",
   "license": "CC BY 4.0; attribution Open-Meteo and originating NWP center",
-  "generated_at_utc": "2026-11-22T21:32:28Z",
+  "generated_at_utc": "2026-11-22T21:44:42Z",
   "init_utc": "2026-11-22T12:00:00Z",
   "valid_utc": "2026-11-23T12:00:00Z",
   "projection": "EPSG:4326 equirectangular",
@@ -91,5 +91,6 @@
     }
   },
   "full_globe": true,
-  "mock": false
+  "mock": false,
+  "source_license": "Open-Meteo data CC BY 4.0; ECCC CMC attribution"
 }

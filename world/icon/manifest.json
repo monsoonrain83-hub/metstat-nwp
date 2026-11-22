@@ -1,0 +1,132 @@
+{
+  "schema": 2,
+  "model": "icon",
+  "source_domain": "dwd_icon",
+  "source": "Open-Meteo data_spatial / model owner",
+  "license": "CC BY 4.0; attribution Open-Meteo and originating NWP center",
+  "generated_at_utc": "2026-11-22T21:45:24Z",
+  "init_utc": "2026-11-22T18:00:00Z",
+  "valid_utc": "2026-11-23T18:00:00Z",
+  "projection": "EPSG:4326 equirectangular",
+  "bbox_wgs84": [
+    -180.0,
+    -90.0,
+    180.0,
+    90.0
+  ],
+  "longitude_orientation": "west_to_east",
+  "latitude_orientation": "north_to_south",
+  "fields": {
+    "t2m": {
+      "file": "icon/t2m.webp",
+      "variable": "temperature_2m",
+      "units": "°C",
+      "sha256": "b0221004d82e9e4c256d659c8f9d3723bbddde42fa5d878cc712a0746211512a",
+      "logical_model": "icon",
+      "init_utc": "2026-11-22T18:00:00Z",
+      "valid_utc": "2026-11-23T18:00:00Z",
+      "lead_hours": 24,
+      "source_grid_bbox_centers_wgs84": [
+        -180,
+        -90,
+        179.75,
+        90.0
+      ],
+      "field_source_domain": "dwd_icon",
+      "nominal_resolution": "13 km",
+      "source_grid": [
+        2879,
+        1441
+      ],
+      "source_grid_origin": [
+        -180,
+        -90
+      ],
+      "source_grid_spacing": [
+        0.125,
+        0.125
+      ],
+      "resampling": "native-source-grid",
+      "width": 2879,
+      "height": 1441,
+      "finite_fraction": 1.0,
+      "min": -46.95,
+      "max": 41.2
+    },
+    "z500": {
+      "file": "icon/z500.webp",
+      "variable": "geopotential_height_500hPa",
+      "units": "dam",
+      "sha256": "a2fc421afb379936627773d357549ecc3143be905b2ac5bc8e92c40431978615",
+      "logical_model": "icon",
+      "init_utc": "2026-11-22T18:00:00Z",
+      "valid_utc": "2026-11-23T18:00:00Z",
+      "lead_hours": 24,
+      "source_grid_bbox_centers_wgs84": [
+        -180,
+        -90,
+        179.75,
+        90.0
+      ],
+      "field_source_domain": "dwd_icon",
+      "nominal_resolution": "13 km",
+      "source_grid": [
+        2879,
+        1441
+      ],
+      "source_grid_origin": [
+        -180,
+        -90
+      ],
+      "source_grid_spacing": [
+        0.125,
+        0.125
+      ],
+      "resampling": "native-source-grid",
+      "width": 2879,
+      "height": 1441,
+      "finite_fraction": 1.0,
+      "min": 488.4,
+      "max": 596.0
+    },
+    "mslp": {
+      "file": "icon/mslp.webp",
+      "variable": "pressure_msl",
+      "units": "hPa",
+      "sha256": "f5daa3bb920944095ded4f9eb22fee730d92d60176e548131804e3c983c0d7d5",
+      "logical_model": "icon",
+      "init_utc": "2026-11-22T18:00:00Z",
+      "valid_utc": "2026-11-23T18:00:00Z",
+      "lead_hours": 24,
+      "source_grid_bbox_centers_wgs84": [
+        -180,
+        -90,
+        179.75,
+        90.0
+      ],
+      "field_source_domain": "dwd_icon",
+      "nominal_resolution": "13 km",
+      "source_grid": [
+        2879,
+        1441
+      ],
+      "source_grid_origin": [
+        -180,
+        -90
+      ],
+      "source_grid_spacing": [
+        0.125,
+        0.125
+      ],
+      "resampling": "native-source-grid",
+      "width": 2879,
+      "height": 1441,
+      "finite_fraction": 1.0,
+      "min": 956.8,
+      "max": 1046.1
+    }
+  },
+  "full_globe": true,
+  "mock": false,
+  "source_license": "CC BY 4.0 with DWD/Open-Meteo attribution"
+}
