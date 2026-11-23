@@ -1157,6 +1157,21 @@ def slp_clim_at(R, d):
 
 # ---------------------------------------------------------------- پردازش یک اجرای یک مدل
 SFC_VARS = {'precipitation', 'snowfall_water_equivalent', 'temperature_2m', 'temperature_2m_max', 'temperature_2m_min', 'relative_humidity_2m'}
+def read_same_cycle_upper(src, run, valid_time, variables):
+    """Read an optional coarse-grid fallback ONLY from the SAME init/valid time.
+
+    A previous-cycle field is not an equivalent forecast, even when its valid
+    time matches. It must never be silently attributed to the new cycle.
+    A failed/missing same-run fallback is genuinely unavailable.
+    """
+    if not src.exists(run, valid_time):
+        return None
+    fields = src.read(run, valid_time, sorted(variables))
+    if not isinstance(fields, dict):
+        raise ValueError('upper source did not return a field dictionary')
+    return fields
+
+
 class RunState:
     def __init__(s, model, run, srcs):
         s.model, s.run, s.srcs = model, run, srcs
@@ -1444,15 +1459,15 @@ class Engine:
                 vars_ = {'precipitation', 'snowfall_water_equivalent', 'temperature_2m'}
                 if not src.exists(run, vt): continue
             if name == 'upper':
-                for rr in (run, run - timedelta(hours=6), run - timedelta(hours=12)):     # اجرای 0.25° ممکن است دیرتر از 0.13° منتشر شود → آخرین اجرای موجود
-                    if not src.exists(rr, vt): continue
-                    try:
-                        D[name] = src.read(rr, vt, sorted(vars_))
-                        if rr != run and not getattr(st, 'up_note', False): st.up_note = True; log(f'  ترازهای فشاری {src.dom}: اجرای {run:%Y%m%d%H} هنوز نیست؛ از اجرای {rr:%Y%m%d%H} استفاده می‌شود')
-                    except Exception as e: log(f'  ترازهای فشاری {src.dom} {vt:%Y%m%d%H} خوانده نشد ({type(e).__name__}: {e})')
-                    break
-                else:
-                    if not getattr(st, 'up_miss', False): st.up_miss = True; log(f'  ترازهای فشاری {src.dom} برای {vt:%Y%m%d%H} در هیچ‌کدام از سه اجرای اخیر پیدا نشد')
+                try:
+                    upper_fields = read_same_cycle_upper(src, run, vt, vars_)
+                    if upper_fields:
+                        D[name] = upper_fields
+                    elif not getattr(st, 'up_miss', False):
+                        st.up_miss = True
+                        log(f'  ترازهای فشاری {src.dom}: ران {run:%Y%m%d%H} / زمان اعتبار {vt:%Y%m%d%H} هنوز موجود نیست؛ از ران قدیمی استفاده نمی‌شود')
+                except Exception as e:
+                    log(f'  ترازهای فشاری {src.dom} ران {run:%Y%m%d%H} زمان {vt:%Y%m%d%H} خوانده نشد ({type(e).__name__}: {e})')
                 continue
             D[name] = src.read(run, vt, sorted(vars_))
         # جمع‌های تجمعی روی شبکهٔ اصلی هر منبع
