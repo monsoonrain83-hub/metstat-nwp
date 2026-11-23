@@ -16,6 +16,7 @@ import argparse, io, math, os, sys, time
 from datetime import datetime, timedelta, timezone
 import numpy as np
 import nwp_maps as N, styles, lr_maps as L
+from publication_integrity import require_complete_frames
 
 UTC = timezone.utc; log = N.log
 CROP = (16.0, 69.0, 8.0, 46.0)
@@ -178,11 +179,19 @@ def make_weekly(up, mk, R, a):
     if str(r.get('run')) != f'{run:%Y%m%d%H}':
         raise RuntimeError(f'{mk}: server begin rejected run {run:%Y%m%d%H}: {str(r)[:180]}')
     have = set(r.get('have', [])); made = 0
+    if ta.shape[0] != pa.shape[0] or not ta.shape[0]:
+        raise RuntimeError(f'{mk}: mismatched or empty weekly precipitation/temperature windows')
+    expected, staged = set(), set()
     for w in range(ta.shape[0]):
         vt = t0 + timedelta(days=7 * (w + 1)); lead = int(round((vt - run).total_seconds() / 3600))  # valid time from forecast interval, not upload day
-        made += put(up, mk, run, 'wta', vt, lead, L.regrid(ta[w], lo, la), have)
-        made += put(up, mk, run, 'wpa', vt, lead, L.regrid(pa[w], lo, la), have)
+        for pid, field in (('wta', ta[w]), ('wpa', pa[w])):
+            key = f'me/{pid}_{vt:%Y%m%d%H}.webp'
+            expected.add(key)
+            if put(up, mk, run, pid, vt, lead, L.regrid(field, lo, la), have):
+                staged.add(key)
+                made += 1
     up.wait()
+    require_complete_frames(mk, expected, have, staged)
     done = up.call('end', js={'model': mk, 'run': f'{run:%Y%m%d%H}'})
     if not done.get('ok'): raise RuntimeError(f'{mk}: host end failed {done}')
     log(f'✓ {mk}: {made} نقشه تازه، شماره اجرا {run:%Y%m%d%H}'); return made
@@ -226,13 +235,29 @@ def make_iri(up, a):
     for pid, path in IRI_VARS.items():
         try: data[pid] = iri_fetch(path, a.mock)
         except Exception as e: log(f'✗ IRI {pid}: {e}')
-    if not data: return 0
-    issue = list(data.values())[0][0]; r = begin(up, 'iri', issue); have = set(r.get('have', [])); made = 0
+    if set(data) != set(IRI_VARS):
+        raise RuntimeError(f'iri: incomplete source variables {sorted(data)}; all {sorted(IRI_VARS)} required')
+    issue = list(data.values())[0][0]
+    if any(source[0] != issue for source in data.values()):
+        raise RuntimeError('iri: mixed forecast issue cycles cannot be published together')
+    r = begin(up, 'iri', issue)
+    if str(r.get('run')) != f'{issue:%Y%m%d%H}':
+        raise RuntimeError('iri: host rejected forecast run')
+    have = set(r.get('have', [])); made = 0; expected, staged = set(), set()
     for pid, (iss, Ls, X, Y, A) in data.items():
         for li, l in enumerate(Ls):
             start = (iss.replace(day=1) + timedelta(days=31 * int(round(l)))).replace(day=1)       # آغاز فصل هدف (L=1 ⇒ ماه بعد)
-            made += put(up, 'iri', issue, pid, start, 24 * 30 * int(round(l)), regrid_nearest(dominant(A[li]), X, Y), have)
-    up.wait(); up.call('end', js={'model': 'iri', 'run': f'{issue:%Y%m%d%H}'}); log(f'✓ iri: {made} نقشه'); return made
+            key = f'me/{pid}_{start:%Y%m%d%H}.webp'
+            expected.add(key)
+            if put(up, 'iri', issue, pid, start, 24 * 30 * int(round(l)), regrid_nearest(dominant(A[li]), X, Y), have):
+                staged.add(key)
+                made += 1
+    up.wait()
+    require_complete_frames('iri', expected, have, staged)
+    done = up.call('end', js={'model': 'iri', 'run': f'{issue:%Y%m%d%H}'})
+    if not done.get('ok'):
+        raise RuntimeError(f'iri: host end failed {done}')
+    log(f'✓ iri: {made} نقشه تازه'); return made
 
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument('--host'); ap.add_argument('--key', default=''); ap.add_argument('--out'); ap.add_argument('--mock', action='store_true'); ap.add_argument('--only', default='ecwk,cfswk,iri')
