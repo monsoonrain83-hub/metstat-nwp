@@ -21,6 +21,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_model_source_inventory_probe.py' -v
       - name: Verify OM grid discovery tests without network
         run: python -m unittest discover -s tests -p 'test_model_grid_shape_probe.py' -v
+      - name: Install numerical test dependency
+        run: pip install 'numpy>=2.0'
       - name: Test field-level candidate quality without network
         run: python -m unittest discover -s tests -p 'test_model_candidate_field_qc.py' -v
       - name: Install read-only S3 metadata and OM-header dependencies
