@@ -1,9 +1,9 @@
 {
- "time": "2026-11-23T14:52Z",
+ "time": "2026-11-23T14:54Z",
  "states": {
-  "Iran": 97,
+  "Iran": 0,
   "Iraq": -1,
-  "Turkey": 82,
+  "Turkey": 0,
   "Azerbaijan": 0,
   "Armenia": 0,
   "Georgia": 0,
@@ -11,20 +11,20 @@
   "Uzbekistan": 0,
   "Tajikistan": 0,
   "Afghanistan": -1,
-  "Pakistan": 1,
+  "Pakistan": 0,
   "Saudi_Arabia": 0,
-  "Oman": 36,
+  "Oman": 0,
   "United_Arab_Emirates": 0,
   "Qatar": 0,
   "Kuwait": 0,
   "Bahrain": 0,
-  "Kazakhstan": 7,
+  "Kazakhstan": 0,
   "Syria": 0,
   "Jordan": 0,
   "Yemen": 0
  },
- "metar": 243,
- "synop": 223,
+ "metar": 0,
+ "synop": 0,
  "synop_unmatched": 5902,
  "unmatched_wmo": {
   "17015": 51,
@@ -281,5 +281,6 @@
   "41431": 17,
   "41466": 17,
   "41477": 17
- }
+ },
+ "fallback_per_block": true
 }
