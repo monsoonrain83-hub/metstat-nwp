@@ -83,6 +83,7 @@ def aifs_request(run: datetime, lead: int, parameter: str) -> dict:
 
 def stage_aifs_grib(run: datetime, lead: int, parameter: str, out_dir: Path) -> Path:
     """Explicit opt-in download only. Never replaces files or uploads anything."""
+    run = validate(run, lead, "aifs")
     req = aifs_request(run, lead, parameter)
     out_dir = Path(out_dir).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
