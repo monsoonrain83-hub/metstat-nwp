@@ -15,7 +15,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from model_source_inventory_probe import SOURCES, inspect_manifest, s3_fetcher
-from model_grid_shape_probe import om_uri
+from model_grid_shape_probe import om_uri, to_utc
 
 ALLOWED = ("aigfs", "grapes", "jma")
 FIELDS = ("temperature_2m", "geopotential_height_500hPa", "precipitation")
@@ -103,7 +103,16 @@ def probe_model(name: str, fetch, sampler) -> dict:
         times = latest.get("valid_times") or []
         if not meta["reference_time"] or not times:
             raise ValueError("run and valid times are required")
-        uri = om_uri(domain, meta["reference_time"], str(times[0]))
+        # Do not probe the analysis hour for precipitation: accumulation
+        # cannot be established at step 0. Prefer an actual forecast valid
+        # instant within +6..24h from the *same* initialization.
+        run_dt = to_utc(meta["reference_time"])
+        eligible = [t for t in times if
+                    6 <= (to_utc(str(t)) - run_dt).total_seconds() / 3600 <= 24]
+        if not eligible:
+            raise ValueError("no forecast valid instant between +6h and +24h")
+        probe_valid = str(eligible[0])
+        uri = om_uri(domain, meta["reference_time"], probe_valid)
         variables = [f for f in FIELDS if f in meta["all_variable_names"]]
         if not variables:
             raise ValueError("no required weather variables in source")
@@ -124,7 +133,7 @@ def probe_model(name: str, fetch, sampler) -> dict:
                 continue
             qc.append(evaluate_sample(v, fields[v]["sample"]))
         return {"model": name, "domain": domain, "run_utc": meta["reference_time"],
-                "valid_utc": times[0], "source_om": uri,
+                "valid_utc": probe_valid, "source_om": uri,
                 "grid_shape": common_shape,
                 "fields": qc, "sample_qc_passed": bool(qc) and all(x["passed"] for x in qc),
                 "coverage_qc_passed": False, "projection_verified": False,
