@@ -1,0 +1,35 @@
+name: probe-new-models-readonly
+on:
+  pull_request:
+    paths:
+      - 'model_source_inventory_probe.py'
+      - 'tests/test_model_source_inventory_probe.py'
+      - '.github/workflows/probe-new-models.yml'
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  source-metadata:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Contract tests without network
+        run: python -m unittest discover -s tests -p 'test_model_source_inventory_probe.py' -v
+      - name: Install read-only S3 metadata dependencies
+        run: pip install 'fsspec>=2024.6' 's3fs>=2024.6'
+      - name: Read seven real latest.json manifests (no NWP array downloads)
+        run: |
+          python model_source_inventory_probe.py --json-out outputs/model-probe.json
+          test -s outputs/model-probe.json
+      - name: Archive source availability without altering producer or host
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: readonly-model-metadata
+          path: outputs/model-probe.json
+          if-no-files-found: ignore
+          retention-days: 7
