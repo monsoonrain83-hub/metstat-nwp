@@ -77,6 +77,17 @@ class TestCandidateFieldQC(unittest.TestCase):
         self.assertEqual(result["valid_utc"], VALID)
         self.assertTrue(checked[0].endswith("2026-11-23T1800.om"))
 
+    def test_unsorted_manifest_chooses_earliest_forecast_valid_time(self):
+        earlier = "2026-11-23T18:00Z"
+        later = "2026-11-24T06:00Z"
+        def unsorted(path):
+            return {"reference_time": RUN, "valid_times": [later, earlier, RUN],
+                    "variables": ["temperature_2m", "geopotential_height_500hPa", "precipitation"]}
+        result = probe_model("jma", unsorted, sampled)
+        self.assertTrue(result["sample_qc_passed"], result)
+        self.assertEqual(result["valid_utc"], earlier)
+        self.assertFalse(result["production_ready"])
+
     def test_unapproved_source_and_missing_run(self):
         with self.assertRaises(ValueError):
             probe_model("kma",fetched,sampled)
