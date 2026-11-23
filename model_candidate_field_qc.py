@@ -111,7 +111,8 @@ def probe_model(name: str, fetch, sampler) -> dict:
                     6 <= (to_utc(str(t)) - run_dt).total_seconds() / 3600 <= 24]
         if not eligible:
             raise ValueError("no forecast valid instant between +6h and +24h")
-        probe_valid = str(eligible[0])
+        # Manifests may list valid times out of order; choose the earliest valid forecast instant.
+        probe_valid = str(min(eligible, key=lambda t: to_utc(str(t))))
         uri = om_uri(domain, meta["reference_time"], probe_valid)
         variables = [f for f in FIELDS if f in meta["all_variable_names"]]
         if not variables:
