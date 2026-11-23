@@ -7,6 +7,7 @@
 NAVGEM هرگز در ترکیب نیست.
 """
 from datetime import date, datetime
+import os
 
 # شناسهٔ مدل‌ها در nwp_maps.py: اروپا=ecmwf (۲۸ کیلومتر)، آمریکا=gfs (۱۳ کیلومتر؛ در نبود آن gfs25)،
 # آلمان=icon، کانادا=gem، بریتانیا=ukmo، فرانسه=arpege
@@ -96,9 +97,36 @@ def _specific_weights(group, pid=None, secondary=False):
     return None
 
 
+def strict_ecmwf_share_weights(group, d, available, pid=None, secondary=False):
+    """Explicit daily 60/40 policy for FIVE independent logical model slots.
+
+    ECMWF occupies exactly 60%; all *other available independent models* share
+    the remaining 40% in their prior relative proportions. ECMWF 9/28 and
+    GFS 13/28 are resolutions of the SAME slot, never extra members.
+    When ECMWF or every independent peer is absent, fail closed: producing a
+    "60/40" blended map would mislabel its weight policy.
+    """
+    base, seasonal = base_weights(group, d)
+    base = _specific_weights(group, pid, secondary) or base
+    slot_sources = pick_sources(available)
+    excluded = sorted(model for model in base if model not in slot_sources)
+    if 'ecmwf' not in slot_sources:
+        return {}, seasonal, excluded
+    peers = [model for model in MM_MODELS
+             if model != 'ecmwf' and model in slot_sources
+             and model in base and base[model] > 0]
+    if not peers:
+        return {}, seasonal, excluded
+    peer_total = float(sum(base[m] for m in peers))
+    return ({'ecmwf': 0.60, **{m: 0.40 * float(base[m]) / peer_total
+                              for m in peers}}, seasonal, excluded)
+
+
 def weights(group, d, available, pid=None, secondary=False):
     """وزن نهایی مدل‌ها (جمع = ۱). available: مدل‌هایی که این پارامتر/گام را دارند و فیلدشان آماده است.
     خروجی: (dict مدل→وزن, فصل, مدل‌های حذف‌شده از وزن پایه)."""
+    if os.getenv('MM_ECMWF_SHARE_POLICY', 'legacy').strip().lower() == 'strict60':
+        return strict_ecmwf_share_weights(group, d, available, pid, secondary)
     base, s = base_weights(group, d)
     base = _specific_weights(group, pid, secondary) or base
     av = [m for m in pick_sources(available) if m in base and m not in EXCLUDED]
