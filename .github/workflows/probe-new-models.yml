@@ -21,6 +21,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_model_source_inventory_probe.py' -v
       - name: Verify OM grid discovery tests without network
         run: python -m unittest discover -s tests -p 'test_model_grid_shape_probe.py' -v
+      - name: Test field-level candidate quality without network
+        run: python -m unittest discover -s tests -p 'test_model_candidate_field_qc.py' -v
       - name: Install read-only S3 metadata and OM-header dependencies
         run: pip install 'fsspec>=2024.6' 's3fs>=2024.6' 'omfiles>=1.0'
       - name: Read seven real latest.json manifests (no NWP array downloads)
@@ -31,6 +33,10 @@ jobs:
         run: |
           python model_grid_shape_probe.py --json-out outputs/model-grid-shapes.json
           test -s outputs/model-grid-shapes.json
+      - name: Probe actual 16x16 sampled weather fields without publishing
+        run: |
+          python model_candidate_field_qc.py --models aigfs grapes jma --json-out outputs/model-field-qc.json
+          test -s outputs/model-field-qc.json
       - name: Archive source availability without altering producer or host
         if: always()
         uses: actions/upload-artifact@v4
@@ -39,5 +45,6 @@ jobs:
           path: |
             outputs/model-probe.json
             outputs/model-grid-shapes.json
+            outputs/model-field-qc.json
           if-no-files-found: ignore
           retention-days: 7
