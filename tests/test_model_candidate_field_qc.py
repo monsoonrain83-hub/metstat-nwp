@@ -63,6 +63,20 @@ class TestCandidateFieldQC(unittest.TestCase):
         r=probe_model("jma",fetched,lambda uri,vars: {"temperature_2m":sampled(uri,vars)["temperature_2m"]})
         self.assertFalse(r["sample_qc_passed"])
 
+    def test_precipitation_must_use_forecast_not_analysis_step(self):
+        checked = []
+        def src(path):
+            return {"reference_time": RUN, "valid_times": [RUN, VALID],
+                    "variables": ["temperature_2m", "geopotential_height_500hPa",
+                                  "precipitation"]}
+        def sampler(uri, variables):
+            checked.append(uri)
+            return sampled(uri, variables)
+        result = probe_model("grapes", src, sampler)
+        self.assertTrue(result["sample_qc_passed"], result)
+        self.assertEqual(result["valid_utc"], VALID)
+        self.assertTrue(checked[0].endswith("2026-11-23T1800.om"))
+
     def test_unapproved_source_and_missing_run(self):
         with self.assertRaises(ValueError):
             probe_model("kma",fetched,sampled)
