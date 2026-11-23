@@ -1,9 +1,13 @@
 import unittest
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
+from pathlib import Path
+from tempfile import TemporaryDirectory
+import json
 
 from ai_model_sources import (
-    aifs_request, aigfs_url, has_grib_record, probe_aigfs, validate,
+    aifs_request, aigfs_url, aigfs_byte_range, has_grib_record,
+    matching_aigfs_records, probe_aigfs, stage_aigfs_grib, validate,
 )
 from nwp_unified_resolution import select_frame_source
 
@@ -79,6 +83,85 @@ class Stage27Sources(unittest.TestCase):
         r = RUN.replace(hour=6)
         self.assertIsNone(select_frame_source(
             "ecmwf", "z500", r, r + timedelta(hours=360), lambda *a: True))
+
+
+    def test_aigfs_duplicate_precipitation_is_ambiguous(self):
+        duplicated = (
+            "1:0:d=2026112312:APCP:surface:6-12 hour acc fcst:\n"
+            "2:26:d=2026112312:APCP:surface:6-12 hour acc fcst:\n")
+        self.assertFalse(has_grib_record(duplicated, "precipitation", RUN, 12))
+        self.assertEqual(len(matching_aigfs_records(
+            duplicated, "precipitation", RUN, 12)), 2)
+        with self.assertRaisesRegex(ValueError, "ambiguous"):
+            aigfs_byte_range(duplicated, RUN, 12, "precipitation")
+
+    def test_aigfs_cycle_forecast_window_and_parameter_exact(self):
+        self.assertTrue(has_grib_record(INDEX, "z500", RUN, 12))
+        self.assertTrue(has_grib_record(INDEX, "precipitation", RUN, 12))
+        self.assertFalse(has_grib_record(INDEX, "precipitation", RUN, 6))
+        self.assertFalse(has_grib_record(INDEX, "z500", RUN, 6))
+        self.assertFalse(has_grib_record(INDEX, "z500", RUN.replace(hour=0), 12))
+        self.assertFalse(has_grib_record(INDEX, "precipitation", RUN, 0))
+
+    def test_aigfs_range_exact_boundaries(self):
+        self.assertEqual(aigfs_byte_range(INDEX, RUN, 12, "z500"), (0, 49))
+        with self.assertRaisesRegex(ValueError, "cannot bound"):
+            aigfs_byte_range(INDEX, RUN, 12, "precipitation")
+        with self.assertRaisesRegex(ValueError, "strictly increasing"):
+            aigfs_byte_range("1:50:d=2026112312:HGT:500 mb:12 hour fcst:\n"
+                             "2:40:d=2026112312:TMP:500 mb:12 hour fcst:\n",
+                             RUN, 12, "z500")
+
+    def test_aigfs_bounded_download_staged_only(self):
+        header = b"GRIB" + b"\x00\x00\x00\x02" + (24).to_bytes(8, "big")
+        raw = header + b"DATA" + b"7777"
+        index = "1:0:d=2026112312:HGT:500 mb:12 hour fcst:\n" + (
+            "2:24:d=2026112312:TMP:500 mb:12 hour fcst:\n")
+        url = aigfs_url(RUN, 12, "z500")
+        class Response:
+            def __init__(self, target, payload, status=200, headers=None):
+                self.target = target
+                self.payload = payload
+                self.status = status
+                self.headers = headers or {}
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+            def geturl(self): return self.target
+            def read(self, n): return self.payload[:n]
+        responses = [Response(url, index.encode("ascii")),
+                     Response(url[:-4], raw, 206, {"Content-Range": "bytes 0-23/100"})]
+        with TemporaryDirectory() as tmp:
+            with patch("ai_model_sources.urlopen", side_effect=responses) as fetch:
+                output = stage_aigfs_grib(RUN, 12, "z500", Path(tmp))
+            self.assertEqual(output.read_bytes(), raw)
+            self.assertEqual(fetch.call_count, 2)
+            self.assertEqual(fetch.call_args.args[0].headers["Range"], "bytes=0-23")
+            info = json.loads(output.with_suffix(".json").read_text())
+            self.assertEqual(info["source_run_time"], RUN.isoformat())
+            self.assertEqual(info["state"], "staged_only_requires_field_and_geometry_qc")
+            self.assertFalse(info["published"])
+            with self.assertRaises(FileExistsError):
+                stage_aigfs_grib(RUN, 12, "z500", Path(tmp))
+
+    def test_range_http_200_refused_even_with_grib_bytes(self):
+        raw = b"GRIB" + b"\x00\x00\x00\x02" + (24).to_bytes(8, "big") + b"DATA7777"
+        index = ("1:0:d=2026112312:HGT:500 mb:12 hour fcst:\n"
+                 "2:24:d=2026112312:TMP:500 mb:12 hour fcst:\n")
+        url = aigfs_url(RUN, 12, "z500")
+        class Resp:
+            def __init__(self, target, data):
+                self.target, self.data = target, data
+                self.status, self.headers = 200, {}
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+            def geturl(self): return self.target
+            def read(self, n): return self.data[:n]
+        with TemporaryDirectory() as tmp:
+            with patch("ai_model_sources.urlopen", side_effect=[
+                    Resp(url, index.encode()), Resp(url[:-4], raw)]):
+                with self.assertRaisesRegex(ValueError, "ignored bounded Range"):
+                    stage_aigfs_grib(RUN, 12, "z500", Path(tmp))
+            self.assertEqual(list(Path(tmp).glob("*")), [])
 
 
 if __name__ == "__main__":
