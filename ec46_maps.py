@@ -109,7 +109,7 @@ def main():
     if not a.host and not a.out: sys.exit('--host یا --out لازم است')
     if a.mock: N.z500_clim_at = lambda R, d: None
     up = N.Uploader(a.host, a.key, a.out)
-    MEMB = []; failed=[]
+    MEMB = []; failed=[]; total_maps = 0
     for mk, om in (('ec46c', 'ecmwf_ec46'), ('ec46m', 'ecmwf_ec46_ensemble_mean')):
         if mk == 'ec46c' and a.mock: continue
         R = collect(a.mock, om)
@@ -126,10 +126,13 @@ def main():
             cum = cum + np.nan_to_num(p); o = dict(p24=(np.maximum(p, 0), lo, la), ptot=(cum.copy(), lo, la))
             if np.isfinite(tm[k - 1]).any(): o['t2m'] = (tm[k - 1], lo, la)
             prods[k] = o
-        n = E.make_model(up, mk, t0, prods, a); log(f'پایان {mk}: {n} نقشه')
+        n = E.make_model(up, mk, t0, prods, a); total_maps += n; log(f'پایان {mk}: {n} نقشه')
         if mk == 'ec46m':
             try: publish_weekly_absolute(up,t0,lo,la,pr,tm)
             except Exception as exc: failed.append('ecwkabs'); log(f'✗ EC46 هفتگی مطلق: {exc}')
+    if total_maps == 0 and not a.mock:
+        failed.append('no-new-ec46-maps')
+        log('✗ EC46: هیچ نقشه تازه‌ای تولید نشد؛ نتیجه موفق گزارش نمی‌شود')
     if failed: log('✗ پردازش ناقص: '+','.join(failed))
     sys.exit(2 if failed else 0)
 
