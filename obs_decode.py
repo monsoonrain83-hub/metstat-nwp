@@ -16,6 +16,10 @@ def decode_synop(raw):
     sec3 = []
     if "333" in g:
         k = g.index("333"); sec3 = g[k + 1:]; g = g[:k]
+        # Section 5 (555) and section 4 (444) have their own group meanings.
+        # In particular, 1xxxx/2xxxx groups after 555 are NOT Tx/Tn.
+        for boundary in ("444", "555"):
+            if boundary in sec3: sec3 = sec3[:sec3.index(boundary)]
     kt = iw in (3, 4); fac = 0.514444 if kt else 1.0
     if len(g) > 3:
         ir = g[2][0]; d = g[3]
@@ -45,10 +49,15 @@ def decode_synop(raw):
             elif c == "6" and r["rr"] is None and x[1:4].isdigit() and x[4].isdigit():
                 n = int(x[1:4]); mm = 0.0 if n == 990 else (n - 990) / 10 if n > 990 else float(n)
                 r["rr"] = mm; r["rr_h"] = {"1": 6, "2": 12, "3": 18, "4": 24, "5": 1, "6": 2, "7": 3, "8": 9, "9": 15}.get(x[4])
+    later_section3_group = False
     for x in sec3:
         if len(x) != 5: continue
-        if x[0] == "1" and r["tmax"] is None: r["tmax"] = _sgn(x[1], x[2:])
-        elif x[0] == "2" and r["tmin"] is None: r["tmin"] = _sgn(x[1], x[2:])
+        # FM-12 section-3 Tx/Tn groups (1snTxTxTx / 2snTnTnTn) occur
+        # before groups 3..9. Local groups such as "333 55093 21865"
+        # are not minimum temperatures (-86.5 C in the example).
+        if x[0] in "3456789": later_section3_group = True
+        if x[0] == "1" and not later_section3_group and r["tmax"] is None: r["tmax"] = _sgn(x[1], x[2:])
+        elif x[0] == "2" and not later_section3_group and r["tmin"] is None: r["tmin"] = _sgn(x[1], x[2:])
         elif x[0] == "7" and x[1:].isdigit() and r["rr24_7"] is None:
             n = int(x[1:]); r["rr24_7"] = 0.0 if n == 9999 else n / 10
         elif x[:3] == "910" and x[3:].isdigit(): r["gust_ms"] = round(int(x[3:]) * fac, 1)
