@@ -175,13 +175,18 @@ def stage_aigfs_grib(run: datetime, lead: int, parameter: str, out_dir: Path,
         raise ValueError("truncated or oversized NOAA GRIB response")
     _check_grib2_message(raw)
 
+    partial_owned = linked = sidecar_owned = False
     try:
         with partial.open("xb") as fp:
+            partial_owned = True
             fp.write(raw)
         import os
-        os.link(partial, final)  # atomic no-overwrite publication within staging filesystem
+        os.link(partial, final)  # no-overwrite: never delete someone else's existing target
+        linked = True
         partial.unlink()
+        partial_owned = False
         with sidecar.open("x", encoding="utf-8") as manifest:
+            sidecar_owned = True
             manifest.write(json.dumps({
             "logical_model": "aigfs", "source_domain": "NOAA NOMADS",
             "source_run_time": run.isoformat(),
@@ -193,9 +198,12 @@ def stage_aigfs_grib(run: datetime, lead: int, parameter: str, out_dir: Path,
             }, indent=2))
         return final
     except BaseException:
-        partial.unlink(missing_ok=True)
-        final.unlink(missing_ok=True)
-        sidecar.unlink(missing_ok=True)
+        if partial_owned:
+            partial.unlink(missing_ok=True)
+        if linked:
+            final.unlink(missing_ok=True)
+        if sidecar_owned:
+            sidecar.unlink(missing_ok=True)
         raise
 
 
