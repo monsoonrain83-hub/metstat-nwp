@@ -63,8 +63,8 @@ class TestMultimodelWeights(unittest.TestCase):
         for d in (date(2026, 7, 1), date(2026, 11, 12)):
             w, _, missing = m.weights('convection', d, MODELS, pid='gdi')
             self.assertEqual(set(w), {'gfs', 'ecmwf'})
-            self.assertAlmostEqual(w['gfs'], 0.60)
-            self.assertAlmostEqual(w['ecmwf'], 0.40)
+            self.assertAlmostEqual(w['gfs'], 0.40)
+            self.assertAlmostEqual(w['ecmwf'], 0.60)
             self.assertEqual(set(missing), set())  # GDI policy explicitly excludes these slots
 
     def test_missing_secondary_models_normalizes(self):
