@@ -41,23 +41,61 @@ def aigfs_url(run: datetime, lead: int, parameter: str) -> str:
             f"aigfs.t{run:%H}z.{group}.f{lead:03d}.grib2.idx")
 
 
-def has_grib_record(index: str, parameter: str) -> bool:
-    if parameter not in ALLOWED_PARAMS:
-        raise ValueError("unsupported AI product")
+def parse_aigfs_index(index: str) -> list[dict]:
+    """Parse NOAA wgrib2 .idx offsets; reject broken order, not just keywords."""
+    records = []
     for line in index.splitlines():
         parts = line.strip().split(":")
         if len(parts) < 6 or not parts[0].isdigit() or not parts[1].isdigit():
             continue
-        name, level = parts[3].strip(), parts[4].strip().lower()
-        if parameter == "z500" and name == "HGT" and re.fullmatch(r"500\s*(?:mb|hpa)", level):
-            return True
-        if parameter == "precipitation" and name == "APCP" and level == "surface":
-            return True
-    return False
+        if not re.fullmatch(r"d=\d{10}", parts[2]):
+            continue
+        offset = int(parts[1])
+        if records and offset <= records[-1]["offset"]:
+            raise ValueError("AIGFS GRIB index offsets are not strictly increasing")
+        records.append(dict(offset=offset, init=parts[2][2:], variable=parts[3].strip(),
+                            level=parts[4].strip().lower(), forecast=parts[5].strip().lower()))
+    return records
 
 
-def probe_aigfs(run: datetime, lead: int, parameter: str, timeout: int = 15) -> dict:
-    run = validate(run, lead, "aigfs")
+def matching_aigfs_records(index: str, parameter: str, run: datetime | None = None,
+                           lead: int | None = None) -> list[dict]:
+    if parameter not in ALLOWED_PARAMS:
+        raise ValueError("unsupported AI product")
+    if run is not None:
+        if run.tzinfo is None:
+            raise ValueError("UTC-aware initialization required")
+        run = run.astimezone(timezone.utc)
+    records = parse_aigfs_index(index)
+    matches = []
+    for record in records:
+        if run is not None and record["init"] != run.strftime("%Y%m%d%H"):
+            continue
+        if parameter == "z500":
+            if record["variable"] != "HGT" or not re.fullmatch(r"500\s*(?:mb|hpa)", record["level"]):
+                continue
+            if lead is not None and not (record["forecast"] == ("analysis" if lead == 0 else f"{lead} hour fcst")):
+                continue
+        else:
+            if record["variable"] != "APCP" or record["level"] != "surface":
+                continue
+            if lead is not None:
+                if lead < 6:
+                    continue
+                # Do not confuse 0-12h accumulation with 6-12h incremental precipitation.
+                if not re.fullmatch(rf"{lead - 6}-{lead}\s+hour acc(?:\s+fcst)?", record["forecast"]):
+                    continue
+        matches.append(record)
+    return matches
+
+
+def has_grib_record(index: str, parameter: str, run: datetime | None = None,
+                    lead: int | None = None) -> bool:
+    """A unique exact record is required; duplicate APCP records are ambiguous."""
+    return len(matching_aigfs_records(index, parameter, run, lead)) == 1
+
+
+def _read_aigfs_index(run: datetime, lead: int, parameter: str, timeout: int) -> tuple[str, str]:
     url = aigfs_url(run, lead, parameter)
     req = Request(url, headers={"User-Agent": "MetStat-stage27-source-check/1.0"})
     with urlopen(req, timeout=timeout) as response:
@@ -66,9 +104,98 @@ def probe_aigfs(run: datetime, lead: int, parameter: str, timeout: int = 15) -> 
         raw = response.read(MAX_INDEX_BYTES + 1)
     if len(raw) > MAX_INDEX_BYTES:
         raise ValueError("index size limit exceeded")
-    available = has_grib_record(raw.decode("ascii"), parameter)
+    return url, raw.decode("ascii")
+
+
+def probe_aigfs(run: datetime, lead: int, parameter: str, timeout: int = 15) -> dict:
+    run = validate(run, lead, "aigfs")
+    url, index = _read_aigfs_index(run, lead, parameter, timeout)
+    matches = matching_aigfs_records(index, parameter, run, lead)
     return dict(model="aigfs", init_utc=run.isoformat(), lead_hours=lead,
-                parameter=parameter, source_index=url, verified_index=available)
+                parameter=parameter, source_index=url,
+                verified_index=len(matches) == 1,
+                matching_records=len(matches),
+                reason=("unique-record" if len(matches) == 1 else
+                        "missing-record" if not matches else "ambiguous-records"),
+                ready_for_publish=False)
+
+
+def aigfs_byte_range(index: str, run: datetime, lead: int, parameter: str) -> tuple[int, int]:
+    """Return exact indexed GRIB message bytes; last index entry has unknown length."""
+    run = validate(run, lead, "aigfs")
+    records = parse_aigfs_index(index)
+    matches = matching_aigfs_records(index, parameter, run, lead)
+    if len(matches) != 1:
+        raise ValueError("missing or ambiguous AIGFS index record")
+    rec = matches[0]
+    i = next(i for i, r in enumerate(records) if r["offset"] == rec["offset"])
+    if i + 1 >= len(records):
+        raise ValueError("index cannot bound the final GRIB record")
+    start, end = rec["offset"], records[i + 1]["offset"] - 1
+    if end < start or end - start + 1 > 64_000_000:
+        raise ValueError("invalid or oversized GRIB record range")
+    return start, end
+
+
+def _check_grib2_message(raw: bytes) -> None:
+    if (len(raw) < 20 or raw[:4] != b"GRIB" or raw[7] != 2 or
+            raw[-4:] != b"7777" or int.from_bytes(raw[8:16], "big") != len(raw)):
+        raise ValueError("incomplete or invalid GRIB2 message")
+
+
+def stage_aigfs_grib(run: datetime, lead: int, parameter: str, out_dir: Path,
+                     timeout: int = 30) -> Path:
+    """Explicit range-only staging of ONE verified-index GRIB; no upload/render."""
+    import hashlib
+    import json
+
+    run = validate(run, lead, "aigfs")
+    index_url, index = _read_aigfs_index(run, lead, parameter, timeout)
+    start, end = aigfs_byte_range(index, run, lead, parameter)
+    url = index_url[:-4]  # remove '.idx' only, preserving the official NOAA host
+    req = Request(url, headers={"User-Agent": "MetStat-stage27-source-check/1.0",
+                                "Range": f"bytes={start}-{end}"})
+    with urlopen(req, timeout=timeout) as response:
+        if not response.geturl().startswith("https://nomads.ncep.noaa.gov/"):
+            raise ValueError("NOAA data redirected outside trusted host")
+        if response.status != 206:
+            raise ValueError("NOAA server ignored bounded Range request")
+        cr = response.headers.get("Content-Range", "")
+        if not re.fullmatch(rf"bytes {start}-{end}/\d+", cr):
+            raise ValueError("NOAA returned an unexpected Content-Range")
+        raw = response.read(end - start + 2)
+    if len(raw) != end - start + 1:
+        raise ValueError("truncated or oversized NOAA GRIB response")
+    _check_grib2_message(raw)
+
+    out_dir = Path(out_dir).resolve()
+    out_dir.mkdir(parents=True, exist_ok=True)
+    final = out_dir / f"aigfs_{run:%Y%m%d%H}_{parameter}_{lead:03d}.grib2"
+    sidecar = final.with_suffix(".json")
+    if final.exists() or sidecar.exists():
+        raise FileExistsError("AI GRIB staging target already exists")
+    partial = final.with_suffix(".grib2.partial")
+    if partial.exists():
+        raise FileExistsError("AI GRIB staging partial target already exists")
+    try:
+        with partial.open("xb") as fp:
+            fp.write(raw)
+        partial.replace(final)
+        sidecar.write_text(json.dumps({
+            "logical_model": "aigfs", "source_domain": "NOAA NOMADS",
+            "source_run_time": run.isoformat(),
+            "lead_hours": lead, "parameter": parameter,
+            "index_url": index_url, "byte_range": [start, end],
+            "sha256": hashlib.sha256(raw).hexdigest(),
+            "state": "staged_only_requires_field_and_geometry_qc",
+            "published": False,
+        }, indent=2), encoding="utf-8")
+        return final
+    except BaseException:
+        partial.unlink(missing_ok=True)
+        final.unlink(missing_ok=True)
+        sidecar.unlink(missing_ok=True)
+        raise
 
 
 def aifs_request(run: datetime, lead: int, parameter: str) -> dict:
