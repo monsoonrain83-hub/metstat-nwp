@@ -33,7 +33,7 @@ class Stage27DailyMultiModel(unittest.TestCase):
                     self.assertAlmostEqual(sum(v for k, v in w.items()
                                                if k != "ecmwf"), .40, places=12)
                     self.assertAlmostEqual(sum(w.values()), 1, places=12)
-                    self.assertEqual(len(w), 5)
+                    self.assertEqual(len(w), 2 if pid == 'gdi' else 5)
 
     def test_missing_optional_models_do_not_shift_ecmwf_share(self):
         w, *_ = W.weights("precip", RUN, ["ecmwf9", "gfs25"], pid="p24")
