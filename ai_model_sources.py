@@ -150,6 +150,13 @@ def stage_aigfs_grib(run: datetime, lead: int, parameter: str, out_dir: Path,
     import json
 
     run = validate(run, lead, "aigfs")
+    out_dir = Path(out_dir).resolve()
+    out_dir.mkdir(parents=True, exist_ok=True)
+    final = out_dir / f"aigfs_{run:%Y%m%d%H}_{parameter}_{lead:03d}.grib2"
+    sidecar = final.with_suffix(".json")
+    partial = final.with_suffix(".grib2.partial")
+    if final.exists() or sidecar.exists() or partial.exists():
+        raise FileExistsError("AI GRIB staging target already exists")
     index_url, index = _read_aigfs_index(run, lead, parameter, timeout)
     start, end = aigfs_byte_range(index, run, lead, parameter)
     url = index_url[:-4]  # remove '.idx' only, preserving the official NOAA host
@@ -168,20 +175,14 @@ def stage_aigfs_grib(run: datetime, lead: int, parameter: str, out_dir: Path,
         raise ValueError("truncated or oversized NOAA GRIB response")
     _check_grib2_message(raw)
 
-    out_dir = Path(out_dir).resolve()
-    out_dir.mkdir(parents=True, exist_ok=True)
-    final = out_dir / f"aigfs_{run:%Y%m%d%H}_{parameter}_{lead:03d}.grib2"
-    sidecar = final.with_suffix(".json")
-    if final.exists() or sidecar.exists():
-        raise FileExistsError("AI GRIB staging target already exists")
-    partial = final.with_suffix(".grib2.partial")
-    if partial.exists():
-        raise FileExistsError("AI GRIB staging partial target already exists")
     try:
         with partial.open("xb") as fp:
             fp.write(raw)
-        partial.replace(final)
-        sidecar.write_text(json.dumps({
+        import os
+        os.link(partial, final)  # atomic no-overwrite publication within staging filesystem
+        partial.unlink()
+        with sidecar.open("x", encoding="utf-8") as manifest:
+            manifest.write(json.dumps({
             "logical_model": "aigfs", "source_domain": "NOAA NOMADS",
             "source_run_time": run.isoformat(),
             "lead_hours": lead, "parameter": parameter,
@@ -189,7 +190,7 @@ def stage_aigfs_grib(run: datetime, lead: int, parameter: str, out_dir: Path,
             "sha256": hashlib.sha256(raw).hexdigest(),
             "state": "staged_only_requires_field_and_geometry_qc",
             "published": False,
-        }, indent=2), encoding="utf-8")
+            }, indent=2))
         return final
     except BaseException:
         partial.unlink(missing_ok=True)
