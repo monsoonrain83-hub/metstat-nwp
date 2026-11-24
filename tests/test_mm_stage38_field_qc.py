@@ -26,8 +26,9 @@ class TestStage38InputQC(unittest.TestCase):
         self.assertTrue(np.all(arr == 0))
 
     def test_masked_values_remain_nan_and_unmasked_remain_finite(self):
-        original = np.ma.array(np.ones((4, 5)), mask=False)
-        original.mask[0, 0] = True
+        mask = np.zeros((4, 5), dtype=bool)
+        mask[0, 0] = True
+        original = np.ma.array(np.ones((4, 5)), mask=mask)
         arr = prepare_field(original)
         self.assertTrue(np.isnan(arr[0, 0]))
         self.assertEqual(arr[1, 1], 1.0)
@@ -62,7 +63,7 @@ class TestStage38InputQC(unittest.TestCase):
         with self.assertRaisesRegex(MultiModelFieldError, "grid mismatch"):
             validate_blend_payloads({
                 "ecmwf": {"f": np.zeros((5, 6))},
-                "gfs": {"f": np.zeros((5, 1))},
+                "gfs": {"f": np.zeros((5, 2))},
             })
 
     def test_reject_wrong_contour_or_wind_grids(self):
