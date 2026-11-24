@@ -72,7 +72,10 @@ class MMCombiner:
         if not 0 <= (vt - run).total_seconds() / 3600 <= 180: return      # فقط پارامترهای مالتی‌مدل (بدون گروه وزنی مثل w10 رد می‌شوند)
         if field is None: return
         try:
-            checked_field = prepare_field(field)
+            # Warning/hazard classes may be spatially rare: a one-cell event
+            # is real. Continuous fields require at least 1% valid coverage.
+            sparse = s.nm.PARAMS[pid].get('kind') == 'sec'
+            checked_field = prepare_field(field, min_fraction=0.0 if sparse else 0.01)
         except MultiModelFieldError as exc:
             s.nm.log(f'  ! MultiModel rejected {mkey} {rk}/{pid} {vt:%Y%m%d%H}: {exc}')
             return
@@ -175,7 +178,7 @@ class MMCombiner:
         rid = f'{run:%Y%m%d%H}'; R = s.eng.regions[rk]; D = {m: s.load(s.idx[k][src]) for m, src in pick.items()}
         # All sources must be on the same 2-D render grid before any output
         # state is begun. Never implicitly broadcast/regrid or publish junk.
-        validate_blend_payloads(D)
+        validate_blend_payloads(D, min_fraction=0.0 if P0['kind'] == 'sec' else 0.01)
         s.begin(run)
         wts, season, _ = W.weights(s.grp(pid), vt, list(pick.values()), pid=pid, secondary=(P0['kind'] == 'sec'))
         if not wts: return 0
