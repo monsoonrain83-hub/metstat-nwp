@@ -68,6 +68,41 @@ def regrid_nearest(arr, lon, lat):
 
 # ---------------------------------------------------------------- ۱) ECMWF EC46 هفتگی (Open-Meteo)
 SAPI = 'https://seasonal-api.open-meteo.com/v1/seasonal'
+def _ec46_request(get, params, deadline, clock=time.monotonic, sleep=time.sleep):
+    """Bounded retry; a 429 must not immediately trigger another model alias."""
+    import email.utils
+    limited = False
+    for attempt in range(3):
+        remaining = deadline - clock()
+        if remaining <= 1:
+            break
+        delay = 4 * (attempt + 1)
+        try:
+            r = get(SAPI, params=params, timeout=(min(15, remaining / 2), min(120, remaining / 2)))
+            if r.status_code == 200:
+                return r.json(), False
+            log(f'  EC46 weekly HTTP {r.status_code}: {r.text[:160]}')
+            if r.status_code == 429:
+                limited = True
+                delay = 65 * (attempt + 1)
+                raw = r.headers.get('Retry-After', '')
+                try:
+                    delay = max(delay, float(raw))
+                except (ValueError, TypeError):
+                    try:
+                        retry_at = email.utils.parsedate_to_datetime(raw)
+                        delay = max(delay, retry_at.timestamp() - time.time())
+                    except (ValueError, TypeError, OverflowError, AttributeError):
+                        pass
+            elif r.status_code == 400:
+                return None, limited
+        except Exception as e:
+            log(f'  {type(e).__name__}')
+        if attempt == 2 or clock() + delay >= deadline:
+            break
+        sleep(delay)
+    return None, limited
+
 def ec_weekly(mock=False):
     import requests
     STEP = 1.5; lo = np.arange(CROP[0], CROP[1] + 1e-6, STEP); la = np.arange(CROP[2], CROP[3] + 1e-6, STEP); LON, LAT = np.meshgrid(lo, la); fl, fa = LON.ravel(), LAT.ravel(); n = len(fl)
@@ -76,24 +111,18 @@ def ec_weekly(mock=False):
         ta = np.stack([np.sin(LON / 7 + k) * 2.5 + (LAT - 30) * 0.05 for k in range(W)]).astype(np.float32); pa = np.stack([np.cos(LAT / 4 - k) * 12 for k in range(W)]).astype(np.float32)
         return t0, lo, la, ta, pa
     vars_ = 'temperature_2m_anomaly,precipitation_anomaly'; got = {}; t_ = None; unit = {}
-    tdead = time.time() + 900                                  # r82: بودجهٔ زمانی کل دریافت EC46؛ بعد از ۱۰ دقیقه رها می‌شود (قبلاً ساعت‌ها در ReadTimeout می‌ماند)
+    tdead = time.monotonic() + 900                                  # r82: بودجهٔ زمانی کل دریافت EC46؛ بعد از ۱۰ دقیقه رها می‌شود (قبلاً ساعت‌ها در ReadTimeout می‌ماند)
     for model in ('ecmwf_ec46_ensemble_mean', 'ecmwf_ec46', None):
         got.clear(); ok = True; B = 10                           # r85: دسته‌های کوچک‌تر (۲۵ نقطه × اعضا از IP گیت‌هاب ReadTimeout می‌داد)
         for s in range(0, n, B):
             p = dict(latitude=','.join(f'{x:.2f}' for x in fa[s:s + B]), longitude=','.join(f'{x:.2f}' for x in fl[s:s + B]), weekly=vars_, timezone='GMT')
             if model: p['models'] = model
-            j = None
-            for k in range(2):
-                if time.time() > tdead: break
-                try:
-                    r = requests.get(SAPI, params=p, timeout=(15, 120))
-                    if r.status_code == 200: j = r.json(); break
-                    log(f'  EC46 هفتگی HTTP {r.status_code}: {r.text[:160]}')
-                    if r.status_code == 400: break
-                except Exception as e: log(f'  {type(e).__name__}')
-                time.sleep(4 * (k + 1))
+            j, limited = _ec46_request(requests.get, p, tdead)
+            if limited:
+                log('  EC46 rate limit persists; keep previous maps, do not retry other model aliases')
+                return None
             if j is None: ok = False; break
-            if time.time() > tdead: ok = False; break
+            if time.monotonic() > tdead: ok = False; break
             for i, o in enumerate(j if isinstance(j, list) else [j]):
                 w = o.get('weekly') or {}; unit.update(o.get('weekly_units') or {})
                 if not w.get('time'): ok = False; break
