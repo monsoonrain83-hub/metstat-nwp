@@ -9,6 +9,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from threading import Lock
 from types import SimpleNamespace
+from unittest.mock import patch
 
 import numpy as np
 
@@ -142,6 +143,27 @@ class TestStage38InputQC(unittest.TestCase):
             c.sink("ecmwf", "iran", "p24", RUN, VALID, np.zeros((5, 6)), {})
             c.sink("gfs", "iran", "p24", RUN, VALID, np.zeros((5, 6)), {})
             self.assertEqual(c.decide(k), {"ecmwf": "ecmwf", "gfs": "gfs"})
+
+    def test_load_closes_npz_even_after_success(self):
+        class FakeArchive:
+            files = ["f"]
+            entered = False
+            exited = False
+            def __enter__(self):
+                self.entered = True
+                return self
+            def __exit__(self, *exc):
+                self.exited = True
+            def __getitem__(self, key):
+                return np.ones((3, 4), dtype=np.float32)
+        archive = FakeArchive()
+        c = MMCombiner.__new__(MMCombiner)
+        with patch("mm_maps.np.load", return_value=archive) as loader:
+            got = c.load("staged.npz")
+        loader.assert_called_once_with("staged.npz", allow_pickle=False)
+        self.assertTrue(archive.entered)
+        self.assertTrue(archive.exited)
+        self.assertEqual(got["f"].shape, (3, 4))
 
     def test_make_rejects_mismatched_staged_grids_before_begin(self):
         with TemporaryDirectory() as directory:
