@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Audit actual published model files; do not mistake a green action or a fresh 'run' for coverage."""
-from collections import Counter
+from collections import defaultdict
 from datetime import datetime, timezone
 import json, argparse, os, sys
 from urllib.request import Request, urlopen
@@ -21,6 +21,20 @@ RULES={
 def parse_run(s):
  try:return datetime.strptime(str(s),'%Y%m%d%H').replace(tzinfo=UTC)
  except ValueError:return None
+def _frame_identity(item):
+ """A distinct published forecast must have an actual valid time or lead.
+
+ A repeated manifest row must not masquerade as multiple forecast frames.
+ Items with no time identity are unverifiable, not valid products.
+ """
+ valid = item.get('v')
+ if valid is not None and str(valid).strip():
+  return ('valid', str(valid).strip())
+ lead = item.get('s')
+ if lead is not None and str(lead).strip():
+  return ('lead', str(lead).strip())
+ return None
+
 def audit(man,now=None):
  now=now or datetime.now(UTC);models=man.get('models') or {};items=man.get('items') or []
  result={};flows=set()
@@ -29,17 +43,30 @@ def audit(man,now=None):
   age=None if dt is None else round((now-dt).total_seconds()/3600,1)
   # Live host manifest v2 omits run on each item: its items list is
   # by definition for the current model run (older items go to items_prev).
-  counter=Counter(x.get('p') for x in items if x.get('m')==m and (not x.get('run') or str(x.get('run'))==str(run)))
+  frame_ids=defaultdict(set); unverifiable=set()
+  for x in items:
+   if not isinstance(x,dict) or x.get('m')!=m or x.get('p') not in variables:
+    continue
+   if x.get('run') and str(x.get('run'))!=str(run):
+    continue
+   key=_frame_identity(x)
+   if key is None:
+    unverifiable.add(x['p'])
+   else:
+    frame_ids[x['p']].add(key)
+  counter={p:len(frame_ids[p]) for p in variables}
   gaps={v:[counter[v],required] for v,required in variables.items() if counter[v]<required}
   problems=[]
   if not obj:problems.append('model_missing')
   if not dt:problems.append('run_missing')
+  elif age < -6:problems.append('run_from_future')
   elif age>max_age:problems.append('stale_run')
+  if unverifiable:problems.append('unverifiable_forecast_time')
   if obj and obj.get('status')!='complete':problems.append('not_complete')
   if gaps:problems.append('products_missing')
   if problems:flows.add(wf)
   result[m]={'run':run,'status':obj.get('status','missing'),'done':obj.get('done',0),
-     'age_hours':age,'variable_counts':{v:counter[v] for v in variables},
+     'age_hours':age,'variable_counts':counter,'unverifiable_parameters':sorted(unverifiable),
      'required_counts':variables,'gaps':gaps,'problems':problems}
  return {'checked_utc':now.isoformat(),'healthy':not flows,'models':result,
    'suggested_workflow_dispatches':sorted(flows)}
