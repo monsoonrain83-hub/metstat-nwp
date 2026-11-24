@@ -29,8 +29,22 @@ DOMAINS = {
 NOMINAL_SINGLE_SOURCE = {'gem':'15 km', 'icon':'13 km', 'ukmo':'10 km'}
 FIELDS = {
     't2m': ('temperature_2m', '°C', -60.0, 50.0),
+    'z850': ('geopotential_height_850hPa', 'dam', 80.0, 200.0),
+    'z700': ('geopotential_height_700hPa', 'dam', 230.0, 360.0),
     'z500': ('geopotential_height_500hPa', 'dam', 480.0, 610.0),
+    'z300': ('geopotential_height_300hPa', 'dam', 810.0, 1040.0),
+    'z200': ('geopotential_height_200hPa', 'dam', 1060.0, 1340.0),
     'mslp': ('pressure_msl', 'hPa', 960.0, 1060.0),
+}
+# Physically conservative *global median* ranges (geopotential height in dam).
+# Source Open-Meteo field names must explicitly say geopotential_height.
+# The ranges discriminate metres from decametres; they are NOT plot clipping.
+Z_DAM_MEDIANS = {
+    'z850': (50.0, 240.0),
+    'z700': (190.0, 390.0),
+    'z500': (350.0, 670.0),
+    'z300': (700.0, 1130.0),
+    'z200': (930.0, 1500.0),
 }
 PALETTE = [
     '#20278f','#244fbc','#317bd1','#53acc9','#8dcac9','#d0e3ce',
@@ -44,9 +58,19 @@ def to_units(param, field):
     if param == 't2m':
         if med > 130: a = a - 273.15
         if not (-110 < float(np.nanmedian(a)) < 65): raise ValueError('unphysical T2m')
-    elif param == 'z500':
-        if med > 1500: a = a / 10.0
-        if not (350 < float(np.nanmedian(a)) < 670): raise ValueError('unphysical Z500')
+    elif param in Z_DAM_MEDIANS:
+        # Do not use the old Z500 1500 m threshold for Z850: a physically
+        # valid ~1400 m Z850 field was wrongly mistaken for ~1400 dam.
+        # Only explicit dam/m representations are accepted; geopotential
+        # m²/s² and unknown units must not be silently reinterpreted.
+        lower, upper = Z_DAM_MEDIANS[param]
+        in_dam = lower <= med <= upper
+        in_m = lower * 10 <= med <= upper * 10
+        if in_dam == in_m:
+            raise ValueError('unsupported or ambiguous geopotential height units: ' + param)
+        if in_m: a = a / 10.0
+        if not (lower <= float(np.nanmedian(a)) <= upper):
+            raise ValueError('unphysical geopotential height: ' + param)
     elif param == 'mslp':
         if med > 3000: a = a / 100.0
         if not (850 < float(np.nanmedian(a)) < 1120): raise ValueError('unphysical MSLP')
