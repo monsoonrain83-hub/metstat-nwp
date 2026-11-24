@@ -1,21 +1,21 @@
 {
- "generated": "2026-11-17T14:21:34+00:00",
+ "generated": "2026-11-24T15:51:09+00:00",
  "mode": "REVIEW",
- "registry_n": 1028,
- "registry_active": 774,
+ "registry_n": 1200,
+ "registry_active": 777,
  "sources": "atlas,isd_awc",
  "source_rows": 1294,
  "status": {
-  "match": 1076,
-  "new_candidate": 161,
+  "match": 1247,
   "coord_conflict": 15,
-  "possible_duplicate": 42
+  "possible_duplicate": 32
  },
- "high_confidence_new": 161,
+ "high_confidence_new": 0,
  "approved_exported": 0,
  "registry_issues": {
-  "wmo_not_reporting": 144,
-  "icao_without_wmo": 173
+  "wmo_not_reporting": 298,
+  "missing_elevation": 2,
+  "icao_without_wmo": 170
  },
  "limits": []
 }

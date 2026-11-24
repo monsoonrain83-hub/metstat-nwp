@@ -1,5 +1,4 @@
 ﻿id,name,issue,detail
-17188,Uşak Arpt,wmo_not_reporting,17188
 345810,Urda,wmo_not_reporting,34581
 350670,Esil',wmo_not_reporting,35067
 354490,Nura,wmo_not_reporting,35449
@@ -67,7 +66,6 @@
 405500,Abdaly,wmo_not_reporting,40550
 405510,Mitribah,wmo_not_reporting,40551
 405530,Sabriyah,wmo_not_reporting,40553
-405680,Bubyan Island,wmo_not_reporting,40568
 405700,Salmy,wmo_not_reporting,40570
 405730,Abraque Mazraa,wmo_not_reporting,40573
 405800,Rabyah,wmo_not_reporting,40580
@@ -78,6 +76,7 @@
 405900,Managish,wmo_not_reporting,40590
 405920,Wafra,wmo_not_reporting,40592
 405940,Nuwasib,wmo_not_reporting,40594
+40602,Rabiah,wmo_not_reporting,40602
 406040,Sinjar,wmo_not_reporting,40604
 406050,Zakho,wmo_not_reporting,40605
 406060,Duhook,wmo_not_reporting,40606
@@ -89,11 +88,73 @@
 406200,Halabcha,wmo_not_reporting,40620
 406220,Chem-Chamal,wmo_not_reporting,40622
 406230,Sulymaniyah,wmo_not_reporting,40623
+40627,Al Kaem,wmo_not_reporting,40627
+40629,Anah,wmo_not_reporting,40629
+40631,Baiji,wmo_not_reporting,40631
+40632,Tuz,wmo_not_reporting,40632
+40633,Tikrit,wmo_not_reporting,40633
+40634,Hadithah,wmo_not_reporting,40634
+40637,Khanaqin,wmo_not_reporting,40637
+40638,Al Khalis,wmo_not_reporting,40638
+40642,Rutbah,wmo_not_reporting,40642
+40645,Ramadi,wmo_not_reporting,40645
+40646,Heet,wmo_not_reporting,40646
+40655,Ainaltamer,wmo_not_reporting,40655
+40656,Kerbela,wmo_not_reporting,40656
+40657,Hella,wmo_not_reporting,40657
 406580,Nukheb,wmo_not_reporting,40658
+40660,Azizyah,wmo_not_reporting,40660
+40662,Badrah,wmo_not_reporting,40662
+40665,Kut-Al-Hai,wmo_not_reporting,40665
+40666,Ali Algharbi,wmo_not_reporting,40666
+40672,Diwaniya,wmo_not_reporting,40672
+40674,Samawa,wmo_not_reporting,40674
+40675,Rafaei,wmo_not_reporting,40675
+40676,Nasiriya,wmo_not_reporting,40676
+40680,Amarah,wmo_not_reporting,40680
+40690,Basrah Airport,wmo_not_reporting,40690
+40691,Al-Fao,wmo_not_reporting,40691
+40705,MESHKINSHAHR,wmo_not_reporting,40705
+40707,SAHAND,wmo_not_reporting,40707
+40714,GERMI,wmo_not_reporting,40714
+40744,GOLMAKAN,wmo_not_reporting,40744
+40749,ZARINEH OBATO,wmo_not_reporting,40749
+40753,DOUSHAN TAPPEH,wmo_not_reporting,40753
+40758,Garmsar,missing_elevation,
 407670,Nowjeh,wmo_not_reporting,40767
+40773,NORABADE LORESTAN,wmo_not_reporting,40773
+40775,MALAYER,wmo_not_reporting,40775
+40776,ALESHTAR,wmo_not_reporting,40776
+40786,POLDOKHTAR,wmo_not_reporting,40786
+40790,ROBAT POSHTBADAM,wmo_not_reporting,40790
+40795,DEZFUL,wmo_not_reporting,40795
 408020,Esfahan/Khatami,wmo_not_reporting,40802
+40803,KABOOTARABAD,wmo_not_reporting,40803
+40805,JIRANDEH,wmo_not_reporting,40805
+40813,RAMHORMOZ,wmo_not_reporting,40813
+40815,SHAHREZA,wmo_not_reporting,40815
+40816,GARIZ,wmo_not_reporting,40816
+40825,FARIMAN,wmo_not_reporting,40825
+40828,EGHLIDE FARS,wmo_not_reporting,40828
 408300,Omidieh,wmo_not_reporting,40830
-408690,Farsi Island,wmo_not_reporting,40869
+40839,ANAR,wmo_not_reporting,40839
+40840,MARVAST,wmo_not_reporting,40840
+40842,Darrehshahr,wmo_not_reporting,40842
+40843,SHAHDAD,wmo_not_reporting,40843
+40844,SAD DOROUDZAN,wmo_not_reporting,40844
+40846,BANDAR DAYLAM,wmo_not_reporting,40846
+40847,ZARGHAN,wmo_not_reporting,40847
+40857,BUSHEHR (COASTAL),wmo_not_reporting,40857
+40861,Kazerun,missing_elevation,
+40862,HASANABADE DARAB,wmo_not_reporting,40862
+40866,MIANDEH JIROFT,wmo_not_reporting,40866
+408690,NEIRIZE EARS,wmo_not_reporting,40869
+40881,JAZIREH LAVAN,wmo_not_reporting,40881
+40886,TOYSERKAN,wmo_not_reporting,40886
+40889,Siri Island,wmo_not_reporting,40889
+40890,Abu Musa,wmo_not_reporting,40890
+40895,NIKSHAHR,wmo_not_reporting,40895
+40897,KENARAK CHAHBAHAR,wmo_not_reporting,40897
 40904,Faizabad Arpt,wmo_not_reporting,40904
 409300,North-Salang,wmo_not_reporting,40930
 40932,Jabul-Saraj,wmo_not_reporting,40932
@@ -121,10 +182,101 @@
 416360,Jhang,wmo_not_reporting,41636
 416720,Rafiqui,wmo_not_reporting,41672
 41716,Rahim Yar Khan/Zayed Arpt,wmo_not_reporting,41716
+88107,ARDEBIL FOROUDGAH,wmo_not_reporting,88107
+88113,Kalaleh (Airport),wmo_not_reporting,88113
+88118,ZANJAN,wmo_not_reporting,88118
+99200,MARAND,wmo_not_reporting,99200
+99202,BILEH SAVAR,wmo_not_reporting,99202
+99203,Poldasht,wmo_not_reporting,99203
+99209,CHALDORAN,wmo_not_reporting,99209
+99214,GHARAHZIAHADIN,wmo_not_reporting,99214
+99231,SAREYN,wmo_not_reporting,99231
+99232,NAMIN,wmo_not_reporting,99232
+99233,NIR,wmo_not_reporting,99233
+99234,Tabriz (Sharq),wmo_not_reporting,99234
+99237,Minudasht,wmo_not_reporting,99237
+99239,BONAB,wmo_not_reporting,99239
+99240,GONBADE KAWOOS,wmo_not_reporting,99240
+99241,Gorgan (Hashemabad),wmo_not_reporting,99241
+99242,Bandar-E-Torkaman,wmo_not_reporting,99242
+99246,KAHRIZ,wmo_not_reporting,99246
+99248,BOSTANABAD,wmo_not_reporting,99248
+99249,TALESH,wmo_not_reporting,99249
+99262,Maneh-Va-Samalqan,wmo_not_reporting,99262
+99268,Kiyashahr,wmo_not_reporting,99268
+99271,Inchehborun,wmo_not_reporting,99271
+99272,Rasht (Agricultulal),wmo_not_reporting,99272
+99276,LAHIJAN,wmo_not_reporting,99276
+99278,NAGHADEH,wmo_not_reporting,99278
+99280,BANEH,wmo_not_reporting,99280
+99281,Masuleh,wmo_not_reporting,99281
+99282,Rudsar,wmo_not_reporting,99282
+99283,Charoymaq,wmo_not_reporting,99283
+99287,ESFARAYEN,wmo_not_reporting,99287
+99288,Oshnavyeh,wmo_not_reporting,99288
+99292,MIANDOAB,wmo_not_reporting,99292
+99295,JAJARM,wmo_not_reporting,99295
+99298,ABBAR,wmo_not_reporting,99298
+99299,Galugah,wmo_not_reporting,99299
+99300,Aliabad-E-Katul,wmo_not_reporting,99300
+99302,Deylaman,wmo_not_reporting,99302
+99304,Bandar-E-Gaz,wmo_not_reporting,99304
+99306,Bandar-E-Amirabad,wmo_not_reporting,99306
+99309,AMOL,wmo_not_reporting,99309
+99310,AVAJ,wmo_not_reporting,99310
+99314,SHAHINDEZH,wmo_not_reporting,99314
+99317,Rudbar,wmo_not_reporting,99317
+99320,CHITGAR,wmo_not_reporting,99320
+99331,JEOPHYSICS TEHRAN,wmo_not_reporting,99331
+99332,BOOKAN,wmo_not_reporting,99332
+99334,khirabad,wmo_not_reporting,99334
+99335,Garmab,wmo_not_reporting,99335
+99348,Kojur,wmo_not_reporting,99348
+99357,BALADEH,wmo_not_reporting,99357
+99360,POLSEFID,wmo_not_reporting,99360
+99361,ALASHT,wmo_not_reporting,99361
+99372,SAVEH,wmo_not_reporting,99372
+99382,Hezarkaniyan,wmo_not_reporting,99382
+99384,NAHAVAND,wmo_not_reporting,99384
+99396,HASHTGERD,wmo_not_reporting,99396
+99401,Sarayan,wmo_not_reporting,99401
+99402,Hajiabad (South Khorasan),wmo_not_reporting,99402
+99407,BOSHROOYEH,wmo_not_reporting,99407
+99409,TAFRESH,wmo_not_reporting,99409
+99417,GOLPAIGAN,wmo_not_reporting,99417
+99421,NATANZ,wmo_not_reporting,99421
+99425,KAMYARAN,wmo_not_reporting,99425
+99433,EIVAN GHARB,wmo_not_reporting,99433
+99437,KHOOR BIRJAND,wmo_not_reporting,99437
+99438,KOUHDASHT,wmo_not_reporting,99438
+99444,DOROUD,wmo_not_reporting,99444
+99445,AZNA,wmo_not_reporting,99445
+99446,SHOSHTAR,wmo_not_reporting,99446
+99447,MEIMEH,wmo_not_reporting,99447
+99455,IZEH,wmo_not_reporting,99455
+99459,BOROOJEN,wmo_not_reporting,99459
+99493,HOSEINIEH,wmo_not_reporting,99493
+99502,RAFSANJAN,wmo_not_reporting,99502
+99511,Meybod,wmo_not_reporting,99511
+99516,EIZADKHAST,wmo_not_reporting,99516
+99527,DEHDEZ,wmo_not_reporting,99527
+99528,MEHRIZ,wmo_not_reporting,99528
+99536,Dehsalam,wmo_not_reporting,99536
+99537,HENDIJAN,wmo_not_reporting,99537
+99549,ZARAND,wmo_not_reporting,99549
+99550,Jiroft,wmo_not_reporting,99550
+99561,BAVANAT,wmo_not_reporting,99561
+99567,KANGAN JAM,wmo_not_reporting,99567
+99574,HARAT,wmo_not_reporting,99574
+99575,TAKHTE JAMSHID,wmo_not_reporting,99575
+99583,FOROUDGAH LAMERD,wmo_not_reporting,99583
+99623,ZAHAK,wmo_not_reporting,99623
+99650,RASK,wmo_not_reporting,99650
+99656,ROUDAN,wmo_not_reporting,99656
+99675,GHESHM (COASTAL),wmo_not_reporting,99675
 AZUH,Nakhchivan Intl,icao_without_wmo,AZUH
 LLBS,Beer-Sheva Arpt,icao_without_wmo,LLBS
 LLER,Eilat/Ramone Arpt,icao_without_wmo,LLER
-LLHA,Haifa,wmo_not_reporting,40155
 LLHZ,Herzelia Airport,icao_without_wmo,LLHZ
 LLIB,Mahanaim I Ben Yaakov,icao_without_wmo,LLIB
 LLJR,Jerusalem/Atarot,icao_without_wmo,LLJR
@@ -181,6 +333,7 @@ OIBH,Bastak Arpt,icao_without_wmo,OIBH
 OIBJ,Jam,icao_without_wmo,OIBJ
 OIBK,Kish Island Arpt,icao_without_wmo,OIBK
 OIBP,Persian Gulf Airport,icao_without_wmo,OIBP
+OIBQ,Kharg,wmo_not_reporting,40845
 OIBS,Sirri Isl Arpt,icao_without_wmo,OIBS
 OIBV,Lavan Island,icao_without_wmo,OIBV
 OICG,Ghasre-Shirin,icao_without_wmo,OICG
@@ -198,13 +351,11 @@ OIKO,Minab,icao_without_wmo,OIKO
 OIKQ,Dayrestan / Gheshm,icao_without_wmo,OIKQ
 OIKR,Rafsanjan,icao_without_wmo,OIKR
 OIMC,Sarakhs Arpt,icao_without_wmo,OIMC
-OIMD,Gonabad,icao_without_wmo,OIMD
 OIMJ,Shahroud Arpt,icao_without_wmo,OIMJ
 OIMQ,Kashmar Arpt,icao_without_wmo,OIMQ
 OINB,Babolsar,icao_without_wmo,OINB
 OINE,Kalaleh,icao_without_wmo,OINE
 OINN,Noshahr Arpt,icao_without_wmo,OINN
-OINZ,Sari Dasht E Naz,icao_without_wmo,OINZ
 OISL,Lar,icao_without_wmo,OISL
 OISR,Lamerd,icao_without_wmo,OISR
 OISY,Yasouj Arpt,icao_without_wmo,OISY
@@ -212,7 +363,7 @@ OITL,Ardabil Intl,icao_without_wmo,OITL
 OITP,Parsabad Moghan Arpt,icao_without_wmo,OITP
 OITU,Maku,icao_without_wmo,OITU
 OIZC,Chah-Bahar Arpt,icao_without_wmo,OIZC
-OIZK,Khash,icao_without_wmo,OIZK
+OIZI,Iran Shahr,wmo_not_reporting,40879
 OJHR,H4,wmo_not_reporting,40250
 OKAJ,Ahmed Al Jaber Ab,icao_without_wmo,OKAJ
 OKAS,Ali Al Salem Ab,icao_without_wmo,OKAS
@@ -248,6 +399,7 @@ OPXY,Sukrand Agromet Observatory,wmo_not_reporting,41745
 ORAA,Al Asad Arpt,icao_without_wmo,ORAA
 ORBB,Baghdad,icao_without_wmo,ORBB
 ORBD,Balad,icao_without_wmo,ORBD
+ORBM,Mosul,wmo_not_reporting,40608
 ORBR,Bashur,icao_without_wmo,ORBR
 ORBS,Saddam,icao_without_wmo,ORBS
 ORER,Erbil Intl,icao_without_wmo,ORER
@@ -256,9 +408,10 @@ ORQW,Qayyarah West,icao_without_wmo,ORQW
 ORSH,Tikrit/Al Sahra,icao_without_wmo,ORSH
 ORSJ,Talabani Intl,icao_without_wmo,ORSJ
 ORSU,Sulaymaniyah Intl,icao_without_wmo,ORSU
+ORTF,Tel Afer,wmo_not_reporting,40603
 ORTL,Tallil/Ali,icao_without_wmo,ORTL
+ORUB,Kut,wmo_not_reporting,40664
 OSKL,Kamishly,wmo_not_reporting,40001
-OSLK,Bassel Al Assad Intl,wmo_not_reporting,40025
 OSPR,Palmyra,icao_without_wmo,OSPR
 OTBH,Al Udeid Ab,icao_without_wmo,OTBH
 OTHH,Doha / Hamad Intl,icao_without_wmo,OTHH
