@@ -10,6 +10,7 @@ import numpy as np
 from datetime import datetime, timedelta, timezone
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mm_weights as W
+from mm_field_qc import MultiModelFieldError, prepare_field, validate_blend_payloads
 
 UTC = timezone.utc
 MM_ID = 'mm'
@@ -70,9 +71,14 @@ class MMCombiner:
         if mkey not in SOURCES or run.hour not in (0, 12) or pid not in s.nm.PARAMS or pid not in s.pmm: return
         if not 0 <= (vt - run).total_seconds() / 3600 <= 180: return      # فقط پارامترهای مالتی‌مدل (بدون گروه وزنی مثل w10 رد می‌شوند)
         if field is None: return
+        try:
+            checked_field = prepare_field(field)
+        except MultiModelFieldError as exc:
+            s.nm.log(f'  ! MultiModel rejected {mkey} {rk}/{pid} {vt:%Y%m%d%H}: {exc}')
+            return
         p = os.path.join(s.dir, rk, pid, f'{run:%Y%m%d%H}'); os.makedirs(p, exist_ok=True)
         path = os.path.join(p, f'{mkey}_{vt:%Y%m%d%H}.npz'); tmp = path + '.tmp.npz'
-        z = dict(f=np.asarray(field, np.float32))
+        z = dict(f=checked_field)
         if extra.get('cont') is not None: z['c'] = np.asarray(extra['cont'], np.float32); z['cl'] = np.asarray(extra.get('cont_lvls', []), np.float32); z['cf'] = np.array(str(extra.get('cont_fmt', '%d')))
         if extra.get('barbs') is not None: z['bu'], z['bv'] = (np.asarray(a, np.float32) for a in extra['barbs'])
         if extra.get('note'): z['note'] = np.array(str(extra['note']))
@@ -166,7 +172,11 @@ class MMCombiner:
     def make(s, k, pick):
         nm = s.nm; rk, pid, run, vt = k; P0 = nm.PARAMS[pid]; lead = int(round((vt - run).total_seconds() / 3600))
         if 'ecmwf' not in pick or 'gfs' not in pick: return 0  # mandatory core models for every field/time
-        s.begin(run); rid = f'{run:%Y%m%d%H}'; R = s.eng.regions[rk]; D = {m: s.load(s.idx[k][src]) for m, src in pick.items()}
+        rid = f'{run:%Y%m%d%H}'; R = s.eng.regions[rk]; D = {m: s.load(s.idx[k][src]) for m, src in pick.items()}
+        # All sources must be on the same 2-D render grid before any output
+        # state is begun. Never implicitly broadcast/regrid or publish junk.
+        validate_blend_payloads(D)
+        s.begin(run)
         wts, season, _ = W.weights(s.grp(pid), vt, list(pick.values()), pid=pid, secondary=(P0['kind'] == 'sec'))
         if not wts: return 0
         made = 0
