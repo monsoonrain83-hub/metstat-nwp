@@ -1,0 +1,22 @@
+name: EC46 offline retry contract
+on:
+  pull_request:
+    paths:
+      - wk_maps.py
+      - test_ec46_rate_limit.py
+      - .github/workflows/ec46-retry-test.yml
+  push:
+    branches: [fix/ec46-rate-limit-20261124]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m py_compile wk_maps.py
+      - run: python -m unittest -v test_ec46_rate_limit
