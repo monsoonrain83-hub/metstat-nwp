@@ -52,6 +52,34 @@ class TestStage38InputQC(unittest.TestCase):
             prepare_field(a)
         self.assertEqual(np.isfinite(prepare_field(a, min_fraction=0.001)).sum(), 1)
 
+    def test_sparse_alert_is_valid_but_all_missing_alert_is_not(self):
+        sparse = np.full((50, 50), np.nan)
+        sparse[15, 15] = 4.0
+        with self.assertRaises(MultiModelFieldError):
+            prepare_field(sparse)  # continuous variable: less than 1% valid
+        checked = prepare_field(sparse, min_fraction=0.0)
+        self.assertEqual(checked[15, 15], 4.0)
+        self.assertEqual(validate_blend_payloads({
+            "ecmwf": {"f": checked},
+            "gfs": {"f": checked.copy()},
+        }, min_fraction=0.0), (50, 50))
+        with self.assertRaises(MultiModelFieldError):
+            prepare_field(np.full((50, 50), np.nan), min_fraction=0.0)
+
+    def test_sparse_real_alert_is_saved_by_producer(self):
+        with TemporaryDirectory() as directory:
+            c, logs = self.fake_combiner(directory)
+            c.nm.PARAMS["alert"] = {"models": ["ecmwf", "gfs"], "kind": "sec"}
+            c.pmm["alert"] = {"kind": "sec"}
+            sparse = np.full((20, 20), np.nan)
+            sparse[3, 7] = 2.0
+            c.sink("ecmwf", "iran", "alert", RUN, VALID, sparse, {})
+            key = ("iran", "alert", RUN, VALID)
+            self.assertIn("ecmwf", c.idx[key])
+            saved = c.load(c.idx[key]["ecmwf"])
+            self.assertEqual(saved["f"][3, 7], 2.0)
+            self.assertEqual(np.isfinite(saved["f"]).sum(), 1)
+
     def test_same_shape_two_families_pass(self):
         got = validate_blend_payloads({
             "ecmwf": {"f": np.full((5, 6), 4)},
