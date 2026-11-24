@@ -114,7 +114,8 @@ class MMCombiner:
 
     # ---- ترکیب
     def load(s, path):
-        z = np.load(path, allow_pickle=False); o = {k: z[k] for k in z.files}; return o
+        with np.load(path, allow_pickle=False) as z:
+            return {k: z[k] for k in z.files}
 
     def combine(s, kind, wts, arrs, pid):
         """arrs: {slot: میدان}. kind: w/max/min."""
