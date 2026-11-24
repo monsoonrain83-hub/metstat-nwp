@@ -103,6 +103,34 @@ def _ec46_request(get, params, deadline, clock=time.monotonic, sleep=time.sleep)
         sleep(delay)
     return None, limited
 
+def _ec46_batches(total, fetch, deadline, clock=time.monotonic, sleep=time.sleep, batch_size=10):
+    """Sequentially collect all coordinates; subdivide only failed batches.
+    No retries of accepted points, no subdivision to bypass a rate limit.
+    """
+    from collections import deque
+    todo = deque((s, min(batch_size, total - s)) for s in range(0, total, batch_size))
+    accepted = []
+    while todo and clock() < deadline:
+        start, count = todo.popleft()
+        rows, limited = fetch(start, count)
+        if limited:
+            return None, len(accepted), True
+        if isinstance(rows, dict):
+            rows = [rows]
+        if not isinstance(rows, list) or len(rows) != count:
+            if count == 1:
+                return None, len(accepted), False
+            half = count // 2
+            todo.appendleft((start + half, count - half))
+            todo.appendleft((start, half))
+            continue
+        accepted.extend(rows)
+        if todo:
+            sleep(min(0.5 * count, max(0, deadline - clock())))
+    if len(accepted) != total or clock() > deadline:
+        return None, len(accepted), False
+    return accepted, total, False
+
 def ec_weekly(mock=False):
     import requests
     STEP = 1.5; lo = np.arange(CROP[0], CROP[1] + 1e-6, STEP); la = np.arange(CROP[2], CROP[3] + 1e-6, STEP); LON, LAT = np.meshgrid(lo, la); fl, fa = LON.ravel(), LAT.ravel(); n = len(fl)
@@ -110,35 +138,62 @@ def ec_weekly(mock=False):
         t0 = datetime(2026, 10, 19, tzinfo=UTC); W = 6
         ta = np.stack([np.sin(LON / 7 + k) * 2.5 + (LAT - 30) * 0.05 for k in range(W)]).astype(np.float32); pa = np.stack([np.cos(LAT / 4 - k) * 12 for k in range(W)]).astype(np.float32)
         return t0, lo, la, ta, pa
-    vars_ = 'temperature_2m_anomaly,precipitation_anomaly'; got = {}; t_ = None; unit = {}
-    tdead = time.monotonic() + 900                                  # r82: بودجهٔ زمانی کل دریافت EC46؛ بعد از ۱۰ دقیقه رها می‌شود (قبلاً ساعت‌ها در ReadTimeout می‌ماند)
+    vars_ = 'temperature_2m_anomaly,precipitation_anomaly'
+    keys = ('temperature_2m_anomaly', 'precipitation_anomaly')
+    # 30 minutes for sequential recovery on the original 1.5-degree grid.
+    tdead = time.monotonic() + 1800
     for model in ('ecmwf_ec46_ensemble_mean', 'ecmwf_ec46', None):
-        got.clear(); ok = True; B = 10                           # r85: دسته‌های کوچک‌تر (۲۵ نقطه × اعضا از IP گیت‌هاب ReadTimeout می‌داد)
-        for s in range(0, n, B):
-            p = dict(latitude=','.join(f'{x:.2f}' for x in fa[s:s + B]), longitude=','.join(f'{x:.2f}' for x in fl[s:s + B]), weekly=vars_, timezone='GMT')
-            if model: p['models'] = model
-            j, limited = _ec46_request(requests.get, p, tdead)
-            if limited:
-                log('  EC46 rate limit persists; keep previous maps, do not retry other model aliases')
+        def fetch(start, count):
+            p = dict(latitude=','.join(f'{x:.2f}' for x in fa[start:start + count]),
+                     longitude=','.join(f'{x:.2f}' for x in fl[start:start + count]),
+                     weekly=vars_, timezone='GMT')
+            if model:
+                p['models'] = model
+            return _ec46_request(requests.get, p, tdead)
+        rows, count, limited = _ec46_batches(n, fetch, tdead)
+        if limited or (rows is None and count > 0):
+            log(f'  EC46: {count}/{n} coordinates received; keep previous maps, do not restart completed work with another alias')
+            return None
+        if rows is None:
+            if time.monotonic() >= tdead:
+                break
+            continue
+        got = {k: {} for k in keys}
+        t_ = None
+        unit = None
+        for i, o in enumerate(rows):
+            if not isinstance(o, dict):
                 return None
-            if j is None: ok = False; break
-            if time.monotonic() > tdead: ok = False; break
-            for i, o in enumerate(j if isinstance(j, list) else [j]):
-                w = o.get('weekly') or {}; unit.update(o.get('weekly_units') or {})
-                if not w.get('time'): ok = False; break
-                t_ = t_ or w['time']
-                for key in ('temperature_2m_anomaly', 'precipitation_anomaly'):
-                    v = w.get(key)
-                    if v is None:      # اعضای جدا: میانگین اعضا
-                        mem = [np.array([np.nan if x is None else x for x in w[k_]], float) for k_ in w if k_.startswith(key + '_member')]
-                        v = np.nanmean(mem, 0) if mem else None
-                    if v is None: ok = False; break
-                    got.setdefault(key, {})[s + i] = np.array([np.nan if x is None else x for x in v], float)
-                time.sleep(0.5)
-            if not ok: break
-        if ok and got: log(f'  EC46 هفتگی: مدل {model or "پیش‌فرض"}؛ واحدها {unit}'); break
-    if not ok or not got or not t_ or any(len(got.get(k, {})) != n for k in ('temperature_2m_anomaly', 'precipitation_anomaly')):
-        log(f'  ✗ EC46: grid incomplete ({len(got.get("temperature_2m_anomaly", {}))}/{n} temperature points); no patchy map published')
+            w = o.get('weekly') or {}
+            dates = w.get('time')
+            units = o.get('weekly_units') or {}
+            if not isinstance(dates, list) or len(dates) < 6:
+                log('  EC46: fewer than six valid forecast weeks; keep previous maps')
+                return None
+            if t_ is None:
+                t_ = dates
+                unit = units
+            if dates != t_ or units != unit:
+                log('  EC46: inconsistent forecast dates or units; keep previous maps')
+                return None
+            for key in keys:
+                v = w.get(key)
+                if v is None:
+                    mem = [np.array([np.nan if x is None else x for x in w[k_]], float) for k_ in w if k_.startswith(key + '_member')]
+                    v = np.nanmean(mem, 0) if mem else None
+                if v is None:
+                    return None
+                arr = np.array([np.nan if x is None else x for x in v], float)
+                if arr.ndim != 1 or len(arr) != len(dates) or not np.isfinite(arr[:6]).all():
+                    log('  EC46: incomplete weekly values; keep previous maps')
+                    return None
+                got[key][i] = arr
+        log(f'  EC46: all {n} coordinates complete; model {model or "default"}; units {unit}')
+        break
+    else:
+        return None
+    if rows is None:
+        log('  EC46: acquisition budget exhausted; keep previous maps')
         return None
     W = min(6, len(t_)); ta = np.full((W, n), np.nan, np.float32); pa = ta.copy()
     for i, v in got['temperature_2m_anomaly'].items(): ta[:, i] = v[:W]
