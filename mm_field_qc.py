@@ -18,7 +18,8 @@ class MultiModelFieldError(ValueError):
 def prepare_field(field, *, min_fraction: float = .01) -> np.ndarray:
     """Return a 2-D float32 field, preserving masked cells as NaN.
 
-    The caller may set min_fraction=0 for sparse *categorical alerts*, but\n    at least one finite pixel is still required.\n    Finite zero-valued precipitation is legitimate. Entirely absent or
+    The caller may set min_fraction=0 for sparse *categorical alerts*, but
+    at least one finite pixel is still required.\n    Finite zero-valued precipitation is legitimate. Entirely absent or
     effectively empty arrays, infinities and unexpected shapes are not.
     """
     if not 0 <= min_fraction <= 1:
