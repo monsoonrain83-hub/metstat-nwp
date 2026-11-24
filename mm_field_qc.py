@@ -18,11 +18,11 @@ class MultiModelFieldError(ValueError):
 def prepare_field(field, *, min_fraction: float = .01) -> np.ndarray:
     """Return a 2-D float32 field, preserving masked cells as NaN.
 
-    Finite zero-valued precipitation is legitimate. Entirely absent or
+    The caller may set min_fraction=0 for sparse *categorical alerts*, but\n    at least one finite pixel is still required.\n    Finite zero-valued precipitation is legitimate. Entirely absent or
     effectively empty arrays, infinities and unexpected shapes are not.
     """
-    if not 0 < min_fraction <= 1:
-        raise ValueError("min_fraction outside (0, 1]")
+    if not 0 <= min_fraction <= 1:
+        raise ValueError("min_fraction outside [0, 1]")
     try:
         masked = np.ma.asarray(field, dtype=np.float32)
     except (TypeError, ValueError, OverflowError) as exc:
@@ -33,14 +33,14 @@ def prepare_field(field, *, min_fraction: float = .01) -> np.ndarray:
     if np.isinf(arr).any():
         raise MultiModelFieldError("field has infinite values")
     finite = np.count_nonzero(np.isfinite(arr))
-    if finite / arr.size < min_fraction:
+    if finite == 0 or finite / arr.size < min_fraction:
         raise MultiModelFieldError(
             f"insufficient finite grid cells: {finite}/{arr.size}"
         )
     return arr
 
 
-def validate_blend_payloads(payloads: dict) -> tuple[int, int]:
+def validate_blend_payloads(payloads: dict, *, min_fraction: float = .01) -> tuple[int, int]:
     """Reject incompatible saved source grids before begin/render/upload.
 
     Each source is keyed by its independent logical family, not by both
@@ -53,7 +53,7 @@ def validate_blend_payloads(payloads: dict) -> tuple[int, int]:
     for name, data in payloads.items():
         if "f" not in data:
             raise MultiModelFieldError(f"{name}: missing scalar field")
-        checked = prepare_field(data["f"])
+        checked = prepare_field(data["f"], min_fraction=min_fraction)
         if shape is None:
             shape = checked.shape
         if checked.shape != shape:
