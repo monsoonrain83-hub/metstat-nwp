@@ -1,0 +1,8 @@
+cff-version: 1.2.0
+message: "If you use this software in research, please cite the repository and specific commit or release."
+title: "MetStat NWP"
+type: software
+authors:
+  - name: "MetStat project contributors"
+repository-code: "https://github.com/monsoonrain83-hub/metstat-nwp"
+url: "https://github.com/monsoonrain83-hub/metstat-nwp"

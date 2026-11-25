@@ -1,0 +1,5 @@
+# Contributing
+
+English and Persian contributions are welcome. Read [architecture](docs/ARCHITECTURE.md) and [security policy](SECURITY.md). Open an issue describing the problem, expected behavior, affected component and reproducible evidence. Use synthetic/publicly licensed fixtures; never attach private station data, secrets, or unlicensed assets.
+
+Fork or create a feature branch, make a narrowly scoped change, add regression tests and document scientific assumptions, units, source, model/run, valid time and known uncertainty where relevant. Include test commands/results in the pull request. Do not merge or deploy changes to operational workflows without maintainer review. Changes spanning repositories should link related PRs and state the compatibility contract and rollback order. For license questions, verify rights before importing code/data; the presence of a public repository is not permission to redistribute its contents. Contributions are subject to the applicable repository license once established; do not assume a missing license grants rights.
