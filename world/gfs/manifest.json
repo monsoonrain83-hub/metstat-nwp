@@ -4,9 +4,9 @@
   "source_domain": "mixed-per-field",
   "source": "Open-Meteo data_spatial / model owner",
   "license": "CC BY 4.0; attribution Open-Meteo and originating NWP center",
-  "generated_at_utc": "2026-11-24T23:30:10Z",
-  "init_utc": "2026-11-24T18:00:00Z",
-  "valid_utc": "2026-11-25T18:00:00Z",
+  "generated_at_utc": "2026-11-25T11:19:54Z",
+  "init_utc": "2026-11-25T06:00:00Z",
+  "valid_utc": "2026-11-26T06:00:00Z",
   "projection": "EPSG:4326 equirectangular",
   "bbox_wgs84": [
     -180.0,
@@ -21,10 +21,10 @@
       "file": "gfs/t2m.webp",
       "variable": "temperature_2m",
       "units": "°C",
-      "sha256": "936fafc188df8ad6764878d5fb9ffaa424cb585744fec581197d6b16737305fb",
+      "sha256": "e80ab8535654eb262313ea8bcfdd9e0a46666af4b3b0c28e7e2fc81b22ac8c56",
       "logical_model": "gfs",
-      "init_utc": "2026-11-24T18:00:00Z",
-      "valid_utc": "2026-11-25T18:00:00Z",
+      "init_utc": "2026-11-25T06:00:00Z",
+      "valid_utc": "2026-11-26T06:00:00Z",
       "lead_hours": 24,
       "source_grid_bbox_centers_wgs84": [
         -180,
@@ -50,17 +50,17 @@
       "width": 3072,
       "height": 1536,
       "finite_fraction": 1.0,
-      "min": -43.5,
-      "max": 43.55
+      "min": -45.55,
+      "max": 42.6
     },
     "z500": {
       "file": "gfs/z500.webp",
       "variable": "geopotential_height_500hPa",
       "units": "dam",
-      "sha256": "81aaa133c9dfcd8a4fba323131bf86fc44e5dad8295f2211d430b243a9916855",
+      "sha256": "07a95b5cc22c0f8e8a4c55cb99ad12cb7ddbef47cf57a67f65f375486ffa233c",
       "logical_model": "gfs",
-      "init_utc": "2026-11-24T18:00:00Z",
-      "valid_utc": "2026-11-25T18:00:00Z",
+      "init_utc": "2026-11-25T06:00:00Z",
+      "valid_utc": "2026-11-26T06:00:00Z",
       "lead_hours": 24,
       "source_grid_bbox_centers_wgs84": [
         -180,
@@ -86,17 +86,17 @@
       "width": 1440,
       "height": 721,
       "finite_fraction": 1.0,
-      "min": 472.4,
-      "max": 594.3
+      "min": 467.8,
+      "max": 594.8
     },
     "mslp": {
       "file": "gfs/mslp.webp",
       "variable": "pressure_msl",
       "units": "hPa",
-      "sha256": "25f05c11dc6d4f95bbcbe532554dac1f621c4ddf0c2340c10c810d5d2a15648c",
+      "sha256": "2d3060f397364c950ecdfc89ea92e9fd41e65acb25fff662b92812366ce03e31",
       "logical_model": "gfs",
-      "init_utc": "2026-11-24T18:00:00Z",
-      "valid_utc": "2026-11-25T18:00:00Z",
+      "init_utc": "2026-11-25T06:00:00Z",
+      "valid_utc": "2026-11-26T06:00:00Z",
       "lead_hours": 24,
       "source_grid_bbox_centers_wgs84": [
         -180,
@@ -122,8 +122,8 @@
       "width": 1440,
       "height": 721,
       "finite_fraction": 1.0,
-      "min": 937.9,
-      "max": 1042.5
+      "min": 938.8,
+      "max": 1042.8
     }
   },
   "full_globe": true,
