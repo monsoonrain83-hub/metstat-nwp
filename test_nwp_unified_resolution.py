@@ -42,4 +42,30 @@ class UnifiedSourcePolicyTests(unittest.TestCase):
         self.assertIsNone(self.select('gfs','t2m',-3,set()))
         self.assertIsNone(self.select('gfs','t2m',385,set()))
         self.assertIsNone(self.select('gfs','t2m',24,set()))
+    def test_reject_off_cycle_before_field_lookup(self):
+        for kwargs in (dict(minute=1), dict(second=1), dict(microsecond=1)):
+            run = self.run.replace(**kwargs)
+            def unavailable(*args):
+                self.fail("invalid cycle must not reach reader")
+            self.assertIsNone(select_frame_source('ecmwf','t2m',run,
+                              run + timedelta(hours=6),unavailable))
+
+    def test_only_boolean_true_confirms_field(self):
+        for value in (1, "false", "available", [], {}, None):
+            result = select_frame_source('gfs','t2m',self.run,
+                       self.run + timedelta(hours=6),lambda *args: value)
+            self.assertIsNone(result)
+        result = select_frame_source('gfs','t2m',self.run,
+                   self.run + timedelta(hours=6),
+                   lambda domain,*args: True if domain == 'ncep_gfs025' else "unverified")
+        self.assertEqual(result.domain, 'ncep_gfs025')
+
+    def test_timezone_conversion_and_blank_variable(self):
+        local = self.run.astimezone(timezone(timedelta(hours=3,minutes=30)))
+        a = select_frame_source('ecmwf','t2m',local,
+             local+timedelta(hours=12),lambda *args: True)
+        self.assertEqual(a.run_utc,self.run)
+        with self.assertRaises(ValueError):
+            select_frame_source('ecmwf','  ',local,local,lambda *args: True)
+
 if __name__ == '__main__': unittest.main()
