@@ -1,0 +1,21 @@
+name: P0 host synchronization safety tests
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+      - 'scripts/check_host_snapshot.py'
+      - 'tests/test_host_snapshot_gate.py'
+      - 'tests/test_bundle_gate.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest discover -s tests -p test_bundle_gate.py -v
