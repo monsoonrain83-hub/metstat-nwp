@@ -1,0 +1,3 @@
+# Code of conduct
+
+We welcome participants regardless of background or level of experience. Be respectful, constructive, accurate and open to scientific disagreement. Harassment, discrimination, threats, personal attacks, doxxing and disclosure of private data are unacceptable. Critique ideas and code, not individuals. Maintainers may remove harmful content, restrict participation or report abuse to GitHub. Report concerns privately to maintainers where possible; if no contact is available, use GitHub reporting or request a private contact without disclosing details. Security vulnerabilities follow [SECURITY.md](SECURITY.md).
