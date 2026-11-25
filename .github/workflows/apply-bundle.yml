@@ -15,6 +15,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   apply:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -27,27 +28,44 @@ jobs:
           shopt -s nullglob
           ls bundle_*.zip >/dev/null 2>&1 || { echo "no bundle"; exit 0; }
           python - <<'PY'
-          import glob, os, sys, zipfile
+          import glob, os, stat, sys, zipfile
+          from pathlib import PurePosixPath
           OK = {".py", ".csv", ".json", ".md", ".txt", ".yml", ".yaml", ".php"}
-          bad = 0; files = []
+          files = {}
+          total = 0
           for z in sorted(glob.glob("bundle_*.zip")):
               with zipfile.ZipFile(z) as zf:
                   for i in zf.infolist():
                       n = i.filename
-                      if n.endswith("/"): continue
-                      parts = n.replace("\\", "/").split("/")
-                      if n.startswith("/") or ".." in parts or parts[0] in (".git", ".github") or os.path.splitext(n)[1].lower() not in OK or i.file_size > 30 * 1024 * 1024:
-                          print("REJECT", n); bad += 1; continue
-                      os.makedirs(os.path.dirname(n) or ".", exist_ok=True); open(n, "wb").write(zf.read(i)); files.append(n)
-          print("extracted", len(files), "files:", *files, sep="\n  ")
-          if bad: print("rejected", bad, "entries (they were NOT written)")
+                      if i.is_dir(): continue
+                      parts = n.split("/")
+                      mode = (i.external_attr >> 16) & 0o170000
+                      if (not n or "\\" in n or any(c.isspace() or ord(c)<32 for c in n)
+                          or any(p in ("", ".", "..") or p.startswith(".") for p in parts)
+                          or ":" in n or mode not in (0, stat.S_IFREG)
+                          or os.path.splitext(n)[1].lower() not in OK
+                          or i.file_size > 30 * 1024 * 1024
+                          or n in files or n == "nwp_upload.php"):
+                          raise SystemExit("Unsafe, duplicate or protected bundle entry: " + repr(n))
+                      total += i.file_size
+                      if total > 120 * 1024 * 1024 or len(files) >= 2000:
+                          raise SystemExit("Bundle size/count limit exceeded")
+                      p = PurePosixPath(n)
+                      if any(os.path.islink(str(q)) for q in (p, *p.parents)):
+                          raise SystemExit("Symlink path rejected")
+                      files[n] = zf.read(i)
+          for n, data in files.items():
+              os.makedirs(os.path.dirname(n) or ".", exist_ok=True)
+              with open(n, "wb") as f: f.write(data)
+          print("extracted", len(files), "files")
           open("/tmp/applied.txt", "w").write("\n".join(files))
           PY
       - name: validate (syntax + obs tests)
         run: |
           shopt -s nullglob
           for f in $(grep -E '\.py$' /tmp/applied.txt 2>/dev/null); do python -m py_compile "$f" || { echo "SYNTAX ERROR in $f — nothing committed"; exit 1; }; done
-          [ -f obs_test.py ] && python obs_test.py || true
+          if [ -f obs_test.py ]; then python obs_test.py; fi
+          for f in $(grep -E '\.php$' /tmp/applied.txt 2>/dev/null); do php -l "$f"; done
       - name: commit and push
         run: |
           shopt -s nullglob
@@ -55,8 +73,8 @@ jobs:
           RA=""; [ -f RUN_AFTER.txt ] && RA="$(cat RUN_AFTER.txt)" && rm -f RUN_AFTER.txt
           git rm -q --ignore-unmatch bundle_*.zip
           git config user.name apply-bot; git config user.email apply-bot@users.noreply.github.com
-          git add -A; git commit -m "apply bundle ($(wc -l < /tmp/applied.txt) files)" || exit 0
-          for i in 1 2 3; do git pull --rebase -q && git push && break || sleep 5; done
+          git add -A; git commit -m "apply bundle ($(wc -l < /tmp/applied.txt) files)"
+          git push || { echo "Push rejected; rebuild and revalidate on latest main"; exit 1; }
           for wf in $RA; do echo "$wf" | grep -Eq '^[a-z0-9_.-]+\.yml$' && gh workflow run "$wf" --ref main && echo "dispatched $wf"; done
         env:
           GH_TOKEN: ${{ github.token }}
