@@ -1937,7 +1937,7 @@ def main():
     try:
         if a.host:
             import requests
-            r = requests.post(f"{a.host.rstrip('/')}/nwp_upload.php?a=clim&key={requests.utils.quote(a.key)}", timeout=120)
+            r = requests.post(f"{a.host.rstrip('/')}/nwp_upload.php?a=clim", headers={'X-Upload-Key': a.key}, timeout=120)
             if r.ok and r.content[:2] == b'PK': CLIM = dict(np.load(io.BytesIO(r.content)))
         elif os.path.exists(os.path.join(HERE, 'clim_tmean.npz')): CLIM = dict(np.load(os.path.join(HERE, 'clim_tmean.npz')))
     except Exception as e: log(f'اقلیم خوانده نشد ({e}); نقشهٔ انومالی ساخته نمی‌شود')
