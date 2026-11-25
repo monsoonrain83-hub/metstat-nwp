@@ -46,10 +46,14 @@ def select_frame_source(model: str, variable: str, run_utc: datetime,
     """
     if model not in SOURCE_PRIORITY:
         raise ValueError("Unknown unified logical model " + repr(model))
-    if not variable or run_utc.tzinfo is None or valid_utc.tzinfo is None:
+    if (not isinstance(variable, str) or not variable.strip()
+            or run_utc.utcoffset() is None or valid_utc.utcoffset() is None):
         raise ValueError("variable and timezone-aware timestamps required")
     run_utc = run_utc.astimezone(timezone.utc)
     valid_utc = valid_utc.astimezone(timezone.utc)
+    # A nominal model cycle is aligned to an exact UTC hour.
+    if any((run_utc.minute, run_utc.second, run_utc.microsecond)):
+        return None
     hours = (valid_utc - run_utc).total_seconds() / 3600
     if hours < 0 or int(hours) != hours:
         return None
@@ -58,6 +62,6 @@ def select_frame_source(model: str, variable: str, run_utc: datetime,
     if limit is None or lead > limit:
         return None
     for domain, res in SOURCE_PRIORITY[model]:
-        if has_verified_field(domain, variable, run_utc, valid_utc):
+        if has_verified_field(domain, variable, run_utc, valid_utc) is True:
             return SourceDecision(model, domain, res, variable, run_utc, valid_utc, lead)
     return None
