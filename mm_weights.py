@@ -97,14 +97,26 @@ def _specific_weights(group, pid=None, secondary=False):
 
 
 def weights(group, d, available, pid=None, secondary=False):
-    """وزن نهایی مدل‌ها (جمع = ۱). available: مدل‌هایی که این پارامتر/گام را دارند و فیلدشان آماده است.
-    خروجی: (dict مدل→وزن, فصل, مدل‌های حذف‌شده از وزن پایه)."""
+    """Daily model-family share: ECMWF 60%, other *independent* models 40%.
+
+    Prior seasonal/parameter ratios determine only the relative shares of the
+    remaining 40%. They cannot silently reduce ECMWF to 15/45/50%. One source
+    per physical family is selected by pick_sources(). Do not manufacture a
+    100% single-model "multimodel" if no independent model is available.
+    """
     base, s = base_weights(group, d)
     base = _specific_weights(group, pid, secondary) or base
-    av = [m for m in pick_sources(available) if m in base and m not in EXCLUDED]
-    tot = float(sum(base[m] for m in av))
-    if tot <= 0: return {}, s, sorted(base)
-    return {m: base[m] / tot for m in av}, s, sorted(m for m in base if m not in av)
+    picked = pick_sources(available)
+    av = [m for m in picked if m in base and m not in EXCLUDED]
+    if "ecmwf" not in av:
+        return {}, s, sorted(base)
+    others = [m for m in av if m != "ecmwf" and base[m] > 0]
+    total = sum(float(base[m]) for m in others)
+    if total <= 0:
+        return {}, s, sorted(m for m in base if m not in av)
+    out = {"ecmwf": 0.60}
+    out.update({m: 0.40 * float(base[m]) / total for m in others})
+    return out, s, sorted(m for m in base if m not in av)
 
 
 def caption(w, lang='fa'):

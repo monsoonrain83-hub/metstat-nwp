@@ -30,40 +30,47 @@ class TestMultimodelWeights(unittest.TestCase):
         self.assertEqual(m.pick_sources(MODELS)['ecmwf'], 'ecmwf9')
         self.assertEqual(m.pick_sources(['ecmwf', 'gfs', 'gem'])['ecmwf'], 'ecmwf')
 
-    def test_parameter_weights(self):
+    def test_daily_ecmwf_60_and_legacy_relative_non_ecmwf_ratios(self):
+        # The baseline/parameter tables above remain as historical reference;
+        # the master requirements supersede their ECMWF absolute share only.
         cases = [
-            ('convection', 'cape', False, {'ecmwf': 50, 'gfs': 20, 'icon': 20, 'gem': 5, 'ukmo': 5}),
-            ('convection', 'cin', False, {'ecmwf': 50, 'gfs': 20, 'icon': 20, 'gem': 5, 'ukmo': 5}),
-            ('convection', 'ki', False, {'gfs': 50, 'ecmwf': 25}),
-            ('humidity', 'pw', False, {'ecmwf': 50, 'gfs': 25}),
-            ('wind', 'gust', False, {'ecmwf': 70}),
-            ('temp', 't2m', False, {'ecmwf': 50}),
-            ('temp', 'tmin', False, {'ecmwf': 40, 'gem': 20, 'gfs': 25, 'icon': 7.5, 'ukmo': 7.5}),
-            ('temp', 'tmax', False, {'gfs': 50, 'ecmwf': 25}),
-            ('precip', 'wrain', True, {'ecmwf': 50}),
-            ('convection', 'hail', True, {'gfs': 50, 'ecmwf': 25})
+            ("convection", "cape", False),
+            ("convection", "ki", False),
+            ("humidity", "pw", False),
+            ("wind", "gust", False),
+            ("temp", "t2m", False),
+            ("temp", "tmin", False),
+            ("temp", "tmax", False),
+            ("precip", "wrain", True),
+            ("convection", "hail", True),
         ]
         for d in (date(2026, 7, 1), date(2026, 11, 12)):
-            for group, pid, secondary, expected in cases:
+            for group, pid, secondary in cases:
                 with self.subTest(date=d, param=pid):
+                    historical, _ = m.base_weights(group, d)
+                    historical = m._specific_weights(group, pid, secondary) or historical
+                    others = [k for k in m.MM_MODELS if k != "ecmwf" and
+                              historical.get(k, 0) > 0]
+                    total_other = sum(historical[k] for k in others)
                     w, _, _ = m.weights(group, d, MODELS, pid=pid, secondary=secondary)
+                    self.assertAlmostEqual(w["ecmwf"], .60)
                     self.assertAlmostEqual(sum(w.values()), 1.0)
-                    self.assertEqual(set(w), {'ecmwf', 'gfs', 'gem', 'icon', 'ukmo'})
-                    for model, pct in expected.items():
-                        self.assertAlmostEqual(w[model] * 100, pct)
+                    self.assertEqual(set(w), {"ecmwf", *others})
+                    for k in others:
+                        self.assertAlmostEqual(w[k], .40 * historical[k] / total_other)
 
     def test_gdi_only_two_models(self):
         for d in (date(2026, 7, 1), date(2026, 11, 12)):
             w, _, missing = m.weights('convection', d, MODELS, pid='gdi')
             self.assertEqual(set(w), {'gfs', 'ecmwf'})
-            self.assertAlmostEqual(w['gfs'], 0.60)
-            self.assertAlmostEqual(w['ecmwf'], 0.40)
+            self.assertAlmostEqual(w['gfs'], 0.40)
+            self.assertAlmostEqual(w['ecmwf'], 0.60)
             self.assertEqual(set(missing), set())  # GDI policy explicitly excludes these slots
 
     def test_missing_secondary_models_normalizes(self):
         w, _, missed = m.weights('convection', date(2026, 7, 1), ['ecmwf9', 'gfs'], pid='ki')
         self.assertEqual(set(w), {'ecmwf', 'gfs'})
-        self.assertAlmostEqual(w['gfs'], 2.0 / 3.0)
+        self.assertAlmostEqual(w['gfs'], 0.40)
         self.assertEqual(set(missed), {'gem', 'icon', 'ukmo'})
 
 if __name__ == '__main__':
