@@ -16,4 +16,4 @@ Production databases, credentials, private observations and provider-restricted 
 
 ## Development and licensing
 
-Inspect `.github/workflows/` and existing `test_*.py` files for model-specific tests. Run tests on synthetic or licensed fixtures without production credentials. A repository-level license was not found in this audit; proposed licensing requires maintainer confirmation and review of third-party code/data. Public visibility alone does not grant reuse rights.
+Inspect `.github/workflows/` and existing `test_*.py` files for model-specific tests. Run tests on synthetic or licensed fixtures without production credentials. Original project source code is licensed under [GNU GPL v3](LICENSE). Third-party libraries retain their own licenses; upstream weather data, derived products, and other third-party material are subject to their respective terms. See [data and licensing](docs/DATA_AND_LICENSING.md).
