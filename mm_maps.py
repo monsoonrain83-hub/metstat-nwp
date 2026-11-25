@@ -10,6 +10,7 @@ import numpy as np
 from datetime import datetime, timedelta, timezone
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mm_weights as W
+from mm_field_qc import MultiModelFieldError, prepare_field, validate_blend_payloads, pixel_weights
 
 UTC = timezone.utc
 MM_ID = 'mm'
@@ -70,9 +71,15 @@ class MMCombiner:
         if mkey not in SOURCES or run.hour not in (0, 12) or pid not in s.nm.PARAMS or pid not in s.pmm: return
         if not 0 <= (vt - run).total_seconds() / 3600 <= 180: return      # فقط پارامترهای مالتی‌مدل (بدون گروه وزنی مثل w10 رد می‌شوند)
         if field is None: return
+        try:
+            sparse = s.nm.PARAMS[pid].get('kind') == 'sec'
+            checked_field = prepare_field(field, min_fraction=0.0 if sparse else .01)
+        except MultiModelFieldError as exc:
+            s.nm.log(f'  ! MultiModel rejected {mkey} {rk}/{pid}: {exc}')
+            return
         p = os.path.join(s.dir, rk, pid, f'{run:%Y%m%d%H}'); os.makedirs(p, exist_ok=True)
         path = os.path.join(p, f'{mkey}_{vt:%Y%m%d%H}.npz'); tmp = path + '.tmp.npz'
-        z = dict(f=np.asarray(field, np.float32))
+        z = dict(f=checked_field)
         if extra.get('cont') is not None: z['c'] = np.asarray(extra['cont'], np.float32); z['cl'] = np.asarray(extra.get('cont_lvls', []), np.float32); z['cf'] = np.array(str(extra.get('cont_fmt', '%d')))
         if extra.get('barbs') is not None: z['bu'], z['bv'] = (np.asarray(a, np.float32) for a in extra['barbs'])
         if extra.get('note'): z['note'] = np.array(str(extra['note']))
@@ -105,22 +112,23 @@ class MMCombiner:
 
     # ---- ترکیب
     def load(s, path):
-        z = np.load(path, allow_pickle=False); o = {k: z[k] for k in z.files}; return o
+        with np.load(path, allow_pickle=False) as z:
+            return {k: z[k] for k in z.files}
 
     def combine(s, kind, wts, arrs, pid):
         """arrs: {slot: میدان}. kind: w/max/min."""
-        slots = list(arrs); A = np.stack([arrs[m] for m in slots]).astype(np.float64); V = ~np.isnan(A)
+        slots = list(arrs); A = np.stack([arrs[m] for m in slots]).astype(np.float64); V = np.isfinite(A)
         if kind == 'max': return np.where(V.any(0), np.nanmax(np.where(V, A, -np.inf), 0), np.nan).astype(np.float32)
         if kind == 'min': return np.where(V.any(0), np.nanmin(np.where(V, A, np.inf), 0), np.nan).astype(np.float32)
-        w = np.array([wts[m] for m in slots])[:, None, None] * V; ws = w.sum(0)
+        w, core = pixel_weights(A, slots, wts)
         if pid in SC_VOTE:
             cls = np.rint(np.nan_to_num(A, nan=-1)).astype(int); out = np.full(A.shape[1:], np.nan)
             best = np.full(A.shape[1:], -1.0)
             for c in np.unique(cls[cls >= 0]):
                 sc_ = (w * (cls == c)).sum(0)
                 m = sc_ > best; out = np.where(m, c, out); best = np.where(m, sc_, best)
-            return out.astype(np.float32)
-        return np.where(ws > 0, (np.nan_to_num(A) * w).sum(0) / np.maximum(ws, 1e-12), np.nan).astype(np.float32)
+            return np.where(core, out, np.nan).astype(np.float32)
+        return np.where(core, (np.where(V, A, 0) * w).sum(0), np.nan).astype(np.float32)
 
     def begin(s, run):
         rid = f'{run:%Y%m%d%H}'
@@ -166,9 +174,14 @@ class MMCombiner:
     def make(s, k, pick):
         nm = s.nm; rk, pid, run, vt = k; P0 = nm.PARAMS[pid]; lead = int(round((vt - run).total_seconds() / 3600))
         if 'ecmwf' not in pick or 'gfs' not in pick: return 0  # mandatory core models for every field/time
-        s.begin(run); rid = f'{run:%Y%m%d%H}'; R = s.eng.regions[rk]; D = {m: s.load(s.idx[k][src]) for m, src in pick.items()}
+        rid = f'{run:%Y%m%d%H}'; R = s.eng.regions[rk]; D = {m: s.load(s.idx[k][src]) for m, src in pick.items()}
+        validate_blend_payloads(D, min_fraction=0.0 if P0['kind'] == 'sec' else .01)
         wts, season, _ = W.weights(s.grp(pid), vt, list(pick.values()), pid=pid, secondary=(P0['kind'] == 'sec'))
         if not wts: return 0
+        # Do not begin a run when mandatory source grids have no overlapping valid cells.
+        if not (np.isfinite(D['ecmwf']['f']) & np.isfinite(D['gfs']['f'])).any():
+            raise MultiModelFieldError('no common ECMWF/GFS coverage')
+        s.begin(run)
         made = 0
         for mpid, P in s.pmm.items():
             if P['base'] != pid: continue
@@ -188,7 +201,7 @@ class MMCombiner:
                 d0 = next(iter(DD.values()))
                 if all('c' in d for d in DD.values()):
                     extra['cont'] = s.combine('w', wts, {m: d['c'] for m, d in DD.items()}, 'x'); extra['cont_lvls'] = d0['cl']; extra['cont_fmt'] = str(d0['cf'])
-                if all('bu' in d for d in DD.values()):
+                if all('bu' in d and 'bv' in d for d in DD.values()):
                     extra['barbs'] = (s.combine('w', wts, {m: d['bu'] for m, d in DD.items()}, 'x'), s.combine('w', wts, {m: d['bv'] for m, d in DD.items()}, 'x'))
             used = {m: pick[m] for m in (wts if kind == 'w' else pick)}
             wstr = ','.join((f'{src}:{round(wts[m] * 100)}' if kind == 'w' else src) for m, src in used.items())
