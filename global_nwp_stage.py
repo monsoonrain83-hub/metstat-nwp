@@ -201,7 +201,7 @@ def cycle_candidates(*sources):
     ]
 
 
-def acquire(model, outdir, requested_lead=24):
+def acquire(model, outdir, requested_lead=24, required_run=None):
     import s3fs
     dom = DOMAINS[model]
     fs = s3fs.S3FileSystem(anon=True, default_block_size=65536)
@@ -217,6 +217,8 @@ def acquire(model, outdir, requested_lead=24):
         hi_src = N.S3Source(high_domain, fs)
         hi_src.i0=0;hi_src.i1=hi_src.nx;hi_src.j0=0;hi_src.j1=hi_src.ny
     runs = cycle_candidates(src, hi_src)
+    if required_run is not None:
+        runs = [m for m in runs if resolve_cycle(m) == required_run]
     if not runs:raise RuntimeError(model+': source has no current cycle')
     runs.sort(key=lambda m:m['reference_time'],reverse=True)
     outdir.mkdir(parents=True,exist_ok=True)
@@ -301,6 +303,7 @@ def main():
     p.add_argument('--model',choices=sorted(DOMAINS),required=True)
     p.add_argument('--out',required=True)
     p.add_argument('--lead',type=int,default=24)
+    p.add_argument('--run-utc', help='Require this exact source cycle (ISO UTC); never fall back to a different run')
     a=p.parse_args()
-    acquire(a.model,Path(a.out),a.lead)
+    acquire(a.model,Path(a.out),a.lead,parse_meta_utc(a.run_utc) if a.run_utc else None)
 if __name__=='__main__': main()
