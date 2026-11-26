@@ -102,3 +102,31 @@ world viewer with completion of the integrated main forecast page.
 - Real field coverage, native unit documentation and scientific QA,
   complete world timeline and main forecast UI integration remain release
   gates. No change to regional formulas or operational publishing.
+
+## V108 — real coverage and remaining weather indices
+
+V107 completed quality-nwp and P0 host synchronization checks at cfbf31602949c11df4ad91ca37fe7f91fc1cade6 (runs 45885755691 and 45885755756).
+Real acceptance 45885750100, same 2026-11-26 12Z initialization and +24h:
+ECMWF cape/li/lr75/sh06; GFS cape/li/lr75; ICON cape/li/lr75/sh06;
+UKMO cape/cin/li/lr75; GEM no convection output (t2m/mslp only).
+This establishes real production of a subset, not complete five-model coverage.
+- KO and SWEAT reuse existing MetStat surface-based KO and modified SWEAT
+  equations; same native input source and terrain masks; parity regression.
+- Reflectivity and SigWx stage only when the exact source completed
+  latest.json identifies the previous native timestamp in the same run.
+  Open-Meteo open-data README documents native timesteps and backward
+  precipitation sums: https://github.com/open-meteo/open-data#updates-to-real-time-weather-forecasts
+  No fixed six-hour divisor, no borrowing older cycles, no zero-filling.
+  Existing native rate diagnostic is not DEM-adjusted precipitation.
+  White = clear/no echo; gray = missing; phase approximation explicitly
+  recorded. SigWx requires CAPE, surface temperature/RH and wind;
+  ice phase availability recorded. These are not official hazard warnings.
+- The world stage now records per-source input presence/range/finite
+  coverage and low-valid-fraction rejection. Diagnosing GEM missing
+  fields and validating official ECCC GRIB metadata, grid and units are
+  still necessary; do not silently reuse unverified regional decoding.
+- V108 completed-cycle single-lead probe tests both weather and convection
+  modules before staging; no host/data-branch writes. New CI and real
+  acceptance pending at this entry. Main, old world catalogue, regional
+  products and host remain unchanged. DEM/precipitation global products,
+  main viewer integration and complete forecast timeline remain gates.
