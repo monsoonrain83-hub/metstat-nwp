@@ -9,7 +9,7 @@ Raw model precipitation rate is used for this *staging* diagnostic,
 as in the existing regional SigWx/reflectivity kernels; it is not a
 DEM-corrected precipitation forecast product.
 """
-from datetime import datetime,timedelta,timezone
+from datetime import timedelta
 import numpy as np
 import nwp_maps as N
 
