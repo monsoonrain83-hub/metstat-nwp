@@ -16,6 +16,7 @@ PRODUCTS={
     'gdi':('','gdi'), 'shw':('K','shw'),
     'lr75':('K/km','lr'), 'lr85':('K/km','lr'),
     'sh85':('m/s','shr'), 'sh06':('m/s','shr'),
+    'ko':('K','ko'), 'swt':('','swt'),
 }
 LEVELS=(925,850,700,500)
 INPUTS={'cape','convective_inhibition','lifted_index','surface_pressure',
@@ -79,6 +80,26 @@ def derive(model,source,data,validate_grid,selected=None):
         k=['temperature_850hPa','temperature_500hPa','relative_humidity_850hPa']+ps_keys
         if 'tt' in requested:save('tt',T[850]+td-2*T[500],k,'existing secondary TT',lv,ps,ps_method)
         if 'shw' in requested:save('shw',S.parcel_to_500(T[850],td,850.,T[500]),k,'existing parcel_to_500',lv,ps,ps_method)
+    if ps is not None and 'ko' in requested and have(850,700,500):
+        t2=get('temperature_2m',-100,65);rh2=get('relative_humidity_2m',0,100)
+        if t2 is not None and rh2 is not None:
+            td={p:N.td_from_rh(T[p],RH[p]) for p in (850,700,500)}
+            td2=N.td_from_rh(t2,rh2)
+            value=.5*(S.theta_e(T[500],td[500],500.)+S.theta_e(T[700],td[700],700.))-.5*(S.theta_e(t2,td2,ps)+S.theta_e(T[850],td[850],850.))
+            save('ko',value,keys((850,700,500))+['temperature_2m','relative_humidity_2m'],
+                 'existing MetStat surface-based KO (not classic 1000 hPa KO)',(850,700,500),ps,ps_method)
+    if ps is not None and 'swt' in requested and T[850] is not None and T[500] is not None and RH[850] is not None:
+        winds=[f'wind_{c}_component_{p}hPa' for p in (850,500) for c in ('u','v')]
+        v=[get(n,-200,200) for n in winds]
+        if all(x is not None for x in v):
+            u850,v850,u500,v500=v
+            td850=N.td_from_rh(T[850],RH[850]);tt=T[850]+td850-2*T[500]
+            f850=np.hypot(u850,v850)*1.94384;f500=np.hypot(u500,v500)*1.94384
+            direction=lambda u,v:(np.degrees(np.arctan2(-u,-v))+360)%360
+            sh=np.sin(np.radians(direction(u500,v500)-direction(u850,v850)))
+            value=12*np.maximum(td850,0)+20*np.maximum(tt-49,0)+2*f850+f500+125*(np.maximum(sh,0)+.2)
+            save('swt',value,['temperature_850hPa','temperature_500hPa','relative_humidity_850hPa']+winds+ps_keys,
+                 'existing MetStat modified SWEAT', (850,500),ps,ps_method)
     if ps is not None and 'gdi' in requested and have(*LEVELS):
         save('gdi',N.gdi(T,RH,ps),keys(LEVELS),'existing GDI (925 hPa substitution)',LEVELS,ps,ps_method)
     if ps is not None:
