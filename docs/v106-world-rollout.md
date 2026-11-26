@@ -78,3 +78,27 @@ world viewer with completion of the integrated main forecast page.
    model/run/frame selection, geog hierarchy, export and browser lifecycle.
 4. Verify actual host baseline, storage, upload integrity, two-run retention,
    rollback and live public map readback. Only then install/publish.
+
+## V107 — global convection first implementation (staging only)
+- Opt-in `global_nwp_stage.py --convection`: CAPE, CIN, LI, K, Soaring,
+  TT, GDI, Showalter, 700–500/850–500 lapse rates, 850–500 shear and
+  existing 10 m–500 hPa approximate 0–6 km shear. Derive each product on
+  one native source and same cycle/valid time. Use existing MetStat
+  thermodynamic kernels and discrete palettes. Reject incompatible
+  grids/units, mask below-ground levels (15 hPa margin); no Iran-specific
+  surface substitution for global indices. Existing native CAPE/CIN/LI
+  are preferred; CIN requires negative convention. Pressure derived
+  from MSLP and native terrain is identified as approximate.
+- Global raster verifier now accepts these twelve products only with
+  explicit units, palette and input/calculation provenance.
+- Real data acceptance workflow `v107-world-convection-probe.yml`
+  reads one +24 h frame per core model, max parallel 2, job 35 min,
+  staging budget 128 MiB/model, no secrets, no write to host or data
+  branch. Missing products are reported explicitly.
+- SWEAT, KO, simulated reflectivity, Significant Weather, full-profile
+  shear and remaining indices are pending. In particular reflectivity
+  and SigWx require verified precipitation interval/phase semantics;
+  do not turn a cumulative precipitation field into a rate blindly.
+- Real field coverage, native unit documentation and scientific QA,
+  complete world timeline and main forecast UI integration remain release
+  gates. No change to regional formulas or operational publishing.
