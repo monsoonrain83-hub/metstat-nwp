@@ -20,6 +20,7 @@ import numpy as np
 from scipy.ndimage import map_coordinates, gaussian_filter
 from PIL import Image, ImageDraw, ImageFont
 import styles, secondary, warn_icons, id_points, wind_tile, hl_centers
+import anomaly_windows as AW
 styles.SC.update(secondary.SECSC)
 
 UTC = timezone.utc
@@ -88,8 +89,8 @@ PARAMS.update({
     'tsoil': dict(kind='inst', sc='temp', models=I_ECA, unit='°C', en='Soil temperature near surface (°C)', fa='دمای خاک نزدیک سطح'),
     'tmax':  dict(kind='day', sc='temp', models=I_ECA, unit='°C', en='Max. temperature 2m, 24h (°C)', fa='دمای بیشینه ۲۴ ساعته', lapse=True),
     'tmin':  dict(kind='day', sc='temp', models=I_ECA, unit='°C', en='Min. temperature 2m, 24h (°C)', fa='دمای کمینه ۲۴ ساعته', lapse=True),
-    'tanom': dict(kind='day', sc='tanom', models=ALL, unit='K', en='Temperature 2m anomaly, daily mean (K)', fa='انومالی دمای ۲ متری (میانگین روزانه)', lapse=True),
-    'tanom5': dict(kind='day', sc='tanom5', models=ALL, unit='K', win_d=5, en='Temperature 2m anomaly, 5-day mean (K)', fa='انومالی دمای ۲ متری (میانگین ۵ روزه)', lapse=True),
+    'tanom': dict(kind='day', anomaly_window=1, sc='tanom', models=ALL, unit='K', en='Temperature 2m anomaly, daily mean (K)', fa='انومالی دمای ۲ متری (میانگین روزانه)', lapse=True),
+    'tanom5': dict(kind='day', anomaly_window=5, sc='tanom5', models=ALL, unit='K', win_d=5, en='Temperature 2m anomaly, 5-day mean (K)', fa='انومالی دمای ۲ متری (میانگین ۵ روزه)', lapse=True),
     'rh':    dict(kind='inst', sc='rh', models=I_EC, unit='%', en='Relative humidity 2m (%)', fa='رطوبت نسبی ۲ متری'),
     'pw':    dict(kind='inst', sc='pw', models=I_EC, unit='mm', en='Entire Atmosphere Precipitable Water (mm)', fa='آب قابل بارش'),
     'ki':    dict(kind='inst', sc='ki', models=I_ECG, unit='', en='K-Index', fa='شاخص K'),
@@ -1483,6 +1484,9 @@ class Engine:
         # جمع‌های تجمعی روی شبکهٔ اصلی هر منبع
         for name, d in D.items():
             if name == 'upper': continue
+            # Temperature availability is independent of precipitation.
+            if d.get('temperature_2m') is not None:
+                st.tser[name][vt] = (d['temperature_2m'], d.get('temperature_2m_max', d['temperature_2m']), d.get('temperature_2m_min', d['temperature_2m']), dt_h)
             cp_off = d.pop('_cum_precip', None); cs_off = d.pop('_cum_snow', None)      # r132: تجمعی مستقیم منبع رسمی
             p = d.get('precipitation'); sn = d.get('snowfall_water_equivalent')
             if p is None: continue
@@ -1497,8 +1501,6 @@ class Engine:
                 if cs_off is not None and cs_off.shape == c['snow'].shape: c['snow'] = np.nan_to_num(np.minimum(cs_off, cp_off)).astype(np.float32)
             st.hist[name][vt] = (c['precip'].copy(), c['snow'].copy())
             if i > 0 and lead % 24 == 0 and cp_off is None: log(f'  [{mkey}/{name}] تجمعی بارش +{lead}h: میانگین {np.nanmean(c["precip"]):.2f} · بیشینه {np.nanmax(c["precip"]):.1f} mm   (برای بررسی با منبع بیرونی)')
-            if 'temperature_2m' in d and (mkey in ('ecmwf', 'gfs', 'gem') or MM_ON):
-                st.tser[name][vt] = (d['temperature_2m'], d.get('temperature_2m_max', d['temperature_2m']), d.get('temperature_2m_min', d['temperature_2m']), dt_h)
         made = 0
         for rk, R in s.regions.items():
             if s.sink_only and rk == 'eu': continue
@@ -1706,6 +1708,8 @@ class Engine:
             if P['h'] in (1, 3, 6) and dt_h > P['h'] + 1e-6: return False
             return t0 == st.run or t0 in st.hist['main']
         if P['kind'] == 'day':
+            if P.get('anomaly_window'):
+                return bool(AW.sample_times(st.run, vt, P['anomaly_window']))
             return vt.hour == 18 and lead >= 24
         return want_all
 
@@ -1781,25 +1785,28 @@ class Engine:
             if not P.get('raw'): f = f * s.precip_factor(st, R)          # بارش/برف: ضریب ارتفاعی غیرخطی (خام: pid با پسوند r)
             return (f, dict(note='Elevation-adjusted: P×(1+χΔz)/(1−χΔz), χ=0.27/km, effective height capped at 2500 m, cell total conserved') if not P.get('raw') else {})
         if P['kind'] == 'day':
-            ser = st.tser['main']; wd = P.get('win_d', 1); ts = sorted(t for t in ser if vt - timedelta(hours=24 * wd) < t <= vt)
-            if len(ts) < 3 * wd: return None
-            if wd > 1:                                         # میانگین ۵/۱۰ روزه: پوشش زمانی کامل لازم است (≥۹۰٪ گام‌های پنجره)
-                dts = [ser[t][3] for t in ts if ser[t][3]]; step = float(np.median(dts)) if dts else 6.0
-                if len(ts) < 0.9 * 24 * wd / max(step, 1.0): return None
+            ser = st.tser['main']
+            if P.get('anomaly_window'):
+                wd = P['anomaly_window']
+                avg = AW.temperature_mean(ser, st.run, vt, wd)
+                if avg is None: return None
+                C = AW.climate_mean(lambda t: clim_at(R, t), st.run, vt, wd)
+                if C is None: return None
+                T = s.lapse(st, R, lambda: avg, full=True)
+                if T.shape != C.shape: return None
+                A = np.where(np.isfinite(T) & np.isfinite(C), T - C, np.nan).astype(np.float32)
+                if not np.isfinite(A).any(): return None
+                return (A, dict(note='4 samples/day at +6,+12,+18,+24h; 1991–2020 IRIMO station normals (Iran only)'))
+            # Preserve the existing UTC18 maximum/minimum products.
+            ts = sorted(t for t in ser if vt - timedelta(hours=24) < t <= vt)
+            if len(ts) < 3: return None
             if pid in ('tmax', 'tmaxr'):
                 f = lambda: np.nanmax(np.stack([ser[t][1] for t in ts]), 0)
             elif pid in ('tmin', 'tminr'):
                 f = lambda: np.nanmin(np.stack([ser[t][2] for t in ts]), 0)
             else:
                 f = lambda: np.nanmean(np.stack([ser[t][0] for t in ts]), 0)
-            T = I(f()) if P.get('raw') else s.lapse(st, R, f, full=pid.startswith('tanom'))
-            if pid.startswith('tanom'):
-                if wd > 1:
-                    Cs = [clim_at(R, vt - timedelta(hours=24 * wd) + timedelta(hours=24 * k + 12)) for k in range(wd)]
-                    C = None if any(c is None for c in Cs) else np.mean(Cs, 0)
-                else: C = clim_at(R, vt - timedelta(hours=12))
-                if C is None: return None
-                return (T - C, dict(note='Anomaly vs. 1991–2020 IRIMO station normals (Iran only)'))
+            T = I(f()) if P.get('raw') else s.lapse(st, R, f)
             return (T, {})
         if P.get('secidx'):
             c = getattr(st, '_sf', None)
