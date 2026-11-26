@@ -21,11 +21,11 @@ SIG = 0.5
 MARG = 1.5
 PS_MARGIN = 15.0            # hPa
 # آستانهٔ برجستگی به واحد میدان: فشار سطح دریا hPa؛ ارتفاع ژئوپتانسیل به دکامتر (gpdm)
-THR = {'msl': 2.0, 850: 2.0, 700: 3.0, 500: 4.0}
+THR = {'msl': 2.0, 850: 2.0, 700: 3.0, 500: 4.0, 300: 4.0}  # 300 hPa uses initial 500 hPa threshold
 COL = {'L': (214, 32, 28, 255), 'H': (31, 79, 216, 255)}
 
 def find_centers(f, kind, ps=None, pxd=PXD):
-    """f: آرایهٔ (ارتفاع، عرض) روی کاشی (NaN مجاز). kind: 'msl'|850|700|500. ps: فشار سطح (hPa) هم‌شکل f یا None.
+    """f: آرایهٔ (ارتفاع، عرض) روی کاشی (NaN مجاز). kind: 'msl'|850|700|500|300. ps: فشار سطح (hPa) هم‌شکل f یا None.
     خروجی: فهرست (نوع 'L'|'H'، x، y در پیکسل کاشی، مقدار، برجستگی)."""
     f = np.asarray(f, np.float32)
     if not np.isfinite(f).any(): return []
@@ -51,37 +51,6 @@ def find_centers(f, kind, ps=None, pxd=PXD):
         if all(not (k[0] == o[0] and np.hypot(k[1] - o[1], k[2] - o[2]) < RAD * pxd) for k in keep): keep.append(o)
     return keep
 
-ANOMALY_COL={'L':(31,79,216,255),'H':(214,32,28,255)}
-def find_anomaly_centers(field, pxd=PXD):
-    """Signed extrema, not absolute-height centers. Preserve masked boundaries."""
-    a=np.asarray(field,np.float32)[::DEC,::DEC]
-    good=np.isfinite(a)
-    if not good.any():return []
-    p=pxd/DEC
-    weights=gaussian_filter(good.astype(np.float32),SIG*p)
-    g=gaussian_filter(np.where(good,a,0),SIG*p)/np.maximum(weights,1e-6)
-    valid=good & (weights>=.98)
-    if not valid.any():return []
-    r=max(1,int(round(RAD*p)));win=2*r+1;h,w=g.shape
-    mn=minimum_filter(np.where(valid,g,np.inf),size=win,mode='nearest')
-    mx=maximum_filter(np.where(valid,g,-np.inf),size=win,mode='nearest')
-    cand=[('L',y,x) for y,x in zip(*np.nonzero(valid&(g==mn)&(g<0)))]+[('H',y,x) for y,x in zip(*np.nonzero(valid&(g==mx)&(g>0)))]
-    ang=np.linspace(0,2*np.pi,16,endpoint=False);rr=RING*p
-    out=[]
-    for t,y,x in cand:
-        if not (rr<=x<w-rr and rr<=y<h-rr):continue
-        ys=np.round(y+rr*np.sin(ang)).astype(int);xs=np.round(x+rr*np.cos(ang)).astype(int)
-        if not valid[ys,xs].all():continue
-        v=float(g[y,x]);ring=float(g[ys,xs].mean());prom=ring-v if t=='L' else v-ring
-        if prom<2.0 or abs(v)<2.0:continue
-        actual=float(a[y,x])
-        if (t=='L' and actual>=0) or (t=='H' and actual<=0):continue
-        out.append((t,(x+.5)*DEC,(y+.5)*DEC,actual,prom))
-    keep=[]
-    for o in sorted(out,key=lambda q:-q[4]):
-        if all(k[0]!=o[0] or np.hypot(k[1]-o[1],k[2]-o[2])>=RAD*pxd for k in keep):keep.append(o)
-    return keep
-
 _FONT = {}
 def _font(sz):
     if sz not in _FONT:
@@ -95,13 +64,13 @@ def _font(sz):
             except Exception: _FONT[sz] = ImageFont.load_default()
     return _FONT[sz]
 
-def encode_layer(centers, W, H, fmt='%d', scale=1.0, colors=None):
+def encode_layer(centers, W, H, fmt='%d', scale=1.0):
     """لایهٔ شفاف WebP بدون اتلاف؛ None اگر مرکزی نیست. حرف با هالهٔ سفید برای خوانایی روی هر رنگ."""
     if not centers: return None
     im = Image.new('RGBA', (W, H), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
     fl, fv = _font(int(34 * scale)), _font(int(18 * scale)); halo = (255, 255, 255, 255)
     for t, x, y, v, _ in centers:
-        c = (COL if colors is None else colors)[t]
+        c = COL[t]
         d.text((x, y - 8 * scale), t, font=fl, fill=c, anchor='mm', stroke_width=max(2, int(3 * scale)), stroke_fill=halo)
         d.text((x, y + 18 * scale), fmt % round(v), font=fv, fill=c, anchor='mm', stroke_width=max(2, int(3 * scale)), stroke_fill=halo)
     b = io.BytesIO(); im.save(b, 'WEBP', lossless=True, quality=100, method=4); return b.getvalue()
