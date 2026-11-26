@@ -1169,8 +1169,16 @@ def coherent_pressure_fields(sources, fields, required):
     """Return complete fields and their matching native grid; no cross-grid index calculation."""
     for key in ('main', 'upper'):
         data = fields.get(key, {})
-        if key in sources and all(data.get(name) is not None for name in required):
-            return data, sources[key]
+        if key not in sources or not required:
+            continue
+        arrays = [data.get(name) for name in required]
+        if any(not isinstance(a, np.ndarray) or a.ndim != 2 or not a.size for a in arrays):
+            continue
+        if any(a.shape != arrays[0].shape or np.isinf(a).any() for a in arrays):
+            continue
+        if not np.logical_and.reduce([np.isfinite(a) for a in arrays]).any():
+            continue
+        return data, sources[key]
     return None, None
 
 
