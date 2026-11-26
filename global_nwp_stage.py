@@ -316,13 +316,35 @@ def acquire(model, outdir, requested_lead=24, required_run=None, convection=Fals
                     if not selected:break
                     fields=source_fields.get(candidate.dom,{})
                     if not fields:continue
+                    # Report availability and numeric ranges without downloading
+                    # additional data. Distinguish absent inputs from QC rejection.
+                    diagnostics={}
+                    for key in sorted(WC.INPUTS):
+                        value=fields.get(key)
+                        if value is None:
+                            diagnostics[key]={'status':'absent'}
+                            continue
+                        try:
+                            value=validate_global_geometry(candidate,value)
+                            finite=np.isfinite(value)
+                            diagnostics[key]={'status':'read','finite_fraction':round(float(finite.mean()),5),
+                                              'min':float(np.min(value[finite])) if finite.any() else None,
+                                              'max':float(np.max(value[finite])) if finite.any() else None}
+                        except (ValueError,TypeError,AttributeError):
+                            diagnostics[key]={'status':'invalid_grid'}
+                    print('WORLD_INPUT_QC',json.dumps(dict(model=model,domain=candidate.dom,run=run.isoformat(),
+                          valid=valid.isoformat(),fields=diagnostics),allow_nan=False),flush=True)
                     try: conv=WC.derive(model,candidate,fields,validate_global_geometry,selected)
                     except Exception as e:
                         errors.append(f'{candidate.dom}/convection: {type(e).__name__}')
                         continue
                     for p,(arr,meta_) in conv.items():
                         try:
-                            if float(np.isfinite(arr).mean())<.90:continue
+                            fraction=float(np.isfinite(arr).mean())
+                            if fraction<.90:
+                                print('WORLD_PRODUCT_QC',json.dumps(dict(model=model,domain=candidate.dom,parameter=p,
+                                      status='insufficient_valid_fraction',finite_fraction=round(fraction,5))),flush=True)
+                                continue
                             if model in SOURCE_PRIORITY:
                                 decision=select_frame_source(model,p,run,valid,lambda d,v,r,t:d==candidate.dom)
                                 if decision is None:continue
