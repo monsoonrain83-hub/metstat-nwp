@@ -25,7 +25,9 @@ MODEL_LICENSE = {
     'ukmo':'CC BY-SA 4.0 — UK Met Office; adaptations share alike',
 }
 
-EXPECTED_UNITS = {'t2m': '°C', 'z500': 'dam', 'mslp': 'hPa'}
+CONVECTION_UNITS = {'cape':'J/kg','cin':'J/kg','li':'K','ki':'K','si':'K','tt':'K','gdi':'',
+                    'shw':'K','lr75':'K/km','lr85':'K/km','sh85':'m/s','sh06':'m/s'}
+EXPECTED_UNITS = {'t2m': '°C', 'z500': 'dam', 'mslp': 'hPa', **CONVECTION_UNITS}
 
 
 def parse_utc(value):
@@ -57,6 +59,12 @@ def verify_manifest_field(model, param, field, man, folder):
         raise ValueError('source raster resolution label mismatch')
     if field.get('units') != EXPECTED_UNITS[param]:
         raise ValueError('field unit mismatch')
+    if param in CONVECTION_UNITS:
+        palette={'lr75':'lr','lr85':'lr','sh85':'shr','sh06':'shr'}.get(param,param)
+        if (field.get('palette')!=palette or not isinstance(field.get('calculation'),str)
+            or not field['calculation'] or not isinstance(field.get('input_variables'),list)
+            or not field['input_variables'] or not all(isinstance(x,str) and x for x in field['input_variables'])):
+            raise ValueError('convection provenance missing')
     # No directory traversals, absolute paths or arbitrary local file reads.
     expected_name = f'{model}_{param}_{valid:%Y%m%d%H}.webp'
     if field.get('file') != expected_name:
