@@ -17,6 +17,7 @@ import argparse, functools, io, json, math, os, re, sys, time, threading, traceb
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 import numpy as np
+from precip_accum_qc import advance_total, window_total
 from scipy.ndimage import map_coordinates, gaussian_filter
 from PIL import Image, ImageDraw, ImageFont
 import styles, secondary, warn_icons, id_points, wind_tile, hl_centers
@@ -1455,25 +1456,30 @@ class Engine:
                     if not getattr(st, 'up_miss', False): st.up_miss = True; log(f'  ترازهای فشاری {src.dom} برای {vt:%Y%m%d%H} در هیچ‌کدام از سه اجرای اخیر پیدا نشد')
                 continue
             D[name] = src.read(run, vt, sorted(vars_))
-        # جمع‌های تجمعی روی شبکهٔ اصلی هر منبع
+        # Accumulate only valid intervals on each native source grid.
         for name, d in D.items():
             if name == 'upper': continue
-            cp_off = d.pop('_cum_precip', None); cs_off = d.pop('_cum_snow', None)      # r132: تجمعی مستقیم منبع رسمی
-            p = d.get('precipitation'); sn = d.get('snowfall_water_equivalent')
-            if p is None: continue
-            if sn is None: sn = p * snow_frac_t(d['temperature_2m']) if 'temperature_2m' in d else np.zeros_like(p)
-            c = st.cum[name]
-            if i == 0 or c['precip'] is None: c['precip'] = np.zeros_like(p); c['snow'] = np.zeros_like(p)
-            if i > 0: c['precip'] = c['precip'] + np.nan_to_num(np.maximum(p, 0)); c['snow'] = c['snow'] + np.nan_to_num(np.maximum(sn, 0))
-            if i > 0 and cp_off is not None and cp_off.shape == c['precip'].shape:
-                sm = float(np.nanmean(c['precip'])); ref = float(np.nanmean(cp_off))
-                if lead % 24 == 0 or abs(sm - ref) > 0.15 * max(ref, 1.0) + 0.3: log(f'  [{mkey}/{name}] تجمعی +{lead}h: رسمی(TOT_PREC) میانگین {ref:.2f} · بیشینه {np.nanmax(cp_off):.1f} mm | مجموع بازه‌ها میانگین {sm:.2f} · بیشینه {np.nanmax(c["precip"]):.1f} mm' + ('  ⚠ مغایرت؛ مقدار رسمی استفاده شد' if abs(sm - ref) > 0.15 * max(ref, 1.0) + 0.3 else ''))
-                c['precip'] = np.nan_to_num(cp_off).astype(np.float32)
-                if cs_off is not None and cs_off.shape == c['snow'].shape: c['snow'] = np.nan_to_num(np.minimum(cs_off, cp_off)).astype(np.float32)
-            st.hist[name][vt] = (c['precip'].copy(), c['snow'].copy())
-            if i > 0 and lead % 24 == 0 and cp_off is None: log(f'  [{mkey}/{name}] تجمعی بارش +{lead}h: میانگین {np.nanmean(c["precip"]):.2f} · بیشینه {np.nanmax(c["precip"]):.1f} mm   (برای بررسی با منبع بیرونی)')
             if 'temperature_2m' in d and (mkey in ('ecmwf', 'gfs', 'gem') or MM_ON):
                 st.tser[name][vt] = (d['temperature_2m'], d.get('temperature_2m_max', d['temperature_2m']), d.get('temperature_2m_min', d['temperature_2m']), dt_h)
+            cp_off = d.pop('_cum_precip', None); cs_off = d.pop('_cum_snow', None)
+            p = d.get('precipitation'); sn = d.get('snowfall_water_equivalent')
+            if p is None: continue
+            if sn is None:
+                sn = p * snow_frac_t(d['temperature_2m']) if 'temperature_2m' in d else np.where(p == 0, 0., np.nan)
+            c = st.cum[name]
+            if i == 0:
+                # The initialization instant is the only unconditional zero baseline.
+                if vt != run: continue
+                c['precip'] = np.zeros_like(p, dtype=np.float32)
+                c['snow'] = np.zeros_like(p, dtype=np.float32)
+            else:
+                first = i == 1 and vts[0] == run
+                contiguous = first or vts[i - 1] in st.hist[name]
+                c['precip'] = advance_total(c['precip'], p, first_interval=first, contiguous=contiguous, official=cp_off)
+                c['snow'] = advance_total(c['snow'], sn, first_interval=first, contiguous=contiguous, official=cs_off)
+                # Snow water equivalent cannot exceed the same-cycle total precipitation.
+                c['snow'] = np.minimum(c['snow'], c['precip'])
+            st.hist[name][vt] = (c['precip'].copy(), c['snow'].copy())
         made = 0
         for rk, R in s.regions.items():
             if s.sink_only and rk == 'eu': continue
@@ -1692,7 +1698,7 @@ class Engine:
         t0 = vt - timedelta(hours=h)
         if t0 == st.run: return c1
         if t0 not in Hh: return None
-        return c1 - Hh[t0][0 if var == 'precip' else 1]
+        return window_total(c1, Hh[t0][0 if var == 'precip' else 1])
 
     def blend(s, st, R, name_field):
         """ICON: ICON-EU (۷ کیلومتر) در محدودهٔ خودش، ICON جهانی در بقیه؛ نوار ۱ درجه‌ای برای اتصال نرم مقدار (نه رنگ)."""
