@@ -1546,17 +1546,12 @@ class Engine:
                     png, lines = render_me(R, field, sck, **{k: v for k, v in extra.items() if k in ('cont', 'cont_lvls', 'cont_fmt', 'barbs', 'stream', 'lows', 'bold', 'cont_fine')})
                     rid_ = f'{run:%Y%m%d%H}'; s.up.put(mkey, rid_, fname, png, dict(r=rk, m=mkey, p=pid, s=lead, v=f'{vt:%Y%m%d%H}'))
                     if lines: s.up.put(mkey, rid_, f'{rk}/{pid}L_{vt:%Y%m%d%H}.webp', lines, dict(r=rk, m=mkey, p=pid + 'L', s=lead, v=f'{vt:%Y%m%d%H}'))
-                    if extra.get('anomaly_hl'):
-                        try:
-                            cs_ = hl_centers.find_anomaly_centers(field, R.px if rk == 'eu' else PXD)
-                            hb = hl_centers.encode_layer(cs_, R.W if rk == 'eu' else MEW, R.H if rk == 'eu' else MEH, fmt='%+d', colors=hl_centers.ANOMALY_COL)
-                            if hb: s.up.put(mkey,rid_,f'{rk}/{pid}AH_{vt:%Y%m%d%H}.webp',hb,dict(r=rk,m=mkey,p=pid+'AH',s=lead,v=f'{vt:%Y%m%d%H}'))
-                        except Exception as e_: log(f'  ! anomaly L/H {pid}: {type(e_).__name__}: {e_}')
                     if extra.get('hl') is not None:                       # r63: لایهٔ مراکز L/H (شفاف، قابل روشن/خاموش در سایت)
                         try:
                             hk, hf, hps = extra['hl']; cs_ = hl_centers.find_centers(hf, hk, hps, R.px if rk == 'eu' else PXD)
                             hb = hl_centers.encode_layer(cs_, R.W if rk == 'eu' else MEW, R.H if rk == 'eu' else MEH)
-                            if hb: s.up.put(mkey, rid_, f'{rk}/{pid}H_{vt:%Y%m%d%H}.webp', hb, dict(r=rk, m=mkey, p=pid + 'H', s=lead, v=f'{vt:%Y%m%d%H}'))
+                            suffix = 'AH' if P.get('pressure_anomaly') else 'H'  # AH is only a transport key; centers are absolute.
+                            if hb: s.up.put(mkey, rid_, f'{rk}/{pid}{suffix}_{vt:%Y%m%d%H}.webp', hb, dict(r=rk, m=mkey, p=pid + suffix, s=lead, v=f'{vt:%Y%m%d%H}'))
                         except Exception as e_: log(f'  ! L/H {pid}: {type(e_).__name__}: {e_}')
                     if wants_value(pid, P) and rk == 'me':
                         try:
@@ -1820,8 +1815,23 @@ class Engine:
             A, Z = result
             levels = {'z850':(100,180,1),'z700':(250,340,1),'z500':(480,620,1),'z300':(800,1050,3),'mslp':(900,1100,4)}
             lo,hi,step = levels[parameter]
+            # Reuse the ordinary absolute-height/pressure center field, independent of climatology.
+            if parameter == 'mslp':
+                centers = ('msl', R.interp(us,U[field]), None)
+            else:
+                p = int(parameter[1:])
+                height = R.interp(us,U[field]) / 10
+                hs = us.hsurf()
+                ps = None
+                if U.get('pressure_msl') is not None:
+                    ps = R.interp(us,U['pressure_msl'] * np.exp(-(hs if hs is not None else 0) / 8434.0))
+                elif p in (850,700) and hs is not None:
+                    # If MSLP is absent, suppress below-terrain centers using native terrain.
+                    ground = R.interp(us,hs)
+                    ps = np.where(np.isfinite(ground)&(ground < height*10), p+hl_centers.PS_MARGIN, np.nan)
+                centers = (p,height,ps)
             extra = dict(cont=Z,cont_lvls=np.arange(lo,hi,step),cont_fine=True,
-                         anomaly_hl=True,note=f'{ref.source} 1991–2020 synoptic normal; native source {us.dom}')
+                         hl=centers,note=f'{ref.source} 1991–2020 synoptic normal; native source {us.dom}; H/L absolute field')
             if parameter == 'z500': extra['bold']=580
             return A, extra
         if P['kind'] == 'day':
