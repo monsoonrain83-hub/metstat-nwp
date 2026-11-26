@@ -8,6 +8,7 @@ import argparse, io, json, math, os, re, sys, tempfile, time
 import numpy as np
 from scipy.ndimage import map_coordinates
 import nwp_maps as N, styles
+from nmme_time_qc import target_month_offsets, valid_months
 
 BASE = 'https://ftp.cpc.ncep.noaa.gov/NMME/realtime_anom/'
 # کلید مدل روی هاست: (نام پوشه در CPC — بدون حساسیت به حروف، برچسب فارسی, نام لاتین)
@@ -49,7 +50,7 @@ def regrid(arr, lon, lat):
     a = np.where(np.isfinite(arr), arr, np.nanmean(arr))
     return map_coordinates(a, [iy, ix], order=3, mode='nearest').astype(np.float32)
 
-def read_nc(path, vname):
+def read_nc(path, vname, run):
     """خروجی: data(lead,lat,lon), lon, lat, offs(ماه‌های پس از آغاز اجرا), units
     فایل‌های CPC/NMME متغیر دادهٔ عمومی «fcst» دارند (ابعاد: initial_time, ensmem, target, lat, lon)."""
     import netCDF4
@@ -79,12 +80,19 @@ def read_nc(path, vname):
     if tk is None: raw = raw[None]; dims = ['target'] + dims; tk = 'target'
     data = np.transpose(raw, [dims.index(tk), next(i for i, d in enumerate(dims) if isl(d)), next(i for i, d in enumerate(dims) if iso(d))])
     lon = np.array(vs[lonk][:], float); lat = np.array(vs[latk][:], float)
-    offs = None
     tn = next((k for k in vs if k.lower() == tk), None)
-    if tn:
-        t = np.array(vs[tn][:], float).ravel()
-        if len(t) == data.shape[0]: offs = [int(round(x - 0.5)) for x in t]
-    if offs is None: offs = list(range(data.shape[0]))
+    if not tn:
+        ds.close()
+        raise ValueError("monthly target coordinate missing")
+    try:
+        coord = vs[tn]
+        t = np.ma.filled(np.ma.asarray(coord[:], dtype=float), np.nan).ravel()
+        if len(t) != data.shape[0]:
+            raise ValueError("monthly target coordinate length mismatch")
+        offs = target_month_offsets(t, getattr(coord, 'units', ''), getattr(coord, 'calendar', 'standard'), run, netCDF4.num2date)
+    except Exception:
+        ds.close()
+        raise
     log(f'  nc: var={key} dims={v.dimensions} units="{units}" shape={tuple(data.shape)} offs={offs[:4]}..')
     ds.close(); return data, lon, lat, offs, units
 
@@ -114,15 +122,17 @@ def run_model(up, mkey, init_dirs, a):
         if not fs: log(f'  ✗ {mkey}: فایل {vn} نیست'); continue
         with tempfile.TemporaryDirectory() as td:
             p = os.path.join(td, 'x.nc'); open(p, 'wb').write(get(d + sub + fs[0], True))
-            data, lon, lat, offs, units = read_nc(p, vn)
+            data, lon, lat, offs, units = read_nc(p, vn, run)
             m_ = mul if (vn != 'prate' or not units or re.search(r'(s-1|/s|s\^-1)', units.replace(' ', ''), re.I)) else 1.0
+        dates = valid_months(run, offs)
+        if len(dates) != len(data): raise ValueError('monthly field and target count mismatch')
         if not started:
             up.call('begin', js={'model': mkey, 'run': run, 'name': mkey.upper(), 'label': label, 'info': dict(tclass='monthly', res='1°', cyc='ماهانه', prov='NOAA CPC / NMME'),
                                  'cats': [dict(id=i, fa=f, o=o) for i, f, o in N.CATS],
                                  'scales': {k: dict(c=styles.SC[k]['colors'], e=[None if abs(x) == math.inf else x for x in styles.SC[k]['edges']], lo=True, hi=True) for k in ('lrta', 'lrpa')},
                                  'params': {v[0]: dict(fa=v[1], unit=v[2], cat=v[3], o=90 + i, sc=v[4], mu=v[2], alt='', me=1, ln=0) for i, v in enumerate(VARS.values())}}); started = True
         for k in range(min(len(data), 9)):
-            y, m = month_add(y0, m0, offs[k]); valid = f'{y}{m:02d}0100'
+            valid = dates[k]
             f = regrid(data[k] * m_, lon, lat)
             if not np.isfinite(f).any(): continue
             dat, _ = N.render_me(None, f, sc)
@@ -136,7 +146,7 @@ def main():
     if a.mock:
         global get, links, find_dir, read_nc
         rng = np.random.default_rng(1); la = np.arange(-89.5, 90); lo = np.arange(0.5, 360)
-        def read_nc(path, vn): return rng.normal(0, 1.2 if vn == 'tmp2m' else 1.5e-5 if vn == 'prate' else 1, (7, 180, 360)).astype(np.float32), lo, la, list(range(7)), 'kg m-2 s-1'
+        def read_nc(path, vn, run): return rng.normal(0, 1.2 if vn == 'tmp2m' else 1.5e-5 if vn == 'prate' else 1, (7, 180, 360)).astype(np.float32), lo, la, list(range(7)), 'kg m-2 s-1'
         find_dir = lambda k: BASE + k + '/'
         links = lambda u: (['202610/'] if False else []) or (['2026100800/'] if u.endswith('/') and u.count('/') < 7 else ['prate.nc', 'tmp2m.nc'])
         get = lambda u, b=False: b'x'
