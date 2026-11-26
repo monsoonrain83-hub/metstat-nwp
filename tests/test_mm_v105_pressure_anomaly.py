@@ -16,7 +16,7 @@ class Source:
     def hsurf(self):return a(0)
 def reg():
     lat,lon=np.meshgrid([30.,31.],[50.,51.],indexing='ij')
-    return SimpleNamespace(lat=lat,lon=lon,interp=lambda src,v:v.copy())
+    return SimpleNamespace(key='me',lat=lat,lon=lon,interp=lambda src,v:v.copy())
 def ref(source='ERA5'):
     n=366 if source=='ERA5' else 365
     v=np.full((n,4,2,2),5500.,np.float32)
@@ -63,7 +63,7 @@ class FrameTests(unittest.TestCase):
     def test_centers_unchanged_when_anomaly_sign_reverses(self):
         y,x=np.mgrid[:400,:600]
         height=(5500+200*np.exp(-((x-130)**2+(y-200)**2)/2000)-200*np.exp(-((x-470)**2+(y-200)**2)/2000)).astype(np.float32)
-        r=SimpleNamespace(interp=lambda src,v:v.copy())
+        r=SimpleNamespace(key='me',interp=lambda src,v:v.copy())
         st=SimpleNamespace(run=RUN,model='gfs',srcs={'main':Source()})
         d={'main':{'geopotential_height_500hPa':height}}
         layers=[]
