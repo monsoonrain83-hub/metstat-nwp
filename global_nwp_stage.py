@@ -16,6 +16,7 @@ import numpy as np
 from PIL import Image, ImageDraw
 import nwp_maps as N
 from nwp_unified_resolution import select_frame_source, SOURCE_PRIORITY
+import world_convection as WC
 
 UTC = timezone.utc
 DOMAINS = {
@@ -65,6 +66,19 @@ def render(field, param, dest):
     im.save(dest, format='WEBP', lossless=True, method=4)
     return {'width':im.width,'height':im.height,'finite_fraction':round(float(np.isfinite(a).mean()),5),
             'min':round(float(np.nanmin(a)),2),'max':round(float(np.nanmax(a)),2)}
+
+def render_convection(field,param,dest):
+    """Use existing fixed MetStat scale, not the generic global palette."""
+    a=np.asarray(field,np.float32)
+    scale=N.styles.SC[WC.PRODUCTS[param][1]]
+    idx=np.clip(np.digitize(a,scale['edges'][1:-1]),0,len(scale['colors'])-1)
+    palette=np.array([N.styles.hex2rgb(c) for c in scale['colors']],np.uint8)
+    rgb=palette[idx];rgb[~np.isfinite(a)]=[215,215,215]
+    im=Image.fromarray(np.flipud(rgb),'RGB')
+    im.save(dest,format='WEBP',lossless=True,method=4)
+    return dict(width=im.width,height=im.height,finite_fraction=round(float(np.isfinite(a).mean()),5),
+                min=round(float(np.nanmin(a)),2),max=round(float(np.nanmax(a)),2))
+
 
 def product_manifest(model, run, valid, dom, result):
     # Root source must never claim coarse 28km when a high-resolution raster
@@ -201,7 +215,7 @@ def cycle_candidates(*sources):
     ]
 
 
-def acquire(model, outdir, requested_lead=24, required_run=None):
+def acquire(model, outdir, requested_lead=24, required_run=None, convection=False):
     import s3fs
     dom = DOMAINS[model]
     fs = s3fs.S3FileSystem(anon=True, default_block_size=65536)
@@ -229,8 +243,10 @@ def acquire(model, outdir, requested_lead=24, required_run=None):
             # Source availability is independent: a missing 0.25-degree field
             # must not prevent using a verified 9/13km field at the same cycle.
             # Never mix runs or substitute a different valid time.
+            wanted = {v[0] for v in FIELDS.values()}
+            if convection: wanted |= WC.INPUTS
             source_fields = read_independent_sources(
-                (src, hi_src), run, valid, sorted(v[0] for v in FIELDS.values()), errors)
+                (src, hi_src), run, valid, sorted(wanted), errors)
             data = source_fields.get(src.dom, {})
             high_data = source_fields.get(hi_src.dom, {}) if hi_src else {}
             if not data and not high_data: continue
@@ -290,6 +306,45 @@ def acquire(model, outdir, requested_lead=24, required_run=None):
                                  'resampling':('octahedral-O1280-to-regular-grid' if chosen_domain=='ecmwf_ifs' else 'native-source-grid'),
                                  **stats}
                 except Exception as e: errors.append(f'{p}: {e}')
+            if convection:
+                # Derived products are calculated independently on each native
+                # source, not by merging individual input variables across grids.
+                # Prefer complete high-res products, then same-run coarse ones.
+                for candidate in (hi_src,src):
+                    if candidate is None: continue
+                    selected=set(WC.PRODUCTS)-set(products)
+                    if not selected:break
+                    fields=source_fields.get(candidate.dom,{})
+                    if not fields:continue
+                    try: conv=WC.derive(model,candidate,fields,validate_global_geometry,selected)
+                    except Exception as e:
+                        errors.append(f'{candidate.dom}/convection: {type(e).__name__}')
+                        continue
+                    for p,(arr,meta_) in conv.items():
+                        try:
+                            if float(np.isfinite(arr).mean())<.90:continue
+                            if model in SOURCE_PRIORITY:
+                                decision=select_frame_source(model,p,run,valid,lambda d,v,r,t:d==candidate.dom)
+                                if decision is None:continue
+                                nominal=decision.nominal_resolution
+                            else:nominal=NOMINAL_SINGLE_SOURCE[model]
+                            units,scale=WC.PRODUCTS[p]
+                            fname=f'{model}_{p}_{valid:%Y%m%d%H}.webp'
+                            raster_path=outdir/fname
+                            stats=render_convection(arr,p,raster_path)
+                            products[p]=dict(file=fname,variable=p,units=units,
+                                sha256=hashlib.sha256(raster_path.read_bytes()).hexdigest(),
+                                logical_model=model,init_utc=run.strftime('%Y-%m-%dT%H:%M:%SZ'),
+                                valid_utc=valid.strftime('%Y-%m-%dT%H:%M:%SZ'),
+                                lead_hours=int((valid-run).total_seconds()/3600),
+                                field_source_domain=candidate.dom,nominal_resolution=nominal,
+                                source_grid=[candidate.nx,candidate.ny],
+                                source_grid_origin=[candidate.lo0,candidate.la0],
+                                source_grid_spacing=[candidate.dx,candidate.dy],
+                                source_grid_bbox_centers_wgs84=[candidate.lo0,candidate.la0,candidate.lo0+candidate.dx*(candidate.nx-1),candidate.la0+candidate.dy*(candidate.ny-1)],
+                                resampling=('octahedral-O1280-to-regular-grid' if candidate.dom=='ecmwf_ifs' else 'native-source-grid'),
+                                palette=scale,**meta_,**stats)
+                        except Exception as e:errors.append(f'{candidate.dom}/{p}: {type(e).__name__}')
             if products:
                 man=product_manifest(model,run,valid,dom,products)
                 (outdir/'manifest.json').write_text(json.dumps(man,ensure_ascii=False,indent=2),encoding='utf-8')
@@ -304,6 +359,7 @@ def main():
     p.add_argument('--out',required=True)
     p.add_argument('--lead',type=int,default=24)
     p.add_argument('--run-utc', help='Require this exact source cycle (ISO UTC); never fall back to a different run')
+    p.add_argument('--convection',action='store_true',help='Stage verified convection products; no deployment')
     a=p.parse_args()
-    acquire(a.model,Path(a.out),a.lead,parse_meta_utc(a.run_utc) if a.run_utc else None)
+    acquire(a.model,Path(a.out),a.lead,parse_meta_utc(a.run_utc) if a.run_utc else None,convection=a.convection)
 if __name__=='__main__': main()
