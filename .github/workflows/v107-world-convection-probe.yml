@@ -1,0 +1,59 @@
+name: V107 real global convection acceptance (staging only)
+on:
+  push:
+    branches: [fix/v102-same-cycle-anomaly-contract]
+    paths: [.github/workflows/v107-world-convection-probe.yml]
+  workflow_dispatch: {}
+permissions:
+  contents: read
+concurrency:
+  group: v107-world-convection-probe
+  cancel-in-progress: false
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        model: [ecmwf, gfs, icon, ukmo, gem]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          pip install -r requirements.txt
+          pip install "omfiles[fsspec]" s3fs
+      - run: PYTHONPATH=. python -m unittest discover -s tests -p test_mm_v107_world_convection.py -v
+      - name: Fetch one exact lead and stage supported products only
+        run: timeout 25m python global_nwp_stage.py --model "${{ matrix.model }}" --out "stage/world-${{ matrix.model }}" --lead 24 --convection
+      - name: Verify staged world fields and convection coverage
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from pack_world_frames import package_frames
+          from pack_global_products import CONVECTION_UNITS
+          c=package_frames(Path('stage'),Path('verified'),128*1024*1024)
+          model, row=next(iter(c['models'].items()))
+          found=sorted(set(row['parameters']) & CONVECTION_UNITS.keys())
+          missing=sorted(CONVECTION_UNITS.keys()-set(found))
+          report=dict(model=model,run_utc=row['run_utc'],available=found,missing=missing,
+                      raster_bytes=c['raster_bytes'],deployment=False)
+          Path('coverage.json').write_text(json.dumps(report,indent=2))
+          print(json.dumps(report))
+          if not found: raise SystemExit('No verified convection products')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v107-world-${{ matrix.model }}
+          path: |
+            coverage.json
+            verified/
+          if-no-files-found: warn
+          retention-days: 3
