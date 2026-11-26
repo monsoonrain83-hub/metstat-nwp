@@ -32,21 +32,17 @@ class Region:
 def field(x): return np.full((2,2),x,dtype=np.float32)
 
 class DailyPolicyTests(unittest.TestCase):
-    def test_catalog_does_not_produce_cancelled_products(self):
-        self.assertNotIn('z850a',nm.PARAMS)
+    def test_catalog_uses_new_six_hour_policy(self):
         self.assertNotIn('tanom10',nm.PARAMS)
-        self.assertNotIn('z850a',nm.EU_PIDS)
         self.assertIn('z850',nm.PARAMS)
-        self.assertIn('z850',nm.EU_PIDS)
         self.assertIn('tanom',nm.PARAMS)
         self.assertIn('tanom5',nm.PARAMS)
-    def test_z700a_only_ecmwf_and_gfs_sources(self):
-        self.assertEqual(set(nm.PARAMS['z700a']['models']),{'ecmwf','gfs','gfs25'})
-        self.assertTrue({'ecmwf','gfs','gfs25','icon','gem','ukmo'}<=set(nm.PARAMS['z500a']['models']))
-        self.assertIn('z500a',nm.EU_PIDS)
-        self.assertIn('z700a',nm.EU_PIDS)
-        for k in ('z500a','z700a'):
-            self.assertEqual(nm.PARAMS[k]['unit'],'dam')
+        for p in ('z850a','z700a','z500a','z300a','mslpa'):
+            self.assertIn(p,nm.EU_PIDS)
+            self.assertEqual(nm.PARAMS[p]['kind'],'inst')
+            self.assertTrue(nm.PARAMS[p]['sixhour'])
+            self.assertEqual(set(nm.PARAMS[p]['models']),set(nm.MODELS))
+            self.assertEqual(nm.PARAMS[p]['unit'],'hPa' if p=='mslpa' else 'dam')
     def test_previous_cycle_not_read(self):
         s=Source('coarse',[(RUN-timedelta(hours=6),VALID)],{'z':field(1)})
         self.assertIsNone(nm.read_same_cycle_upper(s,RUN,VALID,{'z'}))
@@ -80,31 +76,30 @@ class DailyPolicyTests(unittest.TestCase):
         for d in cases:
             with self.subTest(d=d):
                 self.assertEqual(nm.coherent_pressure_fields(src,{'main':d},['a','b']),(None,None))
-    def daily_state(self, level, value, coarse_height=0):
-        src={'main':Source('fine',height=500),'upper':Source('coarse',height=coarse_height)}
-        st=SimpleNamespace(model='gfs',srcs=src,run=RUN)
-        d={'main':{},'upper':{f'geopotential_height_{level}hPa':field(value)}}
-        for h in (6,12,18,24):
-            nm.PD.collect(st,d,RUN+timedelta(hours=h),[level])
-        return st,d
     def test_actual_z500_anomaly_uses_matching_coarse_grid(self):
-        st,d=self.daily_state(500,5580)
+        src={'main':Source('fine'),'upper':Source('coarse')}
+        st=SimpleNamespace(model='gfs',run=RUN,srcs=src)
+        data={'main':{},'upper':{'geopotential_height_500hPa':field(5580)}}
         r=Region()
-        ref=SimpleNamespace(at=lambda level,t,region:field(5500))
-        with patch.object(nm,'daily_pressure_reference',return_value=ref):
-            a,extra=nm.Engine.make(None,nm.PARAMS['z500a'],'z500a',st,d,r,VALID,24,6)
+        ref=SimpleNamespace(at=lambda t,region:field(5500),source='ERA5')
+        with patch.object(nm,'pressure_reference',return_value=ref):
+            a,extra=nm.Engine.make(None,nm.PARAMS['z500a'],'z500a',st,data,r,VALID,24,6)
         np.testing.assert_array_equal(a,field(8))
         np.testing.assert_array_equal(extra['cont'],field(558))
+        self.assertTrue(extra['anomaly_hl'])
         self.assertEqual(r.calls,[('coarse',(2,2)),('coarse',(2,2))])
     def test_z700_correct_grid_terrain_mask(self):
-        st,d=self.daily_state(700,3000,3100)
-        ref=SimpleNamespace(at=lambda level,t,region:field(2900))
-        with patch.object(nm,'daily_pressure_reference',return_value=ref):
-            self.assertIsNone(nm.Engine.make(None,nm.PARAMS['z700a'],'z700a',st,d,Region(),VALID,24,6))
+        src={'main':Source('fine',height=500),'upper':Source('coarse',height=3100)}
+        st=SimpleNamespace(model='gfs',run=RUN,srcs=src)
+        data={'main':{},'upper':{'geopotential_height_700hPa':field(3000)}}
+        ref=SimpleNamespace(at=lambda t,r:field(2900),source='ERA5')
+        with patch.object(nm,'pressure_reference',return_value=ref):
+            self.assertIsNone(nm.Engine.make(None,nm.PARAMS['z700a'],'z700a',st,data,Region(),VALID,24,6))
     def test_no_climatology_no_anomaly(self):
-        st,d=self.daily_state(500,5580)
-        with patch.object(nm,'daily_pressure_reference',return_value=None):
-            self.assertIsNone(nm.Engine.make(None,nm.PARAMS['z500a'],'z500a',st,d,Region(),VALID,24,6))
+        st=SimpleNamespace(model='gfs',run=RUN,srcs={'main':Source('fine')})
+        data={'main':{'geopotential_height_500hPa':field(5580)}}
+        with patch.object(nm,'pressure_reference',return_value=None):
+            self.assertIsNone(nm.Engine.make(None,nm.PARAMS['z500a'],'z500a',st,data,Region(),VALID,24,6))
     def test_index_native_grid_not_mislabeled_when_fallback_missing(self):
         src={'main':Source('fine'),'upper':Source('coarse')}
         st=SimpleNamespace(model='gfs',srcs=src)
