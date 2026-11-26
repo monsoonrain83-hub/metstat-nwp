@@ -21,6 +21,7 @@ from scipy.ndimage import map_coordinates, gaussian_filter
 from PIL import Image, ImageDraw, ImageFont
 import styles, secondary, warn_icons, id_points, wind_tile, hl_centers
 import anomaly_windows as AW
+import pressure_daily as PD
 styles.SC.update(secondary.SECSC)
 
 UTC = timezone.utc
@@ -162,8 +163,8 @@ PARAMS.update({
     'w10':   dict(kind='inst', sc='wind10', models=I_ECG, unit='kt', me_only=True, ln=True, en='MSLP (mb) & 10m Wind Speed (kt)', fa='فشار سطح دریا و سرعت باد ۱۰ متری (گره)'),
     'w250':  dict(kind='inst', sc='windup', models=I_EC, unit='kt', me_only=True, ln=True, en='250mb Wind Speed/Streamlines (kt) & MSLP Extrema (mb)', fa='سرعت باد و خطوط جریان ۲۵۰ هکتوپاسکال (گره)'),
     'w200':  dict(kind='inst', sc='windup', models=I_EC, unit='kt', me_only=True, ln=True, en='200mb Wind Speed/Streamlines (kt)', fa='سرعت باد و خطوط جریان ۲۰۰ هکتوپاسکال (گره)'),
-    'z500a': dict(kind='inst', sc='z500a', models=ALL, unit='dam', me_only=True, ln=True, en='500hPa Geopotential Height (dam) & Anomaly', fa='ارتفاع ژئوپتانسیل ۵۰۰ هکتوپاسکال و انومالی (دکامتر)'),
-    'z700a': dict(kind='inst', sc='z700a', models=['ecmwf', 'gfs', 'gfs25'], unit='dam', me_only=True, ln=True, en='700hPa Geopotential Height (dam) & Anomaly', fa='ارتفاع ژئوپتانسیل ۷۰۰ هکتوپاسکال و انومالی (دکامتر)'),
+    'z500a': dict(kind='day', pressure_daily=500, sc='z500a', models=ALL, unit='dam', me_only=True, ln=True, en='500hPa Daily Mean Geopotential Height (dam) & Anomaly', fa='میانگین روزانه ارتفاع ژئوپتانسیل ۵۰۰ هکتوپاسکال و انومالی (دکامتر)'),
+    'z700a': dict(kind='day', pressure_daily=700, sc='z700a', models=['ecmwf', 'gfs', 'gfs25'], unit='dam', me_only=True, ln=True, en='700hPa Daily Mean Geopotential Height (dam) & Anomaly', fa='میانگین روزانه ارتفاع ژئوپتانسیل ۷۰۰ هکتوپاسکال و انومالی (دکامتر)'),
     'mslpa': dict(kind='inst', sc='mslpa', models=ALL, unit='hPa', me_only=True, ln=True, en='MSLP (hPa) & Anomaly', fa='فشار سطح دریا و انومالی (هکتوپاسکال)'),
     'thk1000': dict(kind='inst', sc='thk1000', models=I_ECG, unit='dam', me_only=True, ln=True, en='1000–500 hPa Thickness (dam) & MSLP', fa='ضخامت لایهٔ ۱۰۰۰–۵۰۰ هکتوپاسکال و فشار سطح دریا (دکامتر)'),
     'thk8550': dict(kind='inst', sc='thk8550', models=I_EC, unit='dam', me_only=True, ln=True, en='850–500 hPa Thickness (dam)', fa='ضخامت لایهٔ ۸۵۰–۵۰۰ هکتوپاسکال (دکامتر)'),
@@ -1148,6 +1149,17 @@ def z_clim_at(R, d, lvl=500):
     C = load_zclim()
     return None if C is None else _clim_interp(C['zs'][lvl], C, R, d)
 def z500_clim_at(R, d): return z_clim_at(R, d, 500)
+
+@functools.lru_cache(maxsize=1)
+def daily_pressure_reference():
+    """The new pressure products must not silently use an older baseline."""
+    path = os.path.join(HERE, 'data', 'static', 'era5_synoptic_1991_2020.npz')
+    try:
+        return PD.SynopticReference.load(path, path + '.json')
+    except Exception as e:
+        log(f'  Daily Z anomaly unavailable: ERA5 1991–2020 reference not ready ({type(e).__name__})')
+        return None
+
 def slp_clim_at(R, d):
     E = _era5_at('msl', R, d)
     if E is not None: return E
@@ -1481,6 +1493,9 @@ class Engine:
                     log(f'  {src.dom}: same-cycle pressure read failed ({type(e).__name__})')
                 continue
             D[name] = src.read(run, vt, sorted(vars_))
+        levels = [PARAMS[p]['pressure_daily'] for p in sh_mine if PARAMS[p].get('pressure_daily')]
+        if levels:
+            PD.collect(st, D, vt, levels)
         # جمع‌های تجمعی روی شبکهٔ اصلی هر منبع
         for name, d in D.items():
             if name == 'upper': continue
@@ -1708,6 +1723,8 @@ class Engine:
             if P['h'] in (1, 3, 6) and dt_h > P['h'] + 1e-6: return False
             return t0 == st.run or t0 in st.hist['main']
         if P['kind'] == 'day':
+            if P.get('pressure_daily'):
+                return bool(AW.sample_times(st.run, vt, 1))
             if P.get('anomaly_window'):
                 return bool(AW.sample_times(st.run, vt, P['anomaly_window']))
             return vt.hour == 18 and lead >= 24
@@ -1784,6 +1801,15 @@ class Engine:
                 except Exception as e: log(f'  [کرمان] تشخیص ناموفق: {type(e).__name__}: {e}')
             if not P.get('raw'): f = f * s.precip_factor(st, R)          # بارش/برف: ضریب ارتفاعی غیرخطی (خام: pid با پسوند r)
             return (f, dict(note='Elevation-adjusted: P×(1+χΔz)/(1−χΔz), χ=0.27/km, effective height capped at 2500 m, cell total conserved') if not P.get('raw') else {})
+        if P.get('pressure_daily'):
+            level = P['pressure_daily']
+            result = PD.anomaly(st, vt, level, R, daily_pressure_reference())
+            if result is None: return None
+            A, Z, domain = result
+            extra = dict(cont=Z, cont_lvls=np.arange(480, 620, 1) if level == 500 else np.arange(250, 340, 1),
+                         cont_fine=True, note=f'24h four synoptic samples; ERA5 1991–2020; native source {domain}')
+            if level == 500: extra['bold'] = 580
+            return A, extra
         if P['kind'] == 'day':
             ser = st.tser['main']
             if P.get('anomaly_window'):
@@ -1831,22 +1857,6 @@ class Engine:
             if u is None or v is None: return None
             U, V = I(u) * 1.94384, I(v) * 1.94384
             return (np.hypot(U, V), dict(stream=(U, V), lows=(I(d['pressure_msl']) if (p == 250 and 'pressure_msl' in d) else None)))
-        if pid == 'z500a':
-            U, us = coherent_pressure_fields(st.srcs, D, ['geopotential_height_500hPa'])
-            C = z500_clim_at(R, vt)
-            if U is None or C is None: return None
-            Z = R.interp(us, U['geopotential_height_500hPa']); return ((Z - C) / 10, dict(cont=Z / 10, cont_lvls=np.arange(480, 620, 1), bold=580, cont_fine=True))
-        if pid == 'z700a':
-            L = 700; field = f'geopotential_height_{L}hPa'
-            U, us = coherent_pressure_fields(st.srcs, D, [field])
-            C = z_clim_at(R, vt, L)
-            if U is None or C is None: return None
-            Z = R.interp(us, U[field]); A = (Z - C) / 10; Zc = Z / 10
-            try:                                                      # ترازِ زیر سطح زمین (فلات ایران/تبت) ماسک شود
-                hs = us.hsurf()
-                if hs is not None: bg = R.interp(us, hs) >= Z; A = np.where(bg, np.nan, A).astype(np.float32); Zc = np.where(bg, np.nan, Zc).astype(np.float32)
-            except Exception: pass
-            return (A, dict(cont=Zc, cont_lvls=np.arange(250, 340, 1), cont_fine=True))
         if pid == 'mslpa':
             if 'pressure_msl' not in d: return None
             C = slp_clim_at(R, vt)
