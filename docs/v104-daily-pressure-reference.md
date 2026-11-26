@@ -1,0 +1,13 @@
+# V104 — daily pressure-height anomaly input contract
+
+The new Z500a/Z700a code is **staged only**, not ready for production without the actual reference.
+
+- Forecast window: four same-initialization synoptic fields at +6,+12,+18,+24 hours in each day. End timestamp is relative to the run, not midnight calendar day. Native source identity and geometry must remain unchanged over all four samples; use the complete coarse same-run day only when the complete fine day is unavailable.
+- Forecast height in metres, output anomaly and absolute contours in dam. Z700 excludes native cells where any of the four heights is below terrain, and requires the source terrain. No partial-window averaging.
+- Reference file: `data/static/era5_synoptic_1991_2020.npz` and `data/static/era5_synoptic_1991_2020.npz.json`. Both absent in the existing main at the time of development. No automatic download or fabrication. The old `era5_clim_1deg.npz` is explicitly 1990–2019 (WeatherBench2) and must not be renamed to this reference.
+- NPZ arrays: `lat`, `lon` regular increasing coordinates in degrees, `z500`, `z700` physical geopotential height in metres, float32 recommended, shape [366,4,nlat,nlon]. Calendar follows month/day of leap year 2000, including Feb 29; hour indices 00,06,12,18 UTC. Cover the actual ME/EU regions; no nearest-edge extrapolation. Geopotential (m²/s²) must be converted using 9.80665 m/s² exactly once.
+- JSON schema: {"schema":1,"source":"ERA5","base_period":"1991-2020","temporal_basis":"synoptic_6h","calendar":"366_month_day","hours_utc":[0,6,12,18],"units":"m","sha256":"<actual NPZ SHA-256>"}.
+- Build the climatology from ERA5 1991–2020 analysis data or a traceable archive of exactly these synoptic calendar normals; independently verify source dataset identifier, variables, unit, latitude/longitude, time coverage, leap-day treatment, sample counts and checksum. Reader checks declared contract and bytes, not independent scientific provenance. Do not use fabricated or simply relabelled arrays for operations.
+- Validate reference against independent ERA5 examples, real forecast run and native grid, verify actual upload manifest retains baseline/source/window metadata, check fixed palette and anomaly extrema layer, then review operational deployment. The existing ME/EU upload metadata path does not yet carry the full provenance. Do not merge this draft before these checks.
+
+No files on the host are removed or replaced by this change. Ordinary absolute pressure maps and the legacy MSLP reference path remain unchanged. MultiModel pressure anomaly integration, ERA5-based temperature reference outside Iran, and raw-then-DEM combination remain separate pending work.
