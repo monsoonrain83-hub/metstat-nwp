@@ -21,7 +21,7 @@ from scipy.ndimage import map_coordinates, gaussian_filter
 from PIL import Image, ImageDraw, ImageFont
 import styles, secondary, warn_icons, id_points, wind_tile, hl_centers
 import anomaly_windows as AW
-import pressure_daily as PD
+import pressure_anomaly as PA
 styles.SC.update(secondary.SECSC)
 
 UTC = timezone.utc
@@ -49,7 +49,7 @@ MEW, MEH = int((ME_EXT[1] - ME_EXT[0]) * PXD), int((ME_EXT[3] - ME_EXT[2]) * PXD
 # r65: کادر «اروپا» (فقط ترازهای بالا و فشار سطح دریا): اروپا، غرب روسیه، شمال کاسپین، مصر/لیبی و بخشی از دریای عرب
 EU_EXT = (-12.0, 68.0, 12.0, 62.0); EU_PXD = 16
 EUW, EUH = int((EU_EXT[1] - EU_EXT[0]) * EU_PXD), int((EU_EXT[3] - EU_EXT[2]) * EU_PXD)
-EU_PIDS = ('z850', 'z700', 'z500', 'z500a', 'z700a', 'w500', 'w300', 'w250', 'w200', 'sfc', 'w10')
+EU_PIDS = ('z850', 'z700', 'z500', 'z850a', 'z700a', 'z500a', 'z300a', 'mslpa', 'w500', 'w300', 'w250', 'w200', 'sfc', 'w10')
 MODELS = {
     'ecmwf':  dict(name='ECMWF 28km', label='ECMWF IFS 28km (0.25°)', dom=['ecmwf_ifs025'], prov='ECMWF', hz={'00': 360, '12': 360, '06': 144, '18': 144}, res='0.25°', cyc='00/06/12/18'),
     'ecmwf9': dict(name='ECMWF 9km', label='ECMWF IFS 9km (HRES)', dom=['ecmwf_ifs'], prov='ECMWF', hz={'00': 360, '12': 360, '06': 144, '18': 144}, res='0.1° (9 km)', cyc='00/06/12/18'),   # فقط پارامترهای سطحی؛ ترازهای فشاری در HRES نیست
@@ -163,9 +163,11 @@ PARAMS.update({
     'w10':   dict(kind='inst', sc='wind10', models=I_ECG, unit='kt', me_only=True, ln=True, en='MSLP (mb) & 10m Wind Speed (kt)', fa='فشار سطح دریا و سرعت باد ۱۰ متری (گره)'),
     'w250':  dict(kind='inst', sc='windup', models=I_EC, unit='kt', me_only=True, ln=True, en='250mb Wind Speed/Streamlines (kt) & MSLP Extrema (mb)', fa='سرعت باد و خطوط جریان ۲۵۰ هکتوپاسکال (گره)'),
     'w200':  dict(kind='inst', sc='windup', models=I_EC, unit='kt', me_only=True, ln=True, en='200mb Wind Speed/Streamlines (kt)', fa='سرعت باد و خطوط جریان ۲۰۰ هکتوپاسکال (گره)'),
-    'z500a': dict(kind='day', pressure_daily=500, sc='z500a', models=ALL, unit='dam', me_only=True, ln=True, en='500hPa Daily Mean Geopotential Height (dam) & Anomaly', fa='میانگین روزانه ارتفاع ژئوپتانسیل ۵۰۰ هکتوپاسکال و انومالی (دکامتر)'),
-    'z700a': dict(kind='day', pressure_daily=700, sc='z700a', models=['ecmwf', 'gfs', 'gfs25'], unit='dam', me_only=True, ln=True, en='700hPa Daily Mean Geopotential Height (dam) & Anomaly', fa='میانگین روزانه ارتفاع ژئوپتانسیل ۷۰۰ هکتوپاسکال و انومالی (دکامتر)'),
-    'mslpa': dict(kind='inst', sc='mslpa', models=ALL, unit='hPa', me_only=True, ln=True, en='MSLP (hPa) & Anomaly', fa='فشار سطح دریا و انومالی (هکتوپاسکال)'),
+    'z850a': dict(kind='inst', sixhour=True, pressure_anomaly='z850', sc='z850a', models=list(MODELS), unit='dam', me_only=True, ln=True, en='850hPa Geopotential Height (dam) & Anomaly', fa='ارتفاع ژئوپتانسیل ۸۵۰ هکتوپاسکال و آنومالی (دکامتر)'),
+    'z700a': dict(kind='inst', sixhour=True, pressure_anomaly='z700', sc='z700a', models=list(MODELS), unit='dam', me_only=True, ln=True, en='700hPa Geopotential Height (dam) & Anomaly', fa='ارتفاع ژئوپتانسیل ۷۰۰ هکتوپاسکال و آنومالی (دکامتر)'),
+    'z500a': dict(kind='inst', sixhour=True, pressure_anomaly='z500', sc='z500a', models=list(MODELS), unit='dam', me_only=True, ln=True, en='500hPa Geopotential Height (dam) & Anomaly', fa='ارتفاع ژئوپتانسیل ۵۰۰ هکتوپاسکال و آنومالی (دکامتر)'),
+    'z300a': dict(kind='inst', sixhour=True, pressure_anomaly='z300', sc='z300a', models=list(MODELS), unit='dam', me_only=True, ln=True, en='300hPa Geopotential Height (dam) & Anomaly', fa='ارتفاع ژئوپتانسیل ۳۰۰ هکتوپاسکال و آنومالی (دکامتر)'),
+    'mslpa': dict(kind='inst', sixhour=True, pressure_anomaly='mslp', sc='mslpa', models=list(MODELS), unit='hPa', me_only=True, ln=True, en='MSLP (hPa) & Anomaly', fa='فشار سطح دریا و آنومالی (هکتوپاسکال)'),
     'thk1000': dict(kind='inst', sc='thk1000', models=I_ECG, unit='dam', me_only=True, ln=True, en='1000–500 hPa Thickness (dam) & MSLP', fa='ضخامت لایهٔ ۱۰۰۰–۵۰۰ هکتوپاسکال و فشار سطح دریا (دکامتر)'),
     'thk8550': dict(kind='inst', sc='thk8550', models=I_EC, unit='dam', me_only=True, ln=True, en='850–500 hPa Thickness (dam)', fa='ضخامت لایهٔ ۸۵۰–۵۰۰ هکتوپاسکال (دکامتر)'),
     'thk7050': dict(kind='inst', sc='thk7050', models=I_EC, unit='dam', me_only=True, ln=True, en='700–500 hPa Thickness (dam)', fa='ضخامت لایهٔ ۷۰۰–۵۰۰ هکتوپاسکال (دکامتر)'),
@@ -184,7 +186,7 @@ for _a in [x[0] for x in PR_WIN] + [x[0] for x in SN_WIN] + ['rh']:
 CATS = [('pr', 'بارش', 1), ('sn', 'برف', 2), ('tp', 'دما', 3), ('hm', 'رطوبت و آب قابل بارش', 4), ('sf', 'فشار و باد سطحی', 5),
         ('ul', 'ارتفاع ژئوپتانسیل و رطوبت ترازهای بالا', 6), ('uw', 'باد در ترازهای بالا', 7), ('dy', 'دینامیک، جبهه و ابر همرفتی', 7.5), ('cv', 'همرفت و ناپایداری', 8), ('rd', 'بازتاب و هوای مهم', 9), ('sc', 'نقشه‌های ثانویه (همرفت، تگرگ، آذرخش، سیل، هشدار)', 10)]
 _CAT = {'t2m': 'tp', 'tsoil': 'tp', 'tmax': 'tp', 'tmin': 'tp', 'tanom': 'tp', 'tanom5': 'tp', 't2mr': 'tp', 'tmaxr': 'tp', 'tminr': 'tp', 'rh': 'hm', 'rhr': 'hm', 'pw': 'hm', 'gust': 'sf', 'sfc': 'sf', 'w10': 'sf',
-        'z850': 'ul', 'z700': 'ul', 'z500': 'ul', 'z500a': 'ul', 'z700a': 'ul', 'mslpa': 'sf', 'thk1000': 'ul', 'thk8550': 'ul', 'thk7050': 'ul', 'thk8570': 'ul', 'w500': 'uw', 'w300': 'uw', 'w250': 'uw', 'w200': 'uw',
+        'z850': 'ul', 'z700': 'ul', 'z500': 'ul', 'z850a': 'ul', 'z700a': 'ul', 'z500a': 'ul', 'z300a': 'ul', 'mslpa': 'sf', 'thk1000': 'ul', 'thk8550': 'ul', 'thk7050': 'ul', 'thk8570': 'ul', 'w500': 'uw', 'w300': 'uw', 'w250': 'uw', 'w200': 'uw',
         'tt': 'cv', 'ko': 'cv', 'shw': 'cv', 'lr75': 'cv', 'lr85': 'cv', 'sh06': 'cv', 'sh85': 'cv', 'swt': 'cv', 'fzl': 'cv', 'hgz': 'cv',
         'ki': 'cv', 'cape': 'cv', 'cin': 'cv', 'si': 'cv', 'gdi': 'cv', 'li': 'cv', 'refl': 'rd', 'sigwx': 'rd',
         'mfc850': 'dy', 'dte': 'cv', 'thk': 'dy', 'ccc': 'dy'}
@@ -1150,14 +1152,17 @@ def z_clim_at(R, d, lvl=500):
     return None if C is None else _clim_interp(C['zs'][lvl], C, R, d)
 def z500_clim_at(R, d): return z_clim_at(R, d, 500)
 
-@functools.lru_cache(maxsize=1)
-def daily_pressure_reference():
-    """The new pressure products must not silently use an older baseline."""
-    path = os.path.join(HERE, 'data', 'static', 'era5_synoptic_1991_2020.npz')
+@functools.lru_cache(maxsize=2)
+def pressure_reference(parameter):
+    """Default ERA5 1991–2020; NCEP alternative must be explicitly selected."""
+    selected = os.environ.get('NWP_PRESSURE_REFERENCE','era5').lower()
+    if selected not in ('era5','ncep'): return None
+    source = 'ERA5' if selected == 'era5' else 'NCEP-NCAR Reanalysis 1'
+    path = os.path.join(HERE,'data','static',f'{selected}_synoptic_1991_2020_{parameter}.npz')
     try:
-        return PD.SynopticReference.load(path, path + '.json')
+        return PA.SynopticReference.load(path,path+'.json',parameter,source)
     except Exception as e:
-        log(f'  Daily Z anomaly unavailable: ERA5 1991–2020 reference not ready ({type(e).__name__})')
+        log(f'  {parameter} anomaly unavailable: {source} reference not ready ({type(e).__name__})')
         return None
 
 def slp_clim_at(R, d):
@@ -1216,7 +1221,7 @@ def needed_vars(mkey, pids, kind):
     if kind == 'all':
         # Load actual source fields for requested anomaly products; absent data are
         # handled by make() as unavailable rather than publishing empty maps.
-        for level in (500, 700):
+        for level in (850, 700, 500, 300):
             if f'z{level}a' in pids: v.add(f'geopotential_height_{level}hPa')
         if 'mslpa' in pids: v.add('pressure_msl')
     if kind == 'all':
@@ -1493,9 +1498,6 @@ class Engine:
                     log(f'  {src.dom}: same-cycle pressure read failed ({type(e).__name__})')
                 continue
             D[name] = src.read(run, vt, sorted(vars_))
-        levels = [PARAMS[p]['pressure_daily'] for p in sh_mine if PARAMS[p].get('pressure_daily')]
-        if levels:
-            PD.collect(st, D, vt, levels)
         # جمع‌های تجمعی روی شبکهٔ اصلی هر منبع
         for name, d in D.items():
             if name == 'upper': continue
@@ -1544,6 +1546,12 @@ class Engine:
                     png, lines = render_me(R, field, sck, **{k: v for k, v in extra.items() if k in ('cont', 'cont_lvls', 'cont_fmt', 'barbs', 'stream', 'lows', 'bold', 'cont_fine')})
                     rid_ = f'{run:%Y%m%d%H}'; s.up.put(mkey, rid_, fname, png, dict(r=rk, m=mkey, p=pid, s=lead, v=f'{vt:%Y%m%d%H}'))
                     if lines: s.up.put(mkey, rid_, f'{rk}/{pid}L_{vt:%Y%m%d%H}.webp', lines, dict(r=rk, m=mkey, p=pid + 'L', s=lead, v=f'{vt:%Y%m%d%H}'))
+                    if extra.get('anomaly_hl'):
+                        try:
+                            cs_ = hl_centers.find_anomaly_centers(field, R.px if rk == 'eu' else PXD)
+                            hb = hl_centers.encode_layer(cs_, R.W if rk == 'eu' else MEW, R.H if rk == 'eu' else MEH, fmt='%+d', colors=hl_centers.ANOMALY_COL)
+                            if hb: s.up.put(mkey,rid_,f'{rk}/{pid}H_{vt:%Y%m%d%H}.webp',hb,dict(r=rk,m=mkey,p=pid+'H',s=lead,v=f'{vt:%Y%m%d%H}'))
+                        except Exception as e_: log(f'  ! anomaly L/H {pid}: {type(e_).__name__}: {e_}')
                     if extra.get('hl') is not None:                       # r63: لایهٔ مراکز L/H (شفاف، قابل روشن/خاموش در سایت)
                         try:
                             hk, hf, hps = extra['hl']; cs_ = hl_centers.find_centers(hf, hk, hps, R.px if rk == 'eu' else PXD)
@@ -1710,6 +1718,7 @@ class Engine:
 
     def plan(s, P, st, vt, lead, dt_h, want_all):
         if P['kind'] == 'sec': return False
+        if P.get('sixhour'): return PA.aligned(st.run,vt)
         if lead == 0 and P['kind'] != 'inst': return False
         if P['kind'] == 'win':
             if lead > P['maxlead']: return False
@@ -1723,8 +1732,6 @@ class Engine:
             if P['h'] in (1, 3, 6) and dt_h > P['h'] + 1e-6: return False
             return t0 == st.run or t0 in st.hist['main']
         if P['kind'] == 'day':
-            if P.get('pressure_daily'):
-                return bool(AW.sample_times(st.run, vt, 1))
             if P.get('anomaly_window'):
                 return bool(AW.sample_times(st.run, vt, P['anomaly_window']))
             return vt.hour == 18 and lead >= 24
@@ -1801,14 +1808,21 @@ class Engine:
                 except Exception as e: log(f'  [کرمان] تشخیص ناموفق: {type(e).__name__}: {e}')
             if not P.get('raw'): f = f * s.precip_factor(st, R)          # بارش/برف: ضریب ارتفاعی غیرخطی (خام: pid با پسوند r)
             return (f, dict(note='Elevation-adjusted: P×(1+χΔz)/(1−χΔz), χ=0.27/km, effective height capped at 2500 m, cell total conserved') if not P.get('raw') else {})
-        if P.get('pressure_daily'):
-            level = P['pressure_daily']
-            result = PD.anomaly(st, vt, level, R, daily_pressure_reference())
+        if P.get('pressure_anomaly'):
+            parameter = P['pressure_anomaly']
+            if not PA.aligned(st.run,vt): return None
+            field = 'pressure_msl' if parameter == 'mslp' else f'geopotential_height_{parameter[1:]}hPa'
+            U, us = coherent_pressure_fields(st.srcs,D,[field])
+            ref = pressure_reference(parameter)
+            if U is None or ref is None: return None
+            result = PA.anomaly(us,U[field],parameter,vt,R,ref)
             if result is None: return None
-            A, Z, domain = result
-            extra = dict(cont=Z, cont_lvls=np.arange(480, 620, 1) if level == 500 else np.arange(250, 340, 1),
-                         cont_fine=True, note=f'24h four synoptic samples; ERA5 1991–2020; native source {domain}')
-            if level == 500: extra['bold'] = 580
+            A, Z = result
+            levels = {'z850':(100,180,1),'z700':(250,340,1),'z500':(480,620,1),'z300':(800,1050,3),'mslp':(900,1100,4)}
+            lo,hi,step = levels[parameter]
+            extra = dict(cont=Z,cont_lvls=np.arange(lo,hi,step),cont_fine=True,
+                         anomaly_hl=True,note=f'{ref.source} 1991–2020 synoptic normal; native source {us.dom}')
+            if parameter == 'z500': extra['bold']=580
             return A, extra
         if P['kind'] == 'day':
             ser = st.tser['main']
@@ -1857,11 +1871,6 @@ class Engine:
             if u is None or v is None: return None
             U, V = I(u) * 1.94384, I(v) * 1.94384
             return (np.hypot(U, V), dict(stream=(U, V), lows=(I(d['pressure_msl']) if (p == 250 and 'pressure_msl' in d) else None)))
-        if pid == 'mslpa':
-            if 'pressure_msl' not in d: return None
-            C = slp_clim_at(R, vt)
-            if C is None: return None
-            M_ = I(d['pressure_msl']); return (M_ - C, dict(cont=M_, cont_lvls=np.arange(900, 1100, 4), hl=('msl', M_, None)))
         if pid == 'thk1000':
             g = d.get('geopotential_height_500hPa')
             if g is None or 'pressure_msl' not in d: return None
