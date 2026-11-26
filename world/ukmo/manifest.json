@@ -4,9 +4,9 @@
   "source_domain": "ukmo_global_deterministic_10km",
   "source": "Open-Meteo data_spatial / model owner",
   "license": "CC BY 4.0; attribution Open-Meteo and originating NWP center",
-  "generated_at_utc": "2026-11-25T23:07:57Z",
-  "init_utc": "2026-11-25T12:00:00Z",
-  "valid_utc": "2026-11-26T12:00:00Z",
+  "generated_at_utc": "2026-11-26T10:57:05Z",
+  "init_utc": "2026-11-26T00:00:00Z",
+  "valid_utc": "2026-11-27T00:00:00Z",
   "projection": "EPSG:4326 equirectangular",
   "bbox_wgs84": [
     -180.0,
@@ -21,10 +21,10 @@
       "file": "ukmo/t2m.webp",
       "variable": "temperature_2m",
       "units": "°C",
-      "sha256": "cfd39561076ac183ed8eb719ad377cd81ca1754cbebd418003b3da9292e88768",
+      "sha256": "3f61b6b98157d420765bf1ea2c27a22fbbc4afb9e78d2f0f0ab07c46646e79c8",
       "logical_model": "ukmo",
-      "init_utc": "2026-11-25T12:00:00Z",
-      "valid_utc": "2026-11-26T12:00:00Z",
+      "init_utc": "2026-11-26T00:00:00Z",
+      "valid_utc": "2026-11-27T00:00:00Z",
       "lead_hours": 24,
       "source_grid_bbox_centers_wgs84": [
         -180,
@@ -50,17 +50,17 @@
       "width": 2560,
       "height": 1920,
       "finite_fraction": 1.0,
-      "min": -51.05,
-      "max": 42.45
+      "min": -52.6,
+      "max": 37.25
     },
     "z500": {
       "file": "ukmo/z500.webp",
       "variable": "geopotential_height_500hPa",
       "units": "dam",
-      "sha256": "5db916c0037bb7f2444bc3690fe5dec9780a9c785de11ac8a1aba8d2c3062bea",
+      "sha256": "4c02b13f5bca3aa02adaa6e6b9cc12d484a4c0d1a23bddc75710400939fcab9e",
       "logical_model": "ukmo",
-      "init_utc": "2026-11-25T12:00:00Z",
-      "valid_utc": "2026-11-26T12:00:00Z",
+      "init_utc": "2026-11-26T00:00:00Z",
+      "valid_utc": "2026-11-27T00:00:00Z",
       "lead_hours": 24,
       "source_grid_bbox_centers_wgs84": [
         -180,
@@ -86,17 +86,17 @@
       "width": 2560,
       "height": 1920,
       "finite_fraction": 1.0,
-      "min": 468.5,
-      "max": 596.0
+      "min": 472.8,
+      "max": 597.0
     },
     "mslp": {
       "file": "ukmo/mslp.webp",
       "variable": "pressure_msl",
       "units": "hPa",
-      "sha256": "bb2519c92f7748c9a8d3c657be9d5d791de66265f2ea78d7745b5165184d0d44",
+      "sha256": "7f096f540ca198fe8e8dd7baabfd57281f90dc31687f2f9557f396f318dd454c",
       "logical_model": "ukmo",
-      "init_utc": "2026-11-25T12:00:00Z",
-      "valid_utc": "2026-11-26T12:00:00Z",
+      "init_utc": "2026-11-26T00:00:00Z",
+      "valid_utc": "2026-11-27T00:00:00Z",
       "lead_hours": 24,
       "source_grid_bbox_centers_wgs84": [
         -180,
@@ -122,8 +122,8 @@
       "width": 2560,
       "height": 1920,
       "finite_fraction": 1.0,
-      "min": 940.1,
-      "max": 1041.3
+      "min": 945.2,
+      "max": 1035.4
     }
   },
   "full_globe": true,
