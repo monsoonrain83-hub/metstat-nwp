@@ -217,7 +217,7 @@ def cycle_candidates(*sources):
     ]
 
 
-def acquire(model, outdir, requested_lead=24, required_run=None, convection=False):
+def acquire(model, outdir, requested_lead=24, required_run=None, convection=False, completed_cycle=False):
     import s3fs
     dom = DOMAINS[model]
     fs = s3fs.S3FileSystem(anon=True, default_block_size=65536)
@@ -232,6 +232,11 @@ def acquire(model, outdir, requested_lead=24, required_run=None, convection=Fals
         high_domain = SOURCE_PRIORITY[model][0][0]
         hi_src = N.S3Source(high_domain, fs)
         hi_src.i0=0;hi_src.i1=hi_src.nx;hi_src.j0=0;hi_src.j1=hi_src.ny
+    if completed_cycle:
+        if required_run is not None:raise ValueError('choose explicit run or completed cycle, not both')
+        meta=src.jget('latest.json')
+        if not meta or meta.get('completed') is False:raise RuntimeError('completed source cycle unavailable')
+        required_run=resolve_cycle(meta)
     runs = cycle_candidates(src, hi_src)
     if required_run is not None:
         runs = [m for m in runs if resolve_cycle(m) == required_run]
@@ -321,7 +326,7 @@ def acquire(model, outdir, requested_lead=24, required_run=None, convection=Fals
                     # Report availability and numeric ranges without downloading
                     # additional data. Distinguish absent inputs from QC rejection.
                     diagnostics={}
-                    for key in sorted(WC.INPUTS):
+                    for key in sorted(WC.INPUTS | WX.INPUTS):
                         value=fields.get(key)
                         if value is None:
                             diagnostics[key]={'status':'absent'}
@@ -388,6 +393,7 @@ def main():
     p.add_argument('--lead',type=int,default=24)
     p.add_argument('--run-utc', help='Require this exact source cycle (ISO UTC); never fall back to a different run')
     p.add_argument('--convection',action='store_true',help='Stage verified convection products; no deployment')
+    p.add_argument('--completed-cycle',action='store_true',help='Pin latest completed base-source cycle for interval acceptance')
     a=p.parse_args()
-    acquire(a.model,Path(a.out),a.lead,parse_meta_utc(a.run_utc) if a.run_utc else None,convection=a.convection)
+    acquire(a.model,Path(a.out),a.lead,parse_meta_utc(a.run_utc) if a.run_utc else None,convection=a.convection,completed_cycle=a.completed_cycle)
 if __name__=='__main__': main()
