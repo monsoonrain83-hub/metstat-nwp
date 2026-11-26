@@ -80,30 +80,30 @@ class DailyPolicyTests(unittest.TestCase):
         for d in cases:
             with self.subTest(d=d):
                 self.assertEqual(nm.coherent_pressure_fields(src,{'main':d},['a','b']),(None,None))
+    def daily_state(self, level, value, coarse_height=0):
+        src={'main':Source('fine',height=500),'upper':Source('coarse',height=coarse_height)}
+        st=SimpleNamespace(model='gfs',srcs=src,run=RUN)
+        d={'main':{},'upper':{f'geopotential_height_{level}hPa':field(value)}}
+        for h in (6,12,18,24):
+            nm.PD.collect(st,d,RUN+timedelta(hours=h),[level])
+        return st,d
     def test_actual_z500_anomaly_uses_matching_coarse_grid(self):
-        src={'main':Source('fine'),'upper':Source('coarse')}
-        st=SimpleNamespace(model='gfs',srcs=src)
-        d={'main':{},'upper':{'geopotential_height_500hPa':field(5580)}}
+        st,d=self.daily_state(500,5580)
         r=Region()
-        with patch.object(nm,'z500_clim_at',return_value=field(5500)):
+        ref=SimpleNamespace(at=lambda level,t,region:field(5500))
+        with patch.object(nm,'daily_pressure_reference',return_value=ref):
             a,extra=nm.Engine.make(None,nm.PARAMS['z500a'],'z500a',st,d,r,VALID,24,6)
         np.testing.assert_array_equal(a,field(8))
         np.testing.assert_array_equal(extra['cont'],field(558))
-        self.assertEqual(r.calls,[('coarse',(2,2))])
-    def test_z700_correct_grid_terrain_mask(self):
-        src={'main':Source('fine',height=500),'upper':Source('coarse',height=3100)}
-        st=SimpleNamespace(model='gfs',srcs=src)
-        d={'main':{},'upper':{'geopotential_height_700hPa':field(3000)}}
-        r=Region()
-        with patch.object(nm,'z_clim_at',return_value=field(2900)):
-            a,extra=nm.Engine.make(None,nm.PARAMS['z700a'],'z700a',st,d,r,VALID,24,6)
-        self.assertTrue(np.isnan(a).all())
-        self.assertTrue(np.isnan(extra['cont']).all())
         self.assertEqual(r.calls,[('coarse',(2,2)),('coarse',(2,2))])
+    def test_z700_correct_grid_terrain_mask(self):
+        st,d=self.daily_state(700,3000,3100)
+        ref=SimpleNamespace(at=lambda level,t,region:field(2900))
+        with patch.object(nm,'daily_pressure_reference',return_value=ref):
+            self.assertIsNone(nm.Engine.make(None,nm.PARAMS['z700a'],'z700a',st,d,Region(),VALID,24,6))
     def test_no_climatology_no_anomaly(self):
-        st=SimpleNamespace(model='gfs',srcs={'main':Source('fine')})
-        d={'main':{'geopotential_height_500hPa':field(5580)}}
-        with patch.object(nm,'z500_clim_at',return_value=None):
+        st,d=self.daily_state(500,5580)
+        with patch.object(nm,'daily_pressure_reference',return_value=None):
             self.assertIsNone(nm.Engine.make(None,nm.PARAMS['z500a'],'z500a',st,d,Region(),VALID,24,6))
     def test_index_native_grid_not_mislabeled_when_fallback_missing(self):
         src={'main':Source('fine'),'upper':Source('coarse')}
