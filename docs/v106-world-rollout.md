@@ -12,12 +12,23 @@ and ARPEGE regional limits, and supersedes any plan to calculate H/L on anomaly 
 - Main models: surface precipitation 1/3/6/24/48/120h and run total where
   supported, T2m and validated Tmin/Tmax, RH2m, MSLP, 10m winds/gusts;
   Z, T, RH, wind at 850/700/500/300/200 hPa when actually available.
-  Advanced convection, warnings, snowfall and other specialized fields
-  retain the existing regional coverage unless separately approved.
+  User approval (2026-11-26): global convection and Significant Weather
+  for these five logical families ONLY, where verified native fields permit:
+  CAPE, CIN, LI, K, TT, GDI, Soaring, Showalter, SWEAT, KO, lapse rates,
+  wind shear, simulated reflectivity and existing Significant Weather.
+  Preserve existing formulas and distinguish native from derived fields.
+  Check pressure-level availability, same-cycle/grid consistency, units,
+  below-ground masks and missing values. No invented inputs or model mixing.
+  Regional hazard forecasts (flood, hail, lightning and severe-weather
+  warnings) retain their current extent and calibration. Other specialized
+  fields, including snowfall, retain existing regional coverage unless
+  separately approved.
 - AIFS, AIGFS, Google GraphCast/WeatherNext (do not double-count aliases),
   France ARPEGE, Japan, China and Korea: true global coverage for pacc,
   p24, T2m, Z500a first; only verified source fields, access/licence and
   accumulation semantics. Preserve existing independent model behavior.
+  No convection or Significant Weather products for these new models at
+  this stage. Their first-phase four-product scope remains unchanged.
 - Z850a/Z700a/Z500a/Z300a/MSLP anomalies at available 6-hour frames;
   H/L on absolute pressure or height, existing detector/colors/values;
   T2m daily and independent five-day windows unchanged.
