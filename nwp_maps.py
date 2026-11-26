@@ -1444,15 +1444,15 @@ class Engine:
                 vars_ = {'precipitation', 'snowfall_water_equivalent', 'temperature_2m'}
                 if not src.exists(run, vt): continue
             if name == 'upper':
-                for rr in (run, run - timedelta(hours=6), run - timedelta(hours=12)):     # اجرای 0.25° ممکن است دیرتر از 0.13° منتشر شود → آخرین اجرای موجود
+                for rr in (run,):     # Same-cycle only: never label an older GFS run as the current cycle
                     if not src.exists(rr, vt): continue
                     try:
                         D[name] = src.read(rr, vt, sorted(vars_))
-                        if rr != run and not getattr(st, 'up_note', False): st.up_note = True; log(f'  ترازهای فشاری {src.dom}: اجرای {run:%Y%m%d%H} هنوز نیست؛ از اجرای {rr:%Y%m%d%H} استفاده می‌شود')
+                        # Never mix run cycles in an unlabelled frame.
                     except Exception as e: log(f'  ترازهای فشاری {src.dom} {vt:%Y%m%d%H} خوانده نشد ({type(e).__name__}: {e})')
                     break
                 else:
-                    if not getattr(st, 'up_miss', False): st.up_miss = True; log(f'  ترازهای فشاری {src.dom} برای {vt:%Y%m%d%H} در هیچ‌کدام از سه اجرای اخیر پیدا نشد')
+                    if not getattr(st, 'up_miss', False): st.up_miss = True; log(f'  ترازهای فشاری {src.dom} برای ران جاری و زمان {vt:%Y%m%d%H} موجود نیست؛ استفاده از ران قدیمی ممنوع')
                 continue
             D[name] = src.read(run, vt, sorted(vars_))
         # جمع‌های تجمعی روی شبکهٔ اصلی هر منبع
