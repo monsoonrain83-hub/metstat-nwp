@@ -1152,7 +1152,7 @@ def z_clim_at(R, d, lvl=500):
     return None if C is None else _clim_interp(C['zs'][lvl], C, R, d)
 def z500_clim_at(R, d): return z_clim_at(R, d, 500)
 
-@functools.lru_cache(maxsize=2)
+@functools.lru_cache(maxsize=5)
 def pressure_reference(parameter):
     """Default ERA5 1991–2020; NCEP alternative must be explicitly selected."""
     selected = os.environ.get('NWP_PRESSURE_REFERENCE','era5').lower()
@@ -1550,7 +1550,7 @@ class Engine:
                         try:
                             cs_ = hl_centers.find_anomaly_centers(field, R.px if rk == 'eu' else PXD)
                             hb = hl_centers.encode_layer(cs_, R.W if rk == 'eu' else MEW, R.H if rk == 'eu' else MEH, fmt='%+d', colors=hl_centers.ANOMALY_COL)
-                            if hb: s.up.put(mkey,rid_,f'{rk}/{pid}H_{vt:%Y%m%d%H}.webp',hb,dict(r=rk,m=mkey,p=pid+'H',s=lead,v=f'{vt:%Y%m%d%H}'))
+                            if hb: s.up.put(mkey,rid_,f'{rk}/{pid}AH_{vt:%Y%m%d%H}.webp',hb,dict(r=rk,m=mkey,p=pid+'AH',s=lead,v=f'{vt:%Y%m%d%H}'))
                         except Exception as e_: log(f'  ! anomaly L/H {pid}: {type(e_).__name__}: {e_}')
                     if extra.get('hl') is not None:                       # r63: لایهٔ مراکز L/H (شفاف، قابل روشن/خاموش در سایت)
                         try:
