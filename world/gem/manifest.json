@@ -4,9 +4,9 @@
   "source_domain": "cmc_gem_gdps_15km",
   "source": "Open-Meteo data_spatial / model owner",
   "license": "CC BY 4.0; attribution Open-Meteo and originating NWP center",
-  "generated_at_utc": "2026-11-26T10:56:20Z",
-  "init_utc": "2026-11-26T00:00:00Z",
-  "valid_utc": "2026-11-27T00:00:00Z",
+  "generated_at_utc": "2026-11-26T23:00:08Z",
+  "init_utc": "2026-11-26T12:00:00Z",
+  "valid_utc": "2026-11-27T12:00:00Z",
   "projection": "EPSG:4326 equirectangular",
   "bbox_wgs84": [
     -180.0,
@@ -21,10 +21,10 @@
       "file": "gem/t2m.webp",
       "variable": "temperature_2m",
       "units": "°C",
-      "sha256": "dae4dbd5beabf5edb1cca1905f8d5c50cebb73394ef5953f4c73d013112c0ca9",
+      "sha256": "28ca74292da5366a09406d5057008a4c79d18c83e1c5b8f0652b2eeece621fa7",
       "logical_model": "gem",
-      "init_utc": "2026-11-26T00:00:00Z",
-      "valid_utc": "2026-11-27T00:00:00Z",
+      "init_utc": "2026-11-26T12:00:00Z",
+      "valid_utc": "2026-11-27T12:00:00Z",
       "lead_hours": 24,
       "source_grid_bbox_centers_wgs84": [
         -180,
@@ -50,17 +50,17 @@
       "width": 2400,
       "height": 1201,
       "finite_fraction": 1.0,
-      "min": -44.45,
-      "max": 35.3
+      "min": -45.0,
+      "max": 41.4
     },
     "mslp": {
       "file": "gem/mslp.webp",
       "variable": "pressure_msl",
       "units": "hPa",
-      "sha256": "c36528ecade01aebb1175f0d66f41ca1ea5e5a514ff30f50b2f085b5c32fa6f9",
+      "sha256": "9a4648334749571ea8ea3de713a166cd5e9b27088055725a73d15103500cbde8",
       "logical_model": "gem",
-      "init_utc": "2026-11-26T00:00:00Z",
-      "valid_utc": "2026-11-27T00:00:00Z",
+      "init_utc": "2026-11-26T12:00:00Z",
+      "valid_utc": "2026-11-27T12:00:00Z",
       "lead_hours": 24,
       "source_grid_bbox_centers_wgs84": [
         -180,
@@ -86,8 +86,8 @@
       "width": 2400,
       "height": 1201,
       "finite_fraction": 1.0,
-      "min": 946.2,
-      "max": 1066.9
+      "min": 950.3,
+      "max": 1046.1
     }
   },
   "full_globe": true,
