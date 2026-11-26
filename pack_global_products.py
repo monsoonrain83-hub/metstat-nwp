@@ -26,7 +26,7 @@ MODEL_LICENSE = {
 }
 
 CONVECTION_UNITS = {'cape':'J/kg','cin':'J/kg','li':'K','ki':'K','si':'K','tt':'K','gdi':'',
-                    'shw':'K','lr75':'K/km','lr85':'K/km','sh85':'m/s','sh06':'m/s','ko':'K','swt':''}
+                    'shw':'K','lr75':'K/km','lr85':'K/km','sh85':'m/s','sh06':'m/s','ko':'K','swt':'','refl':'dBZ','sigwx':''}
 EXPECTED_UNITS = {'t2m': '°C', 'z500': 'dam', 'mslp': 'hPa', **CONVECTION_UNITS}
 
 
@@ -65,6 +65,14 @@ def verify_manifest_field(model, param, field, man, folder):
             or not field['calculation'] or not isinstance(field.get('input_variables'),list)
             or not field['input_variables'] or not all(isinstance(x,str) and x for x in field['input_variables'])):
             raise ValueError('convection provenance missing')
+        if param in ('refl','sigwx'):
+            start=parse_utc(field.get('interval_start_utc'))
+            end=parse_utc(field.get('interval_end_utc'))
+            hours=(end-start).total_seconds()/3600
+            if (end!=valid or start<run or hours not in (1,3,6) or field.get('interval_hours')!=hours
+                or field.get('clear_value')!=-1 or not field.get('phase_basis')
+                or field.get('precipitation_basis')!='native backward sum; raw model rate; not DEM corrected'):
+                raise ValueError('weather interval or phase provenance mismatch')
     # No directory traversals, absolute paths or arbitrary local file reads.
     expected_name = f'{model}_{param}_{valid:%Y%m%d%H}.webp'
     if field.get('file') != expected_name:
