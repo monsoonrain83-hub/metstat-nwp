@@ -31,7 +31,7 @@ class Convection(unittest.TestCase):
             result=C.derive(model,self.src,self.d,validate)
             self.assertEqual(set(result),set(C.PRODUCTS))
             self.assertTrue(all(np.isfinite(v).all() for v,_ in result.values()))
-        self.assertEqual({k:v[0] for k,v in C.PRODUCTS.items()},CONVECTION_UNITS)
+        self.assertEqual({k:v[0] for k,v in C.PRODUCTS.items()},{k:CONVECTION_UNITS[k] for k in C.PRODUCTS})
     def test_new_models_excluded(self):
         for m in ('aifs','aigfs','graphcast','arpege','jma','cma','kim'):
             with self.assertRaises(ValueError):C.derive(m,self.src,self.d,validate)
@@ -43,6 +43,18 @@ class Convection(unittest.TestCase):
         np.testing.assert_allclose(out['si'][0],N.soaring_index(T,R))
         np.testing.assert_allclose(out['gdi'][0],N.gdi(T,R,self.d['surface_pressure']))
         np.testing.assert_allclose(out['tt'][0],T[850]+N.td_from_rh(T[850],R[850])-2*T[500])
+    def test_ko_and_sweat_match_existing_secondary_formulas(self):
+        import secondary as sec
+        f=dict(t2=self.d['temperature_2m'],rh2=self.d['relative_humidity_2m'],ps=self.d['surface_pressure'])
+        for p in (850,700,500):
+            f[f't{p}']=self.d[f'temperature_{p}hPa'];f[f'rh{p}']=self.d[f'relative_humidity_{p}hPa']
+        for p in (850,500):
+            for c in ('u','v'):f[f'{c}{p}']=self.d[f'wind_{c}_component_{p}hPa']
+        expected=sec.indices(f);out=self.derive({'ko','swt'})
+        np.testing.assert_allclose(out['ko'][0],expected['ko'])
+        np.testing.assert_allclose(out['swt'][0],expected['sweat'])
+        del self.d['wind_v_component_850hPa']
+        self.assertNotIn('swt',self.derive({'swt'}))
     def test_bad_grid_and_no_synthetic_zero(self):
         del self.d['relative_humidity_700hPa']
         self.d['cape']=np.ones((4,5))
