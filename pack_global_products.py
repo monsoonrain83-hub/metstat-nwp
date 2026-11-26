@@ -26,7 +26,7 @@ MODEL_LICENSE = {
 }
 
 CONVECTION_UNITS = {'cape':'J/kg','cin':'J/kg','li':'K','ki':'K','si':'K','tt':'K','gdi':'',
-                    'shw':'K','lr75':'K/km','lr85':'K/km','sh85':'m/s','sh06':'m/s'}
+                    'shw':'K','lr75':'K/km','lr85':'K/km','sh85':'m/s','sh06':'m/s','ko':'K','swt':''}
 EXPECTED_UNITS = {'t2m': '°C', 'z500': 'dam', 'mslp': 'hPa', **CONVECTION_UNITS}
 
 
