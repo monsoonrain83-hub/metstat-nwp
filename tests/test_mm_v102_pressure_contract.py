@@ -86,8 +86,9 @@ class DailyPolicyTests(unittest.TestCase):
             a,extra=nm.Engine.make(None,nm.PARAMS['z500a'],'z500a',st,data,r,VALID,24,6)
         np.testing.assert_array_equal(a,field(8))
         np.testing.assert_array_equal(extra['cont'],field(558))
-        self.assertTrue(extra['anomaly_hl'])
-        self.assertEqual(r.calls,[('coarse',(2,2)),('coarse',(2,2))])
+        self.assertEqual(extra['hl'][0],500)
+        np.testing.assert_array_equal(extra['hl'][1],field(558))
+        self.assertEqual(r.calls,[('coarse',(2,2))]*3)
     def test_z700_correct_grid_terrain_mask(self):
         src={'main':Source('fine',height=500),'upper':Source('coarse',height=3100)}
         st=SimpleNamespace(model='gfs',run=RUN,srcs=src)
