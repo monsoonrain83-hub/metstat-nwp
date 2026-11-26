@@ -69,7 +69,7 @@ class Convection(unittest.TestCase):
     def test_palette_bytes_and_provenance_gate(self):
         with tempfile.TemporaryDirectory() as td:
             d=Path(td);run=datetime(2026,11,26,tzinfo=timezone.utc);valid=run+timedelta(hours=24)
-            p=d/'ecmwf_cape_2026112700.webp';arr=np.zeros((361,720),np.float32);arr[-1]=850
+            p=d/'ecmwf_cape_2026112700.webp';arr=np.random.default_rng(107).uniform(0,4000,(361,720)).astype(np.float32);arr[-1,0]=850
             stats=G.render_convection(arr,'cape',p)
             with Image.open(p) as im:
                 scale=N.styles.SC['cape'];i=np.digitize(850,scale['edges'][1:-1])
