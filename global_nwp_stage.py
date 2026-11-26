@@ -17,6 +17,7 @@ from PIL import Image, ImageDraw
 import nwp_maps as N
 from nwp_unified_resolution import select_frame_source, SOURCE_PRIORITY
 import world_convection as WC
+import world_significant_weather as WX
 
 UTC = timezone.utc
 DOMAINS = {
@@ -70,10 +71,11 @@ def render(field, param, dest):
 def render_convection(field,param,dest):
     """Use existing fixed MetStat scale, not the generic global palette."""
     a=np.asarray(field,np.float32)
-    scale=N.styles.SC[WC.PRODUCTS[param][1]]
+    scale=N.styles.SC[(WC.PRODUCTS | WX.PRODUCTS)[param][1]]
     idx=np.clip(np.digitize(a,scale['edges'][1:-1]),0,len(scale['colors'])-1)
     palette=np.array([N.styles.hex2rgb(c) for c in scale['colors']],np.uint8)
     rgb=palette[idx];rgb[~np.isfinite(a)]=[215,215,215]
+    if param in WX.PRODUCTS: rgb[a==-1]=[255,255,255]
     im=Image.fromarray(np.flipud(rgb),'RGB')
     im.save(dest,format='WEBP',lossless=True,method=4)
     return dict(width=im.width,height=im.height,finite_fraction=round(float(np.isfinite(a).mean()),5),
@@ -244,7 +246,7 @@ def acquire(model, outdir, requested_lead=24, required_run=None, convection=Fals
             # must not prevent using a verified 9/13km field at the same cycle.
             # Never mix runs or substitute a different valid time.
             wanted = {v[0] for v in FIELDS.values()}
-            if convection: wanted |= WC.INPUTS
+            if convection: wanted |= WC.INPUTS | WX.INPUTS
             source_fields = read_independent_sources(
                 (src, hi_src), run, valid, sorted(wanted), errors)
             data = source_fields.get(src.dom, {})
@@ -312,7 +314,7 @@ def acquire(model, outdir, requested_lead=24, required_run=None, convection=Fals
                 # Prefer complete high-res products, then same-run coarse ones.
                 for candidate in (hi_src,src):
                     if candidate is None: continue
-                    selected=set(WC.PRODUCTS)-set(products)
+                    selected=set(WC.PRODUCTS | WX.PRODUCTS)-set(products)
                     if not selected:break
                     fields=source_fields.get(candidate.dom,{})
                     if not fields:continue
@@ -334,7 +336,11 @@ def acquire(model, outdir, requested_lead=24, required_run=None, convection=Fals
                             diagnostics[key]={'status':'invalid_grid'}
                     print('WORLD_INPUT_QC',json.dumps(dict(model=model,domain=candidate.dom,run=run.isoformat(),
                           valid=valid.isoformat(),fields=diagnostics),allow_nan=False),flush=True)
-                    try: conv=WC.derive(model,candidate,fields,validate_global_geometry,selected)
+                    try:
+                        conv=WC.derive(model,candidate,fields,validate_global_geometry,selected & WC.PRODUCTS.keys())
+                        if selected & WX.PRODUCTS.keys():
+                            interval=WX.completed_interval(candidate,run,valid,parse_meta_utc)
+                            conv.update(WX.derive(candidate,fields,validate_global_geometry,interval,selected & WX.PRODUCTS.keys()))
                     except Exception as e:
                         errors.append(f'{candidate.dom}/convection: {type(e).__name__}')
                         continue
@@ -350,7 +356,7 @@ def acquire(model, outdir, requested_lead=24, required_run=None, convection=Fals
                                 if decision is None:continue
                                 nominal=decision.nominal_resolution
                             else:nominal=NOMINAL_SINGLE_SOURCE[model]
-                            units,scale=WC.PRODUCTS[p]
+                            units,scale=(WC.PRODUCTS | WX.PRODUCTS)[p]
                             fname=f'{model}_{p}_{valid:%Y%m%d%H}.webp'
                             raster_path=outdir/fname
                             stats=render_convection(arr,p,raster_path)
