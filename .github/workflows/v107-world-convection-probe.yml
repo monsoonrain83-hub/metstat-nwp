@@ -1,4 +1,4 @@
-name: V107 real global convection acceptance (staging only)
+name: V108 real global convection and interval weather acceptance (staging only)
 on:
   push:
     branches: [fix/v102-same-cycle-anomaly-contract]
@@ -28,9 +28,11 @@ jobs:
       - run: |
           pip install -r requirements.txt
           pip install "omfiles[fsspec]" s3fs
-      - run: PYTHONPATH=. python -m unittest discover -s tests -p test_mm_v107_world_convection.py -v
+      - run: |
+          PYTHONPATH=. python -m unittest discover -s tests -p test_mm_v107_world_convection.py -v
+          PYTHONPATH=. python -m unittest discover -s tests -p test_mm_v108_world_weather.py -v
       - name: Fetch one exact lead and stage supported products only
-        run: timeout 25m python global_nwp_stage.py --model "${{ matrix.model }}" --out "stage/world-${{ matrix.model }}" --lead 24 --convection
+        run: timeout 25m python global_nwp_stage.py --model "${{ matrix.model }}" --out "stage/world-${{ matrix.model }}" --lead 24 --convection --completed-cycle
       - name: Verify staged world fields and convection coverage
         run: |
           python - <<'PY'
@@ -51,7 +53,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: v107-world-${{ matrix.model }}
+          name: v108-world-${{ matrix.model }}
           path: |
             coverage.json
             verified/
