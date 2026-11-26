@@ -83,6 +83,7 @@ def _za(step): return [-INF] + [round((-49 + i) * step, 3) for i in range(98)] +
 SC.update({
     'z850a': dict(colors=_P['wx_z500a'], edges=_za(0.5)),
     'z700a': dict(colors=_P['wx_z500a'], edges=_za(0.5)),
+    'z300a': dict(colors=_P['wx_z500a'], edges=_za(0.5)),
     'mslpa': dict(colors=_P['wx_z500a'], edges=_za(0.5)),
     'thk1000': dict(colors=_P['wu_temp'][::2][:20] if len(_P['wu_temp'][::2]) >= 20 else _KI, edges=[-INF] + _sq(504, 594) + [INF]),
     'thk8550': dict(colors=_KI, edges=[-INF] + _sq(372, 444) + [INF]),
@@ -108,5 +109,5 @@ def _an_scale(lim, step):
     return dict(colors=cols, edges=ed)
 SC.update({
     'tanom':  _an_scale(12, 1), 'tanom5': _an_scale(8, 0.5), 'tanom10': _an_scale(8, 0.5),
-    'z500a':  _an_scale(30, 1), 'z850a': _an_scale(25, 1), 'z700a': _an_scale(25, 1), 'mslpa': _an_scale(20, 1),
+    'z500a':  _an_scale(30, 1), 'z850a': _an_scale(25, 1), 'z700a': _an_scale(25, 1), 'z300a': _an_scale(30, 1), 'mslpa': _an_scale(20, 1),
 })
