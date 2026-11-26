@@ -1,4 +1,4 @@
-"""Tests for user-revised six-hour anomalies and separate signed extrema."""
+"""Tests for user-revised six-hour anomalies and absolute-field H/L invariance."""
 from datetime import datetime,timedelta,timezone
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -40,7 +40,11 @@ class FrameTests(unittest.TestCase):
             k='pressure_msl' if p=='mslpa' else 'geopotential_height_'+p[1:4]+'hPa'
             with patch.object(nm,'pressure_reference',return_value=SimpleNamespace(at=lambda time,region:a(norm),source='ERA5')):
                 out,extra=nm.Engine.make(None,nm.PARAMS[p],p,st,{'main':{k:a(raw)}},r,t(6),6,6)
-                np.testing.assert_array_equal(out,a(expected));self.assertTrue(extra['anomaly_hl'])
+                np.testing.assert_array_equal(out,a(expected))
+                kind,height,_=extra['hl']
+                self.assertEqual(kind,'msl' if p=='mslpa' else int(p[1:4]))
+                np.testing.assert_array_equal(height,a(raw if p=='mslpa' else raw/10))
+                self.assertNotIn('anomaly_hl',extra)
     def test_exact_calendar_no_drift_and_leap_day(self):
         r=reg()
         d=lambda y,m,day:datetime(y,m,day,6,tzinfo=timezone.utc)
@@ -56,17 +60,27 @@ class FrameTests(unittest.TestCase):
         v=a(5500);v[0,0]=np.inf
         out,_=pa.anomaly(Source(),v,'z500',t(6),reg(),SimpleNamespace(at=lambda t,r:a(5500)))
         self.assertTrue(np.isnan(out[0,0]))
-    def test_signed_centers(self):
+    def test_centers_unchanged_when_anomaly_sign_reverses(self):
         y,x=np.mgrid[:400,:600]
-        field=20*np.exp(-((x-130)**2+(y-200)**2)/2000)-20*np.exp(-((x-470)**2+(y-200)**2)/2000)
-        centers=hl.find_anomaly_centers(field,pxd=16)
-        self.assertTrue(any(c[0]=='H' and c[3]>0 for c in centers))
-        self.assertTrue(any(c[0]=='L' and c[3]<0 for c in centers))
-        self.assertTrue(all((c[3]>0)==(c[0]=='H') for c in centers))
-        self.assertTrue(hl.encode_layer(centers,600,400,fmt='%+d',colors=hl.ANOMALY_COL))
-    def test_masked_and_uniform_no_centers(self):
-        self.assertEqual(hl.find_anomaly_centers(np.full((200,200),np.nan)),[])
-        self.assertEqual(hl.find_anomaly_centers(np.full((200,200),10.)),[])
+        height=(5500+200*np.exp(-((x-130)**2+(y-200)**2)/2000)-200*np.exp(-((x-470)**2+(y-200)**2)/2000)).astype(np.float32)
+        r=SimpleNamespace(interp=lambda src,v:v.copy())
+        st=SimpleNamespace(run=RUN,model='gfs',srcs={'main':Source()})
+        d={'main':{'geopotential_height_500hPa':height}}
+        layers=[]
+        expected=hl.find_centers(height/10,500,None,16)
+        self.assertEqual({c[0] for c in expected},{'H','L'})
+        for norm in (5300.,5800.):
+            with patch.object(nm,'pressure_reference',return_value=SimpleNamespace(at=lambda t,r:np.full_like(height,norm),source='ERA5')):
+                out,extra=nm.Engine.make(None,nm.PARAMS['z500a'],'z500a',st,d,r,t(6),6,6)
+            kind,field,ps=extra['hl']
+            centers=hl.find_centers(field,kind,ps,16)
+            self.assertEqual(centers,expected)
+            layers.append(hl.encode_layer(centers,600,400))
+        self.assertEqual(layers[0],layers[1])
+    def test_existing_absolute_color_and_300_support(self):
+        self.assertEqual(hl.COL,{'L':(214,32,28,255),'H':(31,79,216,255)})
+        self.assertIn(300,hl.THR)
+        self.assertFalse(hasattr(hl,'find_anomaly_centers'))
     def test_fixed_300_palette(self):
         self.assertIn('z300a',nm.styles.SC)
 if __name__=='__main__':unittest.main()
