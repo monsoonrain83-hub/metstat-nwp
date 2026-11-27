@@ -12,7 +12,8 @@ MAX_INDEX=2*1024*1024
 MAX_MESSAGE=32*1024*1024
 FIELDS={'t2m':('2t','heightAboveGround',2,'instant'),
         'z500':('z','isobaricInhPa',500,'instant'),
-        'pacc':('tp','surface',0,'accum')}
+        'pacc':('tp','surface',0,'accum'),
+        'orog':('z','surface',0,'instant')}
 def urls(model,res,run,lead,key):
     if model not in ('ifs','aifs-single') or res not in ('0p1','0p25') or (model=='aifs-single' and res!='0p25'):
         raise ValueError('unsupported official model/grid')
@@ -30,6 +31,7 @@ def select(index,key,lead):
         row=json.loads(line)
         if not isinstance(row,dict) or row.get('param')!=param:continue
         if key=='z500' and str(row.get('levelist'))!='500':continue
+        if key=='orog' and (row.get('levtype')!='sfc' or row.get('levelist') not in (None,'',0,'0')):continue
         if str(row.get('step'))!=str(lead):continue
         start,length=row.get('_offset'),row.get('_length')
         if type(start) is not int or type(length) is not int or not 0<=start<=2**40 or not 20<=length<=MAX_MESSAGE:
@@ -81,6 +83,7 @@ def decode(data,run,lead,key,res):
         unit=str(get('units'))
         if key=='t2m' and unit=='K':a=a-273.15;out='°C';lo,hi=-110,65
         elif key=='z500' and unit in ('m**2 s**-2','m2 s-2'):a=a/9.80665;out='m';lo,hi=3500,7000
+        elif key=='orog' and unit in ('m**2 s**-2','m2 s-2'):a=a/9.80665;out='m';lo,hi=-500,9000
         elif key=='pacc' and unit=='m':a=a*1000;out='mm';lo,hi=-.001,5000
         elif key=='pacc' and unit in ('kg m**-2','kg m-2'):out='mm';lo,hi=-.001,5000
         else:raise ValueError('unknown unit')
