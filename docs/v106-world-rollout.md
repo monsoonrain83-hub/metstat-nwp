@@ -412,3 +412,60 @@ No substitute mock website or copy of the R5 demonstration engine.
   or full timeline activation in this change.
 
 - Administrator-confirmed canonical online maps page: https://wtafkik.ir/monitoring-forecast/weather-models/online-maps . Use this exact route for live browser acceptance and user-facing links. The previously cited /weather-models path was incorrect. Workflow route corrected in 58e6d2c; browser acceptance must be evaluated on the corrected route.
+
+## V119 — family viewer integration, direct ECMWF/AIFS and native interval fix
+- Correct canonical live page browser workflow 45942176527 passed
+  (both genuine ECMWF CAPE +24/+48 images HTTP 200, 3600x1801,
+  world selection and return to ME, zero page errors).
+- V118 45942196756: live readback confirmed 22 GEM official ECCC,
+  22 GFS and 26 ICON frames. ECMWF follow-up HTTP 400 and UKMO
+  failed because requested host-pinned 2026112612 cycle not found.
+  Local V116 PHP replay of 30 actual ECMWF frames reproduced
+  weather interval rejection: native whole-hour floats 1.0/3.0 did
+  not satisfy PHP integer enum. Exact wire_metadata normalization
+  in 40171e6 (no rounding fractional times), three regression tests
+  627e6b9, all 30 accepted locally after normalization. No PHP update.
+  Retry 9f20cd4 same host current-run append, immutable conflicts
+  preserved; UKMO never borrows a different cycle.
+- Local frontend V119 package MetStat_V119_unified_model_viewer_upload.zip
+  SHA256 80cef2dd865ff2948fb866d72df23f31cd7d4efba7d46739893f99cf13220122.
+  Exactly index.html (9f8315b276a0507d4e8a450bff12506de78b57302c876e940f244ad8b156131a)
+  and hashed assets/ms_r5_perf_core_9567dff741e9b6d3.js
+  (9567dff741e9b6d36fee8caa87f679d4611ce82a22a535ad0399f92373416617).
+  Requires installed V116 index 7192d357...; no data/config/PHP changes.
+  Read-only logical view of shared manifest; raw manifest untouched,
+  real physical URLs retained. ECMWF9 then 28; GFS13 then 28; per
+  exact run, valid hour, region and parameter, source resolution
+  displayed. Current/previous isolated; duplicate keys removed.
+  Existing archived real manifest Node projection 16 checks,
+  15171 ECMWF and 14551 GFS current frame keys. Offline browser
+  desktop/touch replay 42 checks zero page errors with actual V109
+  global raster bytes; regional times changed only for fixture
+  coeval world run; regional return verified, regional raster
+  requests blocked. Not deployed. Existing separate physical
+  producers and legacy folders remain until same-run backend
+  publication migration is proven, no deletion of old data.
+- GitHub/source study: ecmwf/ecmwf-opendata (official request/index),
+  blaylockbk/Herbie (indexed GRIB range selection), open-meteo/open-meteo
+  (ingest/domain availability), ecmwf/earthkit-regrid (native-grid
+  interpolation candidate). Use documented patterns, do not copy
+  code without license review. References:
+  https://github.com/ecmwf/ecmwf-opendata
+  https://github.com/blaylockbk/Herbie
+  https://github.com/open-meteo/open-meteo
+  https://github.com/ecmwf/earthkit-regrid
+  Implemented original bounded index/range reader world_ecmwf_official.py
+  d4d9b34; exact URI, byte range, GRIB identity, units, 0.1/0.25 grid,
+  cumulative start/end, nonnegative daily differences. Real workflow
+  45943481886 all three jobs passed: IFS 0p1 (3600x1801),
+  IFS 0p25 and AIFS Single 0p25 (1440x721). All six requested
+  T2m/Z500/pacc +24/+48 fields per variant verified and raw p24
+  derived from +48 minus +24. Reference run 2026112612.
+  Original producer-first acceptance only; IFS source not yet
+  integrated into operational regional/global producer, AIFS not yet
+  published. New model four product contract remains pacc,p24,T2m,Z500a;
+  raw p24 is not DEM corrected, absolute Z500 not anomaly. Need verified
+  global DEM/native orography and reference climate before compliant
+  products, matching palette and safe new-model onboarding. No new model
+  catalogue placeholders. Existing live V116 unchanged except verified
+  V118 world data writes.
