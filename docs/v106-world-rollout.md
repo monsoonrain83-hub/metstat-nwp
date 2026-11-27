@@ -382,3 +382,31 @@ No substitute mock website or copy of the R5 demonstration engine.
   Full combined live deployment pending current uploader hash and
   authenticated installation verification. Do not claim site world
   coverage is live from these tests.
+
+## V116/V117 — first actual host world publication
+- User-supplied live uploader SHA matched archived 4b57c03a... baseline.
+  V116 package SHA a18b01eecdfb6916c416ba048d6c34d6345d99925e21ed22f0b3ff8131e8760b.
+  Candidate PHP SHA f29b0d1d6387fae1621b2ee1af516ebac29510b0aa62f3e477d2c5e7b98fa4d7.
+  37 PHP, 17 publisher and 10 legacy parity local checks. No config/data changes.
+- Actual live HTTPS index and core hashes matched installed V116; authenticated
+  ping advertises worldput-v1/worldsync-v1. Read-only gate 45941134625,
+  2026-11-27 04:38 UTC. Zero world frames before canary.
+- One-time bounded canary 45941238646 completed success, 04:40 UTC.
+  Published and verified two actual ECMWF CAPE world WebP images
+  (2026112618 +24/+48 h, 1,004,868 bytes) under
+  online/data/nwp/ecmwf/2026112618/world/ and the existing
+  online/data/manifest.json. Public readback hashes matched both.
+  Existing accepted V109 intermediary-sourced artifacts were reused for
+  this deployment verification, not a new producer-first source acceptance.
+  Exact run gated; no begin/end/purge, no new tree.
+- V117 exact host-pinned GEM no longer needs Open-Meteo metadata or s3fs
+  before official data; fallback initializes lazily. First new fixture CI
+  failed due missing s3fs dependency, corrected in 1c19af4 and 89d521e.
+  Latest quality gate pending. Unpinned completed-cycle discovery still uses
+  intermediary metadata. Other original-source adapters pending.
+- Read-only real browser workflow v117-live-viewer.yml added; pending.
+  Do not claim browser interaction success until its results are verified.
+  World data availability remains limited to these two frames in current
+  run; existing retention may rotate them into previous-run data.
+  Recurring world job remains disabled/unmerged. No other model publication
+  or full timeline activation in this change.
