@@ -272,14 +272,17 @@ def official_gem_products(run,valid,outdir,convection,errors):
 
 
 def acquire(model, outdir, requested_lead=24, required_run=None, convection=False, completed_cycle=False):
-    import s3fs
     dom = DOMAINS[model]
-    fs = s3fs.S3FileSystem(anon=True, default_block_size=65536)
+    fs = None
     # Explicit host-pinned GEM runs must be obtainable directly even when
     # the intermediary's metadata/service is unavailable.
     pinned_gem = model=='gem' and required_run is not None and not completed_cycle
     def source(domain):
+        nonlocal fs
         try:
+            if fs is None:
+                import s3fs
+                fs=s3fs.S3FileSystem(anon=True,default_block_size=65536)
             candidate=N.S3Source(domain,fs)
             candidate.i0=0;candidate.i1=candidate.nx;candidate.j0=0;candidate.j1=candidate.ny
             return candidate
