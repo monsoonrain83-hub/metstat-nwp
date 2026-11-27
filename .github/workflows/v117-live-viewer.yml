@@ -1,0 +1,68 @@
+name: V117 live world viewer read-only acceptance
+on:
+  push:
+    branches: [fix/v102-same-cycle-anomaly-contract]
+    paths: [.github/workflows/v117-live-viewer.yml]
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.56.1 && npx playwright install --with-deps chromium
+      - name: Actual installed viewer and actual current public manifest
+        run: |
+          cat > live.cjs <<'JS'
+          const {chromium}=require('playwright');
+          const assert=require('node:assert/strict'), fs=require('node:fs');
+          (async()=>{
+            const browser=await chromium.launch();
+            const report={mode:'read-only live browser',requests:[],checks:[],errors:[]};
+            try{
+              const ctx=await browser.newContext({viewport:{width:1440,height:900},serviceWorkers:'block'});
+              await ctx.route('**/*',r=>{
+                const req=r.request(),u=new URL(req.url());
+                return u.origin==='https://wtafkik.ir'&&['GET','HEAD'].includes(req.method())?r.continue():r.abort();
+              });
+              const page=await ctx.newPage();
+              page.on('pageerror',e=>report.errors.push(String(e).slice(0,200)));
+              page.on('response',r=>{const u=new URL(r.url());if(u.pathname.includes('/world/cape_'))report.requests.push({path:u.pathname,status:r.status()});});
+              await page.goto('https://wtafkik.ir/weather-models',{waitUntil:'domcontentloaded',timeout:60000});
+              await page.waitForFunction(()=>typeof ON!=='undefined'&&ON.man&&Array.isArray(ON.man.items)&&typeof NV!=='undefined'&&document.getElementById('nvReg'),{},{timeout:60000});
+              const current=await page.evaluate(()=>({run:ON.man.models.ecmwf?.run,frames:ON.man.items.filter(i=>i.m==='ecmwf'&&i.r==='world'&&i.p==='cape').map(i=>i.s)}));
+              report.current=current;
+              assert(current.frames.includes(24)&&current.frames.includes(48),'current ECMWF world canary no longer available');
+              // Select via existing application state and original menu handlers.
+              // No manifest/image replacement or route response interception.
+              await page.evaluate(()=>{NV.s.tc='daily';NV.s.m='ecmwf';NV.s.p='cape';NV.s.cat=nvPar('cape').cat;nvFillRun();nvRegionSelect(document.getElementById('nvReg'),'world');document.getElementById('nvReg').onchange();});
+              await page.waitForFunction(()=>NV.entry?.item?.r==='world'&&!!NV.entry.img&&!NV.busy,{},{timeout:45000});
+              report.checks.push('world actual raster decoded');
+              const first=await page.evaluate(()=>({region:NV.s.reg,leads:NV.items.map(x=>x.s),size:[NV.entry.img.naturalWidth,NV.entry.img.naturalHeight],title:document.getElementById('nvSub').textContent,worldOption:[...document.getElementById('nvReg').options].some(x=>x.value==='world')}));
+              assert.equal(first.region,'world');assert(first.worldOption);assert(first.size[0]>700&&first.size[1]>350);
+              report.viewer=first;
+              await page.evaluate(()=>{const item=NV.items.find(x=>x.s===48);document.getElementById('nvFr').value=item.v;document.getElementById('nvFr').onchange();});
+              await page.waitForFunction(()=>NV.entry?.item?.s===48&&!!NV.entry.img&&!NV.busy,{},{timeout:45000});
+              report.checks.push('48 hour real raster decoded');
+              await page.evaluate(()=>{nvRegionSelect(document.getElementById('nvReg'),'me');document.getElementById('nvReg').onchange();});
+              await page.waitForFunction(()=>NV.s.reg==='me'&&NV.items.every(i=>i.r==='me'));
+              report.checks.push('return to original Middle East scope');
+              report.passed=true;
+            }finally{
+              fs.writeFileSync('live-viewer.json',JSON.stringify(report,null,2));
+              console.log(JSON.stringify(report));
+              await browser.close();
+            }
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          JS
+          node live.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v117-live-viewer
+          path: live-viewer.json
+          if-no-files-found: warn
+          retention-days: 7
