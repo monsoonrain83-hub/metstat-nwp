@@ -275,25 +275,33 @@ def acquire(model, outdir, requested_lead=24, required_run=None, convection=Fals
     import s3fs
     dom = DOMAINS[model]
     fs = s3fs.S3FileSystem(anon=True, default_block_size=65536)
-    src = N.S3Source(dom, fs)
-    # Intentional global override of the existing regional BBOX subsetting;
-    # do NOT mutate N.BBOX or production Engine's model loops.
-    src.i0=0;src.i1=src.nx;src.j0=0;src.j1=src.ny
-    # The native high-resolution source is optional, never a prerequisite to
-    # rendering a verified 0.25-degree fallback at the SAME cycle and lead.
-    hi_src = None
-    if model in SOURCE_PRIORITY:
-        high_domain = SOURCE_PRIORITY[model][0][0]
-        hi_src = N.S3Source(high_domain, fs)
-        hi_src.i0=0;hi_src.i1=hi_src.nx;hi_src.j0=0;hi_src.j1=hi_src.ny
+    # Explicit host-pinned GEM runs must be obtainable directly even when
+    # the intermediary's metadata/service is unavailable.
+    pinned_gem = model=='gem' and required_run is not None and not completed_cycle
+    def source(domain):
+        try:
+            candidate=N.S3Source(domain,fs)
+            candidate.i0=0;candidate.i1=candidate.nx;candidate.j0=0;candidate.j1=candidate.ny
+            return candidate
+        except Exception:
+            if not pinned_gem:raise
+            return None
+    src = None if pinned_gem else source(dom)
+    hi_src = source(SOURCE_PRIORITY[model][0][0]) if model in SOURCE_PRIORITY else None
     if completed_cycle:
         if required_run is not None:raise ValueError('choose explicit run or completed cycle, not both')
         meta=src.jget('latest.json')
         if not meta or meta.get('completed') is False:raise RuntimeError('completed source cycle unavailable')
         required_run=resolve_cycle(meta)
-    runs = cycle_candidates(src, hi_src)
-    if required_run is not None:
-        runs = [m for m in runs if resolve_cycle(m) == required_run]
+    if pinned_gem:
+        # Candidate is a request, not an availability assertion; actual official
+        # GRIB reference/valid/grid/field validation remains authoritative.
+        runs=[dict(reference_time=required_run.isoformat(),
+                   valid_times=[(required_run+timedelta(hours=requested_lead)).isoformat()])]
+    else:
+        runs=cycle_candidates(src,hi_src)
+        if required_run is not None:
+            runs=[m for m in runs if resolve_cycle(m)==required_run]
     if not runs:raise RuntimeError(model+': source has no current cycle')
     runs.sort(key=lambda m:m['reference_time'],reverse=True)
     outdir.mkdir(parents=True,exist_ok=True)
@@ -312,9 +320,11 @@ def acquire(model, outdir, requested_lead=24, required_run=None, convection=Fals
                 products,fallback_reason=official_gem_products(run,valid,outdir,convection,errors)
             # No intermediary field downloads when official products satisfy all requested outputs.
             requested=set(FIELDS) | (set(WC.PRODUCTS)|set(WX.PRODUCTS) if convection else set())
-            source_fields = (read_independent_sources(
-                (src, hi_src), run, valid, sorted(wanted), errors) if requested-set(products) else {})
-            data = source_fields.get(src.dom, {})
+            if requested-set(products):
+                if pinned_gem and src is None:src=source(dom)
+                source_fields=read_independent_sources((src,hi_src),run,valid,sorted(wanted),errors)
+            else:source_fields={}
+            data = source_fields.get(dom, {})
             high_data = source_fields.get(hi_src.dom, {}) if hi_src else {}
             if not data and not high_data and not products: continue
             # A source is selectable only after actual field read + shape and
