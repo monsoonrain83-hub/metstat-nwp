@@ -19,6 +19,9 @@ from nwp_unified_resolution import select_frame_source, SOURCE_PRIORITY
 import world_convection as WC
 import world_significant_weather as WX
 from pack_global_products import valid_coverage
+import nwp_source_policy as SP
+import world_gem_official as GO
+from types import SimpleNamespace
 
 UTC = timezone.utc
 DOMAINS = {
@@ -89,8 +92,8 @@ def product_manifest(model, run, valid, dom, result):
     sources={v.get('field_source_domain') for v in result.values()
              if v.get('field_source_domain')}
     root_source=next(iter(sources)) if len(sources)==1 else ('mixed-per-field' if sources else dom)
-    return {'schema':2,'model':model,'source_domain':root_source,'source':'Open-Meteo data_spatial / model owner',
-            'license':'CC BY 4.0; attribution Open-Meteo and originating NWP center',
+    return {'schema':2,'model':model,'source_domain':root_source,'source':'producer or intermediary, see each field source provenance',
+            'license':'Mixed source licences; see field provenance and model attribution',
             'generated_at_utc':datetime.now(UTC).strftime('%Y-%m-%dT%H:%M:%SZ'),
             'init_utc':run.strftime('%Y-%m-%dT%H:%M:%SZ'),
             'valid_utc':valid.strftime('%Y-%m-%dT%H:%M:%SZ'),
@@ -218,6 +221,56 @@ def cycle_candidates(*sources):
     ]
 
 
+def official_gem_products(run,valid,outdir,convection,errors):
+    """Official GDPS first. Independent input bundle, no cross-source merge."""
+    products={}
+    keys=GO.DEFAULT_FIELDS if convection else ('temperature_2m','pressure_msl','geopotential_height_500hPa')
+    try:
+        fields,report=GO.read(run,valid,keys)
+    except Exception as e:
+        errors.append('official GEM: '+type(e).__name__)
+        return products,'official GEM request failed: '+type(e).__name__
+    src=SimpleNamespace(dom=SP.ECCC_DOMAIN,nx=GO.NX,ny=GO.NY,lo0=-180.,la0=-90.,dx=.15,dy=.15,hsurf=lambda:None)
+    def emit(p,key,arr,units,meta,dependencies):
+        try:
+            a=validate_global_geometry(src,arr)
+            fraction=round(float(np.isfinite(a).mean()),5)
+            if not valid_coverage(p,{**meta,'finite_fraction':fraction},src.nx,src.ny):return
+            # Only provenance for fields actually used by this product.
+            refs={k:report[k] for k in dependencies if report.get(k,{}).get('status')=='verified'}
+            if len(refs)!=len(set(dependencies)):return
+            fname=f'gem_{p}_{valid:%Y%m%d%H}.webp'
+            dst=outdir/fname
+            stats=render_convection(a,p,dst) if p in WC.PRODUCTS else render(a,p,dst)
+            products[p]=dict(file=fname,variable=key,units=units,sha256=hashlib.sha256(dst.read_bytes()).hexdigest(),
+                logical_model='gem',init_utc=run.strftime('%Y-%m-%dT%H:%M:%SZ'),valid_utc=valid.strftime('%Y-%m-%dT%H:%M:%SZ'),
+                lead_hours=int((valid-run).total_seconds()/3600),field_source_domain=SP.ECCC_DOMAIN,nominal_resolution='15 km',
+                source_grid=[src.nx,src.ny],source_grid_origin=[-180.,-90.],source_grid_spacing=[.15,.15],
+                source_grid_bbox_centers_wgs84=[-180.,-90.,179.85,90.],resampling='native-source-grid',
+                **SP.provenance('gem',SP.ECCC_DOMAIN,refs),**meta,**stats)
+        except Exception as e:errors.append('official GEM/'+p+': '+type(e).__name__)
+    for p,(key,units,lo,hi) in FIELDS.items():
+        if key in fields:
+            # GO.decode has already validated and converted metadata units.
+            a=fields[key]
+            if p=='z500':a=a/10.
+            emit(p,key,a,units,{},[key])
+    if convection:
+        try:
+            derived=WC.derive('gem',src,fields,validate_global_geometry)
+        except Exception as e:
+            errors.append('official GEM convection: '+type(e).__name__)
+            derived={}
+        for p,(a,m) in derived.items():
+            units,scale=WC.PRODUCTS[p]
+            # Avoid mislabelling an official field as Open-Meteo.
+            m=dict(m,calculation=m['calculation'].replace('Open-Meteo','ECCC'),palette=scale)
+            emit(p,p,a,units,m,m['input_variables'])
+    print('OFFICIAL_GEM_PRODUCTS',json.dumps(dict(run=run.isoformat(),valid=valid.isoformat(),available=sorted(products),
+          inputs={k:v.get('status') for k,v in report.items()})),flush=True)
+    return products,'official source lacks a validated complete product or native interval for this frame'
+
+
 def acquire(model, outdir, requested_lead=24, required_run=None, convection=False, completed_cycle=False):
     import s3fs
     dom = DOMAINS[model]
@@ -253,15 +306,21 @@ def acquire(model, outdir, requested_lead=24, required_run=None, convection=Fals
             # Never mix runs or substitute a different valid time.
             wanted = {v[0] for v in FIELDS.values()}
             if convection: wanted |= WC.INPUTS | WX.INPUTS
-            source_fields = read_independent_sources(
-                (src, hi_src), run, valid, sorted(wanted), errors)
+            products={}
+            fallback_reason=None
+            if model=='gem':
+                products,fallback_reason=official_gem_products(run,valid,outdir,convection,errors)
+            # No intermediary field downloads when official products satisfy all requested outputs.
+            requested=set(FIELDS) | (set(WC.PRODUCTS)|set(WX.PRODUCTS) if convection else set())
+            source_fields = (read_independent_sources(
+                (src, hi_src), run, valid, sorted(wanted), errors) if requested-set(products) else {})
             data = source_fields.get(src.dom, {})
             high_data = source_fields.get(hi_src.dom, {}) if hi_src else {}
-            if not data and not high_data: continue
+            if not data and not high_data and not products: continue
             # A source is selectable only after actual field read + shape and
             # coverage QC. Prefer each variable at native 9/13km independently.
-            products={}
             for p,(key,units,lo,hi) in FIELDS.items():
+                if p in products:continue
                 verified = {}
                 source_instances = {}
                 # Read and validate both candidate rasters separately. We NEVER
@@ -312,7 +371,7 @@ def acquire(model, outdir, requested_lead=24, required_run=None, convection=Fals
                                  'source_grid_origin':[chosen_src.lo0,chosen_src.la0],
                                  'source_grid_spacing':[chosen_src.dx,chosen_src.dy],
                                  'resampling':('octahedral-O1280-to-regular-grid' if chosen_domain=='ecmwf_ifs' else 'native-source-grid'),
-                                 **stats}
+                                 **SP.provenance(model,chosen_domain,attempted=model=='gem',reason=fallback_reason),**stats}
                 except Exception as e: errors.append(f'{p}: {e}')
             if convection:
                 # Derived products are calculated independently on each native
@@ -377,7 +436,7 @@ def acquire(model, outdir, requested_lead=24, required_run=None, convection=Fals
                                 source_grid_spacing=[candidate.dx,candidate.dy],
                                 source_grid_bbox_centers_wgs84=[candidate.lo0,candidate.la0,candidate.lo0+candidate.dx*(candidate.nx-1),candidate.la0+candidate.dy*(candidate.ny-1)],
                                 resampling=('octahedral-O1280-to-regular-grid' if candidate.dom=='ecmwf_ifs' else 'native-source-grid'),
-                                palette=scale,**meta_,**stats)
+                                palette=scale,**SP.provenance(model,candidate.dom,attempted=model=='gem',reason=fallback_reason),**meta_,**stats)
                         except Exception as e:errors.append(f'{candidate.dom}/{p}: {type(e).__name__}')
             if products:
                 man=product_manifest(model,run,valid,dom,products)
