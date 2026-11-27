@@ -44,13 +44,24 @@ def derive(model,source,data,validate_grid,selected=None):
         if pid not in requested or value is None:return
         a=np.asarray(value,np.float32)
         good=np.isfinite(a)
+        qc={}
         if levels:
-            if ps is None:return
-            good &= np.isfinite(ps)&(ps>=max(levels)+15.)
+            if ps is None or ps.shape!=a.shape:return
+            known=np.isfinite(ps)
+            eligible=known&(ps>=max(levels)+15.)
+            below=known&~eligible
+            good &= eligible
+            # Missing surface pressure is NOT a terrain exclusion.
+            total=a.size;excluded=int(np.count_nonzero(below))
+            valid=int(np.count_nonzero(good))
+            qc=dict(coverage_basis='terrain_eligible_cells_v1',
+                    total_cells=total,terrain_excluded_cells=excluded,
+                    pressure_unknown_cells=int(np.count_nonzero(~known)),
+                    valid_cells=valid)
         a=np.where(good,a,np.nan)
         if not np.isfinite(a).any():return
         out[pid]=(a,dict(input_variables=sorted(set(keys)),calculation=method,
-                         pressure_level_mask=list(levels),surface_pressure_basis=ps_method if levels else None))
+                         pressure_level_mask=list(levels),surface_pressure_basis=ps_method if levels else None,**qc))
     for pid,key,lo,hi in [('cape','cape',0,15000),('cin','convective_inhibition',-5000,0),('li','lifted_index',-80,80)]:
         if pid in requested:save(pid,get(key,lo,hi),[key],'native Open-Meteo field')
     ps=get('surface_pressure',250,1100);ps_method='native surface_pressure';ps_keys=['surface_pressure']
