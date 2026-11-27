@@ -1,0 +1,68 @@
+name: V109 official Canada GDPS field acceptance (no deployment)
+on:
+  push:
+    branches: [fix/v102-same-cycle-anomaly-contract]
+    paths: [.github/workflows/v109-gem-official-probe.yml]
+  workflow_dispatch: {}
+permissions:
+  contents: read
+concurrency:
+  group: v109-gem-official-probe
+  cancel-in-progress: true
+jobs:
+  gem:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: PYTHONPATH=. python -m unittest discover -s tests -p test_mm_v109_gem_official.py -v
+      - name: Read official GRIB2 of exact published cycle
+        run: |
+          timeout 18m python - <<'PY'
+          import json
+          from datetime import timedelta
+          from pathlib import Path
+          from types import SimpleNamespace
+          import s3fs
+          import nwp_maps as N
+          import global_nwp_stage as G
+          import world_gem_official as O
+          import world_convection as C
+          import numpy as np
+          from pack_global_products import valid_coverage
+          # Use metadata only to locate a known completed same cycle; no
+          # Open-Meteo fields are merged with official Canadian fields.
+          src=N.S3Source('cmc_gem_gdps_15km',s3fs.S3FileSystem(anon=True))
+          meta=src.jget('latest.json')
+          run=G.resolve_cycle(meta)
+          valid=run+timedelta(hours=24)
+          fields,report=O.read(run,valid)
+          terrain,tr=O.read(run,run,('orography',))
+          native=SimpleNamespace(dom='msc_gdps_official',nx=2400,ny=1201,
+                                la0=-90.,lo0=-180.,dx=.15,dy=.15,
+                                hsurf=lambda:terrain.get('orography'))
+          derived=C.derive('gem',native,fields,G.validate_global_geometry)
+          passed={}
+          for p,(arr,m) in derived.items():
+              fraction=round(float(np.isfinite(arr).mean()),5)
+              if valid_coverage(p,{**m,'finite_fraction':fraction},2400,1201):
+                  passed[p]={'finite_fraction':fraction,**m}
+          result=dict(run=run.isoformat(),valid=valid.isoformat(),fields=report,
+                      terrain=tr,products=passed,deployment=False)
+          Path('official-gem-coverage.json').write_text(json.dumps(result,indent=2))
+          print(json.dumps(result))
+          if not passed:raise SystemExit('No official convection product verified')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: official-gem-coverage
+          path: official-gem-coverage.json
+          if-no-files-found: warn
+          retention-days: 3
