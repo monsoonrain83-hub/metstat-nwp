@@ -18,6 +18,7 @@ import nwp_maps as N
 from nwp_unified_resolution import select_frame_source, SOURCE_PRIORITY
 import world_convection as WC
 import world_significant_weather as WX
+from pack_global_products import valid_coverage
 
 UTC = timezone.utc
 DOMAINS = {
@@ -351,8 +352,8 @@ def acquire(model, outdir, requested_lead=24, required_run=None, convection=Fals
                         continue
                     for p,(arr,meta_) in conv.items():
                         try:
-                            fraction=float(np.isfinite(arr).mean())
-                            if fraction<.90:
+                            fraction=round(float(np.isfinite(arr).mean()),5)
+                            if not valid_coverage(p,{**meta_,'finite_fraction':fraction},arr.shape[1],arr.shape[0]):
                                 print('WORLD_PRODUCT_QC',json.dumps(dict(model=model,domain=candidate.dom,parameter=p,
                                       status='insufficient_valid_fraction',finite_fraction=round(fraction,5))),flush=True)
                                 continue
