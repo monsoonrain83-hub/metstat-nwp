@@ -1,0 +1,58 @@
+name: V112 integrated producer-first GDPS staging
+on:
+  push:
+    branches: [fix/v102-same-cycle-anomaly-contract]
+    paths: [.github/workflows/v112-gem-producer-first.yml]
+  workflow_dispatch: {}
+permissions:
+  contents: read
+concurrency:
+  group: v112-gem-producer-first
+  cancel-in-progress: true
+jobs:
+  gem:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: PYTHONPATH=. python -m unittest discover -s tests -p 'test_mm_v112_official_first.py' -v
+      - name: Exact-run two lead common engine
+        run: |
+          timeout 16m python global_nwp_stage.py --model gem --out stage/world-gem-24 --lead 24 --convection --completed-cycle
+          RUN=$(python -c 'import json; print(json.load(open("stage/world-gem-24/manifest.json"))["init_utc"])')
+          timeout 16m python global_nwp_stage.py --model gem --out stage/world-gem-48 --lead 48 --convection --run-utc "$RUN"
+      - name: Verify source and fallback for each product
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from pack_world_frames import package_frames
+          c=package_frames(Path('stage'),Path('verified'),128*1024*1024)
+          row=c['models']['gem']
+          official={};fallback={}
+          for p,frames in row['parameters'].items():
+              for f in frames:
+                  target=official if f.get('distribution')=='producer' else fallback
+                  target.setdefault(p,[]).append(f['lead_hours'])
+                  if target is fallback:
+                      assert f.get('official_attempted') and f.get('fallback_reason')
+          report=dict(run=row['run_utc'],official=official,fallback=fallback,bytes=c['raster_bytes'],deployment=False)
+          Path('coverage.json').write_text(json.dumps(report,indent=2))
+          print(json.dumps(report))
+          assert official.get('ki')==[24,48] and official.get('t2m')==[24,48], 'official two-frame coverage not demonstrated'
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v112-gem-common-engine
+          path: |
+            coverage.json
+            verified/
+          if-no-files-found: warn
+          retention-days: 3
