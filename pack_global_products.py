@@ -39,6 +39,38 @@ def parse_utc(value):
     return timestamp.astimezone(timezone.utc)
 
 
+# Only these pressure-level products may discount physically excluded cells.
+TERRAIN_LEVELS = {'ki':850,'si':850,'tt':850,'shw':850,'gdi':925,'ko':850,'swt':850,
+                  'lr75':700,'lr85':850,'sh85':850,'sh06':500,'li':500}
+
+def valid_coverage(param, field, width, height):
+    """90% of terrain-eligible cells, counting unknown pressure as missing.
+    Never waive the ordinary 90% gate for unmasked products. Counts describe
+    the producer's QC, not independent verification of the input fields.
+    """
+    from math import isfinite
+    fraction=field.get('finite_fraction')
+    if type(fraction) not in (int,float) or not isfinite(fraction) or not 0<=fraction<=1:
+        return False
+    if field.get('coverage_basis') is None:
+        return fraction>=.90 and not field.get('pressure_level_mask')
+    if field.get('coverage_basis')!='terrain_eligible_cells_v1' or param not in TERRAIN_LEVELS:
+        return False
+    levels=field.get('pressure_level_mask')
+    if not isinstance(levels,list) or not levels or any(type(x) is not int or x not in (500,700,850,925) for x in levels):
+        return False
+    if max(levels)!=TERRAIN_LEVELS[param] or not field.get('surface_pressure_basis'):
+        return False
+    counts=[field.get(k) for k in ('total_cells','terrain_excluded_cells','pressure_unknown_cells','valid_cells')]
+    if any(type(x) is not int or x<0 for x in counts):return False
+    total,excluded,unknown,valid=counts
+    if total!=width*height or total<=0 or excluded+unknown+valid>total:return False
+    # Conservative global floor: do not accept an apparently regional product
+    # disguised by declaring most of the globe beneath a pressure surface.
+    if excluded>.30*total or abs(fraction-valid/total)>.0000051:return False
+    return valid>=.90*(total-excluded)
+
+
 def verify_manifest_field(model, param, field, man, folder):
     """Require real same-cycle, global, physically classified WebP bytes."""
     if not isinstance(field, dict):
@@ -101,9 +133,8 @@ def verify_manifest_field(model, param, field, man, folder):
     if any(abs(value - target) > .3 for value, target in
            zip(bounds, (-180, 180, -90, 90))):
         raise ValueError('source grid is not global')
-    fraction = field.get('finite_fraction')
-    if type(fraction) not in (int, float) or not isfinite(fraction) or not .90 <= fraction <= 1:
-        raise ValueError('insufficient global valid pixels')
+    if not valid_coverage(param,field,w,h):
+        raise ValueError('insufficient global valid pixels or inconsistent terrain coverage')
     data = frame.read_bytes()
     if (data[:4] != b'RIFF' or data[8:12] != b'WEBP' or
             int.from_bytes(data[4:8], 'little') != len(data) - 8):
