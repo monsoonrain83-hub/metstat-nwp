@@ -52,6 +52,39 @@ def readback(manifest,records):
             found[key]=row.get('g',{}).get('sha256')
     _require(found==expected,'manifest readback mismatch or run advanced')
 
+def pending_plan(plan,manifest):
+    """Do not regenerate/replace already published immutable world frame names.
+    The fresh host manifest is authoritative for the current run. Missing
+    hashes and inconsistent state are conflicts, not permission to overwrite.
+    """
+    _require(plan.get('manifest')=='online/data/manifest.json' and plan.get('deploy') is False,'invalid plan')
+    models=manifest.get('models',{})
+    found={}
+    for row in manifest.get('items',[]):
+        if row.get('r')!='world':continue
+        m=row.get('m');run=models.get(m,{}).get('run')
+        key=(m,run,row.get('p'),row.get('v'))
+        _require(key not in found,'duplicate existing world manifest entry')
+        g=row.get('g')
+        found[key]=g.get('sha256') if isinstance(g,dict) else None
+    records=[];deferred=list(plan.get('deferred',[]))
+    already=conflicts=stale=0
+    for r in plan['records']:
+        key=identity(r)
+        model,run,p,valid=key
+        _require(r['destination']==f"online/data/nwp/{model}/{run}/{r['file']}",'unexpected destination')
+        if models.get(model,{}).get('run')!=run:
+            stale+=1;deferred.append((model,p,'host cycle advanced'));continue
+        if key in found:
+            if found[key] and found[key]==r['meta'].get('sha256'):
+                already+=1
+            else:
+                conflicts+=1;deferred.append((model,p,'immutable published frame differs; kept existing'))
+            continue
+        records.append(r)
+    return {**plan,'records':records,'deferred':deferred},dict(already_present=already,immutable_conflicts=conflicts,stale_frames=stale)
+
+
 def publish(plan,transport):
     prepared,runs=verify_plan(plan)
     caps=transport.call('ping')
@@ -115,8 +148,14 @@ if __name__=='__main__':
     parser.add_argument('catalog',type=Path);parser.add_argument('host_manifest',type=Path);parser.add_argument('--apply',action='store_true')
     args=parser.parse_args();p=plan(args.catalog,json.loads(args.host_manifest.read_text()))
     if not args.apply:
-        records,_=verify_plan(p);print(json.dumps(dict(mode='dry-run',frames=len(records),deferred=len(p['deferred']))))
+        p,counts=pending_plan(p,json.loads(args.host_manifest.read_text()))
+        records,_=verify_plan(p) if p['records'] else ([],{})
+        print(json.dumps(dict(mode='dry-run',frames=len(records),deferred=len(p['deferred']),**counts)))
     else:
         t=HttpTransport(os.environ.get('NWP_UPLOAD_KEY',''))
-        try:print(json.dumps(publish(p,t)))
+        try:
+            fresh=t.manifest()
+            p,counts=pending_plan(p,fresh)
+            result=publish(p,t) if p['records'] else dict(verified=0,bytes=0,models=[],manifest='online/data/manifest.json')
+            print(json.dumps(dict(**result,**counts,deferred=len(p['deferred']))))
         finally:t.close()
