@@ -347,3 +347,38 @@ No substitute mock website or copy of the R5 demonstration engine.
   in shared public manifest; complete input provenance remains in staging.
   Final V114 browser replay and current host baseline/readback still
   required. No live writes or second data directory.
+
+## V115 — host publication client and installation readiness
+- Existing public HTTPS root exact SHA256 confirmed V105
+  82cd6d47ff38b03d5fffc5051bafcf16ebe4842b9f410babb99e64062cbb1b8e
+  in site repository read-only workflow 45936123665. FTPS connection
+  failed certificate verification (SSLCertVerificationError); no
+  insecure TLS fallback. Current online/nwp_upload.php hash is NOT
+  verified. Request only that file from administrator, never config/key.
+- Frontend-only package MetStat_V115_frontend_upload.zip
+  SHA256 72158ce033f52332643e953c33fb66ec1968d2c1db7b05efc2b98835459af5cb,
+  five exact tested V114 UI files. No PHP/data/auth/config replacements.
+  Compatible with confirmed V105 index baseline. World menu remains
+  availability-gated; installing UI alone will not create live world data.
+- publish_world_host.py (commit 98df05780ed91fd59f741ca96b848d89052b5bb8):
+  explicit apply only; fixed HTTPS origin, no redirects, no key logging,
+  bounded plan preflight, exact same current model run, capability
+  checks, upload limits, acknowledge each SHA, sync common manifest
+  and verify public raster bytes. Never call begin/end/purge. No atomic
+  all-model batch transaction; partial upload can occur on interrupted
+  request, safely retry same immutable bytes while run remains current.
+  Local end-to-end replay against actual candidate PHP, four genuine
+  ECMWF CAPE and official GEM K-index frames, 17 checks passed.
+- Existing nwp.yml now contains opt-in world job (commit
+  576585bd6b5d9549498a391b2a3810048b9ee6c8). Disabled by default
+  unless METSTAT_WORLD_ENABLE=1; no change to existing cadence or
+  regional jobs. First tranche two leads (+24/+48) per core family,
+  one model at a time, 128 MiB/model, exact current host cycle. Uses
+  existing MX_KEY only in explicit publish step; no second live store.
+  Full timeline, base products, reference climate, other direct
+  adapters, geography and R5 remain open. Branch not merged or live.
+- V114 browser_v114_report confirms both desktop and mobile offline
+  end-to-end viewer replay, zero page errors, actual V109 ECMWF images.
+  Full combined live deployment pending current uploader hash and
+  authenticated installation verification. Do not claim site world
+  coverage is live from these tests.
