@@ -1,0 +1,70 @@
+name: V119 original IFS and AIFS data acceptance
+on:
+  push:
+    branches: [fix/v102-same-cycle-anomaly-contract]
+    paths: [.github/workflows/v119-ecmwf-original.yml]
+permissions:
+  contents: read
+jobs:
+  direct:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - {model: ifs, res: 0p1}
+          - {model: ifs, res: 0p25}
+          - {model: aifs-single, res: 0p25}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install numpy requests eccodes
+      - run: PYTHONPATH=. python -m unittest discover -s tests -p test_mm_v119_ecmwf_official.py -v
+      - name: Actual official byte ranges and physical field validation
+        env:
+          MODEL: ${{ matrix.model }}
+          RES: ${{ matrix.res }}
+        run: |
+          python - <<'PY'
+          import json,os
+          import requests,numpy as np
+          from datetime import datetime,timedelta,timezone
+          from pathlib import Path
+          import world_ecmwf_official as W
+          run=(datetime.now(timezone.utc)-timedelta(hours=12)).replace(minute=0,second=0,microsecond=0)
+          run=run.replace(hour=run.hour//6*6)
+          model,res=os.environ['MODEL'],os.environ['RES']
+          report=dict(model=model,res=res,run=run.isoformat(),fields={},deployment=False)
+          p={}
+          with requests.Session() as s:
+              for lead in (24,48):
+                  for key in W.FIELDS:
+                      try:
+                          a,m=W.read(s,model,res,run,lead,key)
+                          report['fields'][f'{key}_{lead}']={'status':'verified',**m}
+                          if key=='pacc':p[lead]=a
+                      except Exception as e:
+                          report['fields'][f'{key}_{lead}']={'status':'unavailable_or_rejected','reason':type(e).__name__+': '+str(e)[:150]}
+          if set(p)=={24,48}:
+              try:
+                  d=W.daily_precip(p[48],p[24])
+                  report['p24_raw']={'status':'verified','min':float(np.nanmin(d)),'max':float(np.nanmax(d)),'not_dem_corrected':True}
+              except ValueError as e:report['p24_raw']={'status':'rejected','reason':str(e)}
+          report['z500_anomaly']='await verified 1991-2020 reference'
+          Path('direct-report.json').write_text(json.dumps(report,indent=2))
+          print(json.dumps(report))
+          assert any(x['status']=='verified' for x in report['fields'].values()),'No verified direct fields'
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v119-direct-${{ matrix.model }}-${{ matrix.res }}
+          path: direct-report.json
+          if-no-files-found: warn
+          retention-days: 7
