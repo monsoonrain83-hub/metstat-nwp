@@ -130,3 +130,40 @@ This establishes real production of a subset, not complete five-model coverage.
   acceptance pending at this entry. Main, old world catalogue, regional
   products and host remain unchanged. DEM/precipitation global products,
   main viewer integration and complete forecast timeline remain gates.
+
+## V109 — terrain-aware quality gate and exact-run timeline
+V108 quality-nwp 45886723787, P0 45886723800, and real acceptance
+45886681213 passed. Verified +24h staging coverage (runs 2026-11-26):
+ECMWF: cape,li,lr75,sh06,refl,sigwx; GFS: cape,li,lr75,refl;
+ICON: cape,li,lr75,sh06,refl,sigwx; UKMO: cape,cin,li,lr75,refl,sigwx;
+GEM: refl only among convection/weather. All also produced some basic fields.
+ECMWF and UKMO used 06Z; other three used 12Z. GEM pressure inputs
+were absent in the tested Open-Meteo file, not proven absent in GDPS.
+GFS/ICON/UKMO K/TT/GDI rejection was largely the flat 90% global grid
+coverage threshold versus physically below-ground pressure levels.
+- Count terrain-excluded, unknown-pressure and valid cells separately.
+  Require 90% of cells not explicitly excluded by known terrain pressure,
+  with unchanged 15 hPa margin; unknown pressure remains missing.
+  Conservative maximum exclusion 30% of grid cells (engineering gate,
+  not a scientific threshold). Unmasked products retain the old 90%
+  rule. Validate count consistency and expected product/level mapping.
+  Do not convert positive-source CIN to negative until source semantics
+  are verified, nor silently clip source RH or mix high/coarse fields.
+- Six new terrain tests; quality-nwp 45930221590 and P0 45930221834
+  passed at 793fefb144f6773ab105aba9dc73866a3f0358ce.
+- Real two-lead +24/+48h staging workflow 45930216371, exact cycle
+  pinned from first manifest, 128 MiB/model staging budget, no deployment.
+  Pending at time of entry.
+- New independent official ECCC GDPS 15 km GRIB reader
+  world_gem_official.py checks single-message size, time, level,
+  variable, explicit units, global regular grid and orientation.
+  Official source documentation:
+  https://eccc-msc.github.io/open-data/msc-data/nwp_gdps/readme_gdps-datamart_en/
+  Bounded fixed-source downloads, no cross-source field merge.
+  Unknown/grid-relative winds are rejected until orientation verified.
+  Five metadata fixture tests and separate official read/derive
+  acceptance 45930380359 pending. Official reader is not yet admitted to
+  publication catalogue; verify actual names/metadata/access/licence
+  and results first. Regional engine unchanged.
+- Host integration, actual DEM corrected global rainfall and reference
+  climatology remain open. No host release or live deployment in V109.
