@@ -410,3 +410,5 @@ No substitute mock website or copy of the R5 demonstration engine.
   run; existing retention may rotate them into previous-run data.
   Recurring world job remains disabled/unmerged. No other model publication
   or full timeline activation in this change.
+
+- Administrator-confirmed canonical online maps page: https://wtafkik.ir/monitoring-forecast/weather-models/online-maps . Use this exact route for live browser acceptance and user-facing links. The previously cited /weather-models path was incorrect. Workflow route corrected in 58e6d2c; browser acceptance must be evaluated on the corrected route.
