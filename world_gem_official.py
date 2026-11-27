@@ -86,8 +86,8 @@ def decode(raw,key,run,valid):
         if (abs(dx-.15)>1e-6 or abs(dy-.15)>1e-6 or abs(lon1)>1e-6 or abs(lon2-359.85)>1e-5
             or sorted((lat1,lat2))!=[-90.,90.] or bool(get('jScansPositively'))!=(lat2>lat1)):
             raise ValueError('wrong global grid origin or coverage')
-        if kind=='wind' and int(get('uvRelativeToGrid')) not in (0,1):
-            raise ValueError('unknown wind orientation')
+        if kind=='wind' and int(get('uvRelativeToGrid'))!=0:
+            raise ValueError('grid-relative wind needs independent orientation validation')
         a=np.asarray(ec.codes_get_values(g),np.float32).reshape(NY,NX)
         if int(get('bitmapPresent')):
             a=np.where(a==float(get('missingValue')),np.nan,a)
