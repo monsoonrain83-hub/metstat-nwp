@@ -3,6 +3,7 @@ import tempfile, unittest
 from datetime import datetime,timezone,timedelta
 from pathlib import Path
 from unittest.mock import patch
+from types import SimpleNamespace
 import global_nwp_stage as G
 
 RUN=datetime(2026,11,26,12,tzinfo=timezone.utc)
@@ -19,6 +20,7 @@ class PinnedGem(unittest.TestCase):
             self.assertEqual(set(m['fields']),set(G.FIELDS))
     def test_partial_official_survives_intermediary_failure(self):
         with tempfile.TemporaryDirectory() as td, \
+                patch.dict('sys.modules',{'s3fs':SimpleNamespace(S3FileSystem=lambda **kw:object())}), \
                 patch.object(G,'official_gem_products',return_value=({'t2m':{'field_source_domain':'msc_gdps_official','width':2400,'height':1201}},'no remaining fields')) as official, \
                 patch.object(G.N,'S3Source',side_effect=RuntimeError('intermediary unavailable')) as source:
             m=G.acquire('gem',Path(td),48,RUN)
