@@ -2,8 +2,7 @@
 """MetStat MultiModel (مالتی مدل MetStat) — وزن‌دهی مدل‌ها.
 
 وزن‌های پایه طبق دستور کاربر؛ بر اساس فصل (تاریخ شمسی) و گروه پارامتر.
-اگر مدلی پارامتر/گام زمانی را ندارد، از ترکیب حذف و وزن بقیه به تناسب وزن پایه‌شان بازتوزیع می‌شود:
-    w_i = base_i / Σ_{j ∈ موجود} base_j
+ECMWF سهم ثابت ۶۰٪ دارد؛ وزن‌های پایه فقط نسبت سهم سایر اعضای موجود (۴۰٪) را تعیین می‌کنند.
 NAVGEM هرگز در ترکیب نیست.
 """
 from datetime import date, datetime
@@ -97,14 +96,25 @@ def _specific_weights(group, pid=None, secondary=False):
 
 
 def weights(group, d, available, pid=None, secondary=False):
-    """وزن نهایی مدل‌ها (جمع = ۱). available: مدل‌هایی که این پارامتر/گام را دارند و فیلدشان آماده است.
-    خروجی: (dict مدل→وزن, فصل, مدل‌های حذف‌شده از وزن پایه)."""
+    """Daily family policy: ECMWF 60%, independent peers together 40%.
+
+    Existing seasonal/parameter-specific weights govern relative peer shares.
+    Keep existing parameter eligibility and mandatory ECMWF/GFS core.
+    This is a field-level policy; spatial masks are checked separately.
+    """
     base, s = base_weights(group, d)
     base = _specific_weights(group, pid, secondary) or base
     av = [m for m in pick_sources(available) if m in base and m not in EXCLUDED]
-    tot = float(sum(base[m] for m in av))
-    if tot <= 0: return {}, s, sorted(base)
-    return {m: base[m] / tot for m in av}, s, sorted(m for m in base if m not in av)
+    missing = sorted(m for m in base if m not in av)
+    if 'ecmwf' not in av or 'gfs' not in av:
+        return {}, s, missing
+    peers = [m for m in av if m != 'ecmwf' and base[m] > 0]
+    total = sum(float(base[m]) for m in peers)
+    if total <= 0:
+        return {}, s, missing
+    out = {'ecmwf': 0.60}
+    out.update({m: 0.40 * float(base[m]) / total for m in peers})
+    return out, s, missing
 
 
 def caption(w, lang='fa'):

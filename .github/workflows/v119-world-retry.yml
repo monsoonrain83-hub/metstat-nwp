@@ -1,0 +1,105 @@
+name: V119 bounded ECMWF and UKMO retry
+on:
+  push:
+    branches: [fix/v102-same-cycle-anomaly-contract]
+    paths: [.github/workflows/v119-world-retry.yml]
+permissions:
+  contents: read
+concurrency:
+  group: metstat-world-first-append
+  cancel-in-progress: false
+jobs:
+  append:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        model: [ecmwf, ukmo]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - name: Verify installed host and pin exact current model initialization
+        env:
+          MODEL: ${{ matrix.model }}
+          MX_KEY: ${{ secrets.MX_KEY }}
+        run: |
+          python - <<'PY'
+          import os,json,hashlib,urllib.request
+          from pathlib import Path
+          from datetime import datetime,timezone
+          from publish_world_host import HttpTransport
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self,*args,**kwargs):return None
+          req=urllib.request.Request('https://wtafkik.ir/',headers={'Cache-Control':'no-cache','Accept-Encoding':'identity'})
+          with urllib.request.build_opener(NoRedirect()).open(req,timeout=30) as r:
+              b=r.read(2*1024*1024+1)
+          assert hashlib.sha256(b).hexdigest()=='7192d357b04b03d0b027cab8b47bde1e32891bbd8ef69b339870b8f4245c0db0','installed UI mismatch'
+          t=HttpTransport(os.environ['MX_KEY'])
+          try:
+              caps=t.call('ping')
+              assert caps.get('ok') is True and {'worldput-v1','worldsync-v1'}<=set(caps.get('caps',[]))
+              m=t.manifest()
+          finally:t.close()
+          model=os.environ['MODEL'];run=m['models'][model]['run']
+          dt=datetime.strptime(run,'%Y%m%d%H').replace(tzinfo=timezone.utc)
+          assert dt.strftime('%Y%m%d%H')==run
+          Path('host-manifest.json').write_text(json.dumps(m))
+          Path('run-utc.txt').write_text(dt.strftime('%Y-%m-%dT%H:%M:%SZ'))
+          print(json.dumps({'model':model,'run':run,'phase':'pinned; no write'}))
+          PY
+      - name: Produce actual 24 and 48 hour global frames on identical run
+        env:
+          MODEL: ${{ matrix.model }}
+        run: |
+          RUN=$(cat run-utc.txt)
+          timeout 16m python global_nwp_stage.py --model "$MODEL" --out "stage/world-$MODEL-24" --lead 24 --run-utc "$RUN" --convection
+          timeout 16m python global_nwp_stage.py --model "$MODEL" --out "stage/world-$MODEL-48" --lead 48 --run-utc "$RUN" --convection
+          python pack_world_frames.py stage verified --budget-bytes 67108864
+      - name: Append only compatible verified frames; preserve existing files and read back
+        env:
+          MODEL: ${{ matrix.model }}
+          MX_KEY: ${{ secrets.MX_KEY }}
+        run: |
+          python - <<'PY'
+          import os,json
+          from pathlib import Path
+          from PIL import Image
+          from plan_world_host import plan
+          from publish_world_host import HttpTransport,verify_plan,publish,pending_plan
+          t=HttpTransport(os.environ['MX_KEY'])
+          report={'model':os.environ['MODEL'],'published':False,'verified':0}
+          try:
+              m=t.manifest()
+              p=plan(Path('verified/catalog.json'),m)
+              report['deferred']=p['deferred']
+              p,counts=pending_plan(p,m)
+              report.update(counts)
+              if p['records']:
+                  prepared,runs=verify_plan(p)
+                  assert len(prepared)<=32 and sum(len(b) for _,b in prepared)<=64*1024*1024
+                  for r,b in prepared:
+                      with Image.open(r['source']) as im:
+                          assert im.format=='WEBP' and im.size==(r['meta']['width'],r['meta']['height'])
+                          im.load()
+                  report['products']=[{'parameter':r['meta']['variable'],'lead':r['meta']['lead_hours'],'source':r['meta']['field_source_domain']} for r,b in prepared]
+                  report.update(publish(p,t));report['published']=True
+              else:report['reason']='No new compatible current-run frames; no writes'
+          finally:
+              t.close()
+              Path('append-report.json').write_text(json.dumps(report,indent=2))
+              print(json.dumps(report))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v119-world-retry-${{ matrix.model }}
+          path: append-report.json
+          if-no-files-found: warn
+          retention-days: 7

@@ -1,0 +1,56 @@
+name: V120 first real AIFS regional publication
+on:
+  push:
+    branches: [fix/v102-same-cycle-anomaly-contract]
+    paths: [.github/workflows/v120-aifs-first-publish.yml]
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: metstat-aifs-first
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: v120-aifs-regional
+          run-id: 45947304156
+          github-token: ${{ github.token }}
+          path: stage
+      - run: python publish_aifs_regional.py stage
+      - name: Verify installed V119 frontend
+        run: |
+          python - <<'PY'
+          import hashlib,urllib.request
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self,*args,**kwargs):return None
+          client=urllib.request.build_opener(NoRedirect())
+          for p,digest,limit in [
+              ('/monitoring-forecast/weather-models/online-maps','9f8315b276a0507d4e8a450bff12506de78b57302c876e940f244ad8b156131a',2*1024*1024),
+              ('/assets/ms_r5_perf_core_9567dff741e9b6d3.js','9567dff741e9b6d36fee8caa87f679d4611ce82a22a535ad0399f92373416617',6*1024*1024)]:
+              req=urllib.request.Request('https://wtafkik.ir'+p,headers={'Cache-Control':'no-cache','Accept-Encoding':'identity'})
+              with client.open(req,timeout=30) as r:b=r.read(limit+1)
+              assert len(b)<=limit and hashlib.sha256(b).hexdigest()==digest,'live frontend changed'
+          PY
+      - name: First verified AIFS publication to existing NWP tree
+        env:
+          NWP_UPLOAD_KEY: ${{ secrets.MX_KEY }}
+        run: |
+          python publish_aifs_regional.py stage --apply | tee publish-report.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v120-aifs-publication
+          path: publish-report.json
+          if-no-files-found: warn
+          retention-days: 7

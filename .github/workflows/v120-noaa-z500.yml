@@ -1,0 +1,28 @@
+name: V120 NOAA actual synoptic Z500 reference
+on:
+  push:
+    branches: [fix/v102-same-cycle-anomaly-contract]
+    paths: [.github/workflows/v120-noaa-z500.yml]
+permissions:
+  contents: read
+jobs:
+  reference:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install numpy scipy netCDF4
+      - name: Fetch exact NOAA 500 hPa climatology and sample counts
+        run: |
+          timeout 10m python build_noaa_synoptic_z500.py --out reference/ncep_r1_synoptic_1991_2020_z500.npz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v120-noaa-synoptic-z500
+          path: reference/
+          if-no-files-found: error
+          retention-days: 7

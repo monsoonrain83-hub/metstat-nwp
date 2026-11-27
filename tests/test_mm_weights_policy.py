@@ -49,22 +49,38 @@ class TestMultimodelWeights(unittest.TestCase):
                     w, _, _ = m.weights(group, d, MODELS, pid=pid, secondary=secondary)
                     self.assertAlmostEqual(sum(w.values()), 1.0)
                     self.assertEqual(set(w), {'ecmwf', 'gfs', 'gem', 'icon', 'ukmo'})
-                    for model, pct in expected.items():
-                        self.assertAlmostEqual(w[model] * 100, pct)
+                    self.assertAlmostEqual(w['ecmwf'], .60)
+                    raw = m._specific_weights(group, pid, secondary)
+                    total = sum(raw[k] for k in raw if k != 'ecmwf')
+                    for model in w:
+                        if model != 'ecmwf':
+                            self.assertAlmostEqual(w[model], .40 * raw[model] / total)
 
     def test_gdi_only_two_models(self):
         for d in (date(2026, 7, 1), date(2026, 11, 12)):
             w, _, missing = m.weights('convection', d, MODELS, pid='gdi')
             self.assertEqual(set(w), {'gfs', 'ecmwf'})
-            self.assertAlmostEqual(w['gfs'], 0.60)
-            self.assertAlmostEqual(w['ecmwf'], 0.40)
+            self.assertAlmostEqual(w['gfs'], 0.40)
+            self.assertAlmostEqual(w['ecmwf'], 0.60)
             self.assertEqual(set(missing), set())  # GDI policy explicitly excludes these slots
 
     def test_missing_secondary_models_normalizes(self):
         w, _, missed = m.weights('convection', date(2026, 7, 1), ['ecmwf9', 'gfs'], pid='ki')
         self.assertEqual(set(w), {'ecmwf', 'gfs'})
-        self.assertAlmostEqual(w['gfs'], 2.0 / 3.0)
+        self.assertAlmostEqual(w['gfs'], 0.40)
         self.assertEqual(set(missed), {'gem', 'icon', 'ukmo'})
+
+    def test_missing_core_model_never_becomes_single_model(self):
+        for available in (['ecmwf9'], ['gfs'], ['ecmwf9','gem'], ['gfs','icon']):
+            w, _, _ = m.weights('precip', date(2026,11,25), available)
+            self.assertEqual(w, {})
+
+    def test_family_deduplication_and_excluded_models(self):
+        w, _, _ = m.weights('precip', date(2026,11,25),
+            ['ecmwf9','ecmwf','gfs','gfs25','gem','icon','ukmo','iri','arpege','aifs','aigfs'])
+        self.assertEqual(set(w), set(m.MM_MODELS))
+        self.assertAlmostEqual(w['ecmwf'], .60)
+        self.assertAlmostEqual(sum(w.values()), 1)
 
 if __name__ == '__main__':
     unittest.main()

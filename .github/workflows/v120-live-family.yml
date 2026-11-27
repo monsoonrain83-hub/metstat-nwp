@@ -1,0 +1,65 @@
+name: V120 verify live family buttons and model coverage
+on:
+  push:
+    branches: [fix/v102-same-cycle-anomaly-contract]
+    paths: [.github/workflows/v120-live-family.yml]
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.56.1 && npx playwright install --with-deps chromium
+      - name: Inspect actual installed page and current logical model menus
+        run: |
+          cat > live.cjs <<'JS'
+          const {chromium}=require('playwright');
+          const fs=require('node:fs'),assert=require('node:assert/strict'),crypto=require('node:crypto');
+          const base='https://wtafkik.ir';
+          const sha=b=>crypto.createHash('sha256').update(b).digest('hex');
+          (async()=>{
+            const report={mode:'read-only',checks:[],errors:[]};
+            const browser=await chromium.launch();
+            try {
+              const ctx=await browser.newContext({viewport:{width:1440,height:900},serviceWorkers:'block'});
+              await ctx.route('**/*',r=>{const req=r.request(),u=new URL(req.url());return u.origin===base&&['GET','HEAD'].includes(req.method())?r.continue():r.abort();});
+              const page=await ctx.newPage();
+              page.on('pageerror',e=>report.errors.push(String(e).slice(0,200)));
+              const r=await page.goto(base+'/monitoring-forecast/weather-models/online-maps',{waitUntil:'domcontentloaded',timeout:60000});
+              assert.equal(r.status(),200);
+              report.index=sha(await r.body());
+              report.version={'9f8315b276a0507d4e8a450bff12506de78b57302c876e940f244ad8b156131a':'V119','7192d357b04b03d0b027cab8b47bde1e32891bbd8ef69b339870b8f4245c0db0':'V116'}[report.index]||'unknown';
+              await page.waitForFunction(()=>typeof ON!=='undefined'&&ON.man&&Array.isArray(ON.man.items)&&typeof NV!=='undefined'&&document.getElementById('nvM'),{},{timeout:60000});
+              report.current=await page.evaluate(()=>{const m=ON.man,o={};for(const i of m.items)if(i.r==='world'){const a=o[i.m]||=( {run:m.models[i.m]?.run,frames:0,params:[]});a.frames++;if(!a.params.includes(i.p))a.params.push(i.p);}return o;});
+              report.menu=await page.evaluate(()=>[...document.getElementById('nvM').options].map(o=>({id:o.value,label:o.textContent})));
+              if(report.version!=='V119'){report.reason='V119 not verified on live route; no claim of family integration';return;}
+              const asset=await ctx.request.get(base+'/assets/ms_r5_perf_core_9567dff741e9b6d3.js',{maxRedirects:0,timeout:30000});
+              assert.equal(asset.status(),200);assert.equal(sha(await asset.body()),'9567dff741e9b6d36fee8caa87f679d4611ce82a22a535ad0399f92373416617');
+              report.checks.push('exact core verified');
+              const result=await page.evaluate(()=>{const m=nvViewManifest(),menu=[...document.getElementById('nvM').options].map(o=>o.value);const counts={};for(const k of ['ecmwf','gfs']){const a=m.items.filter(i=>i.m===k);counts[k]={count:a.length,unique:new Set(a.map(i=>[i.r,i.p,i.v].join('|'))).size,run:m.models[k]?.run,res:[...new Set(a.map(i=>i.sourceResolution).filter(Boolean))],coeval:a.every(i=>i.run===m.models[k].run)};}return {menu,counts};});
+              report.families=result;assert(result.menu.includes('ecmwf')&&result.menu.includes('gfs')&&!result.menu.includes('ecmwf9')&&!result.menu.includes('gfs25'));report.checks.push('single ECMWF and GFS menu');
+              for(const c of Object.values(result.counts)){assert(c.count>0&&c.count===c.unique&&c.coeval);}
+              report.checks.push('no duplicate or mixed cycle family frames');
+              const aifs=await page.evaluate(()=>({menu:[...document.getElementById('nvM').options].find(o=>o.value==='aifs')?.textContent||null,run:ON.man.models.aifs?.run,frames:ON.man.items.filter(i=>i.m==='aifs'&&i.r==='me').map(i=>({p:i.p,s:i.s,v:i.v,f:i.f}))}));
+              report.aifs=aifs;
+              assert(aifs.menu&&aifs.run==='2026112612'&&aifs.frames.length===6,'AIFS actual menu or frames missing');
+              for(const p of ['p24','pacc','t2m'])assert.deepEqual(aifs.frames.filter(i=>i.p===p).map(i=>i.s).sort((a,b)=>a-b),[24,48]);
+              await page.evaluate(()=>{const el=document.getElementById('nvM');el.value='aifs';el.dispatchEvent(new Event('change',{bubbles:true}));});
+              await page.waitForFunction(()=>NV.s.m==='aifs'&&NV.items?.length>0,{},{timeout:30000});
+              report.checks.push('real AIFS menu and all six frames visible');
+              report.passed=true;
+            } finally {console.log(JSON.stringify(report));fs.writeFileSync('live-family.json',JSON.stringify(report,null,2));await browser.close();}
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          JS
+          node live.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v120-live-family
+          path: live-family.json
+          if-no-files-found: warn
+          retention-days: 3

@@ -56,6 +56,63 @@ jobs:
           done
           exit $rc
 
+
+  world:
+    # Opt-in, bounded first operational tranche; same workflow and host tree.
+    # Enable only after V114+ host uploader and viewer are installed/verified.
+    if: ${{ vars.METSTAT_WORLD_ENABLE == '1' }}
+    name: world append ${{ matrix.model }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        model: [ecmwf, gfs, icon, ukmo, gem]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: Pin existing host run without changing regional state
+        env:
+          MODEL: ${{ matrix.model }}
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request
+          from pathlib import Path
+          from datetime import datetime, timezone
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self,*args,**kwargs):return None
+          req=urllib.request.Request('https://wtafkik.ir/online/data/manifest.json',headers={'Cache-Control':'no-cache','Accept-Encoding':'identity'})
+          with urllib.request.build_opener(NoRedirect()).open(req,timeout=30) as r:
+              b=r.read(32*1024*1024+1)
+              if len(b)>32*1024*1024:raise ValueError('manifest too large')
+          m=json.loads(b)
+          run=m['models'][os.environ['MODEL']]['run']
+          dt=datetime.strptime(run,'%Y%m%d%H').replace(tzinfo=timezone.utc)
+          assert dt.strftime('%Y%m%d%H')==run
+          Path('host-manifest.json').write_bytes(b)
+          Path('run-utc.txt').write_text(dt.strftime('%Y-%m-%dT%H:%M:%SZ'))
+          PY
+      - name: Stage verified two-frame world products of the identical run
+        env:
+          MODEL: ${{ matrix.model }}
+        run: |
+          RUN=$(cat run-utc.txt)
+          timeout 18m python global_nwp_stage.py --model "$MODEL" --out "stage/world-$MODEL-24" --lead 24 --run-utc "$RUN" --convection
+          timeout 18m python global_nwp_stage.py --model "$MODEL" --out "stage/world-$MODEL-48" --lead 48 --run-utc "$RUN" --convection
+          python pack_world_frames.py stage verified --budget-bytes 134217728
+          python publish_world_host.py verified/catalog.json host-manifest.json
+      - name: Publish same-run frames and verify public bytes
+        env:
+          NWP_UPLOAD_KEY: ${{ secrets.MX_KEY }}
+        run: |
+          timeout 15m python publish_world_host.py verified/catalog.json host-manifest.json --apply
+
   mm:
     # مالتی‌مدل: فقط میدان‌ها را از همهٔ مدل‌ها می‌خواند (بدون ساخت نقشهٔ تک‌مدل) و نقشهٔ ترکیبی می‌سازد؛ سه سهم موازی
     name: multimodel ${{ matrix.s }}

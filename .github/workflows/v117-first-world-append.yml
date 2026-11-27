@@ -1,0 +1,86 @@
+name: V117 bounded first live world append
+on:
+  push:
+    branches: [fix/v102-same-cycle-anomaly-contract]
+    paths: [.github/workflows/v117-first-world-append.yml]
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: metstat-world-first-append
+  cancel-in-progress: false
+jobs:
+  canary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install numpy pillow requests
+      - uses: actions/download-artifact@v4
+        with:
+          name: v109-world-ecmwf
+          run-id: 45930216371
+          github-token: ${{ github.token }}
+          path: accepted
+      - name: Verify installed UI, exact current cycle and bounded CAPE canary
+        env:
+          NWP_UPLOAD_KEY: ${{ secrets.MX_KEY }}
+        run: |
+          python - <<'PY'
+          import json,hashlib,os,urllib.request
+          from pathlib import Path
+          from PIL import Image
+          from plan_world_host import plan
+          from publish_world_host import HttpTransport, publish, verify_plan
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self,*args,**kwargs):return None
+          def verify_public(path,expected,limit):
+              req=urllib.request.Request('https://wtafkik.ir'+path,headers={'Cache-Control':'no-cache','Accept-Encoding':'identity'})
+              with urllib.request.build_opener(NoRedirect()).open(req,timeout=30) as r:
+                  b=r.read(limit+1)
+              assert len(b)<=limit and hashlib.sha256(b).hexdigest()==expected,'installed UI mismatch'
+          verify_public('/','7192d357b04b03d0b027cab8b47bde1e32891bbd8ef69b339870b8f4245c0db0',2*1024*1024)
+          verify_public('/assets/ms_r5_perf_core_3e2a23923400a982.js','3e2a23923400a9828a5e1dbb04ad7cd0b027f85fbeb839aebb9dbcabb56135ee',6*1024*1024)
+          paths=list(Path('accepted').rglob('catalog.json'))
+          assert len(paths)==1
+          path=paths[0]
+          c=json.loads(path.read_text())
+          assert c['schema']==2 and c['mock'] is False and set(c['models'])=={'ecmwf'}
+          row=c['models']['ecmwf']
+          assert row['run_utc']=='2026-11-26T18:00:00Z'
+          frames=row['parameters']['cape']
+          assert sorted(x['lead_hours'] for x in frames)==[24,48]
+          row['parameters']={'cape':frames}
+          selected=path.with_name('selected-cape.json')
+          selected.write_text(json.dumps(c))
+          t=HttpTransport(os.environ['NWP_UPLOAD_KEY'])
+          try:
+              before=t.manifest()
+              if before.get('models',{}).get('ecmwf',{}).get('run')!='2026112618':
+                  report={'published':False,'reason':'host cycle advanced; no writes'}
+              else:
+                  p=plan(selected,before)
+                  prepared,runs=verify_plan(p)
+                  assert len(prepared)==2 and runs=={'ecmwf':'2026112618'}
+                  assert sum(len(b) for _,b in prepared)<=4*1024*1024
+                  for r,b in prepared:
+                      with Image.open(r['source']) as im:
+                          assert im.format=='WEBP' and im.size==(r['meta']['width'],r['meta']['height'])
+                          im.load()
+                  report={'published':True,**publish(p,t),'run':'2026112618','parameter':'cape','leads':[24,48]}
+              print(json.dumps(report))
+              Path('canary-report.json').write_text(json.dumps(report,indent=2))
+          finally:t.close()
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v117-live-world-canary
+          path: canary-report.json
+          if-no-files-found: warn
+          retention-days: 7
