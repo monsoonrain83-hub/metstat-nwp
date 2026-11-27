@@ -469,3 +469,41 @@ No substitute mock website or copy of the R5 demonstration engine.
   products, matching palette and safe new-model onboarding. No new model
   catalogue placeholders. Existing live V116 unchanged except verified
   V118 world data writes.
+
+## V120 — live family viewer verified, AIFS first regional tranche
+- V119 retry 45943681179: ECMWF published 16 additional world frames,
+  14 existing immutable frames retained; UKMO exact host-pinned cycle
+  unavailable. V120 live browser 45947042008 passed, exact V119 index
+  and core; actual canonical route menu one ECMWF and one GFS.
+  Raw shared manifest had ECMWF 30, GEM 22, GFS 22, ICON 26 current
+  world frames. Logical current ECMWF 2026112700 (235 high-res frames)
+  is newer than the coarse 2026112618 run holding the world maps;
+  those cycles MUST NOT be merged. Logical GFS 7406 unique current
+  frames, both resolutions; no JS errors. Physical producers remain
+  independent pending backend consolidation.
+- NOAA PSL NCEP-NCAR R1 1991–2020 actual 4Xday HGT dataset documented:
+  https://psl.noaa.gov/thredds/dodsC/Datasets/ncep.reanalysis.derived/pressure/hgt.4Xday.ltm.1991-2020.nc.html
+  1460 synoptic steps, 73x144, 17 levels and valid_yr_count. Builder
+  build_noaa_synoptic_z500.py selects 500 hPa only, checks units,
+  sample counts, calendar and checksum. First actual run 45947137237
+  failed NetCDF OPeNDAP access (-77); no reference output or fallback
+  fabricated. ERA5 remains preferred; use any NOAA reference explicitly
+  labelled only after actual data acceptance.
+- Official AIFS reader added distinct surface geopotential, never Z500
+  mistaken for orography. Actual AIFS stage workflow 45947304156 SUCCESS:
+  2026112612; exact +24/+48 accumulations, instantaneous 2m temperature
+  (live t2m label verified), surface geopotential lead 0. Full 1440x721
+  native field coverage; ME raster 1440x960. Reused Engine.precip_factor,
+  Engine.lapse and render_me. Exact current host palettes verified.
+  Existing Iran DEM covers 12.0433% of ME raster; factor .653–1.860,
+  explicitly preserve raw values outside valid DEM. Six images,
+  196986 bytes. Actual artifact 15175346380, SHA256
+  52ca6c677a075551777434e0a5ff342a0769557c66fa438051696dc45bac840d.
+  This is initial regional tranche ONLY, not global or complete timeline.
+- publish_aifs_regional.py validates source references, exact run/lead,
+  byte hashes, full decode, shared palettes, current AIFS state, uploader
+  caps; only AIFS begin/put/end, no sync/purge or shared parameters.
+  Explicit first publication job 45947389180 queued on installed V119
+  exact hash. Check outcome before claiming live. Different existing
+  AIFS run refused; recurring rotation, full timeline, global DEM and
+  synoptic climate reference still pending.
