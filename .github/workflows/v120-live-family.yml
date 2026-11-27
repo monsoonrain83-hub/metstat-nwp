@@ -44,6 +44,13 @@ jobs:
               report.families=result;assert(result.menu.includes('ecmwf')&&result.menu.includes('gfs')&&!result.menu.includes('ecmwf9')&&!result.menu.includes('gfs25'));report.checks.push('single ECMWF and GFS menu');
               for(const c of Object.values(result.counts)){assert(c.count>0&&c.count===c.unique&&c.coeval);}
               report.checks.push('no duplicate or mixed cycle family frames');
+              const aifs=await page.evaluate(()=>({menu:[...document.getElementById('nvM').options].find(o=>o.value==='aifs')?.textContent||null,run:ON.man.models.aifs?.run,frames:ON.man.items.filter(i=>i.m==='aifs'&&i.r==='me').map(i=>({p:i.p,s:i.s,v:i.v,f:i.f}))}));
+              report.aifs=aifs;
+              assert(aifs.menu&&aifs.run==='2026112612'&&aifs.frames.length===6,'AIFS actual menu or frames missing');
+              for(const p of ['p24','pacc','t2m'])assert.deepEqual(aifs.frames.filter(i=>i.p===p).map(i=>i.s).sort((a,b)=>a-b),[24,48]);
+              await page.evaluate(()=>{const el=document.getElementById('nvM');el.value='aifs';el.dispatchEvent(new Event('change',{bubbles:true}));});
+              await page.waitForFunction(()=>NV.s.m==='aifs'&&NV.items?.length>0,{},{timeout:30000});
+              report.checks.push('real AIFS menu and all six frames visible');
               report.passed=true;
             } finally {console.log(JSON.stringify(report));fs.writeFileSync('live-family.json',JSON.stringify(report,null,2));await browser.close();}
           })().catch(e=>{console.error(e);process.exitCode=1;});
