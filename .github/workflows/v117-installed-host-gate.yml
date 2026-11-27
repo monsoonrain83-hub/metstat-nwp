@@ -1,0 +1,59 @@
+name: V117 installed host capabilities gate (read only)
+on:
+  push:
+    branches: [fix/v102-same-cycle-anomaly-contract]
+    paths: [.github/workflows/v117-installed-host-gate.yml]
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify exact public release and authenticated capabilities
+        env:
+          MX_KEY: ${{ secrets.MX_KEY }}
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,urllib.request,urllib.error
+          from pathlib import Path
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self,*args,**kwargs):return None
+          client=urllib.request.build_opener(NoRedirect())
+          origin='https://wtafkik.ir'
+          def get(path,limit,method='GET',key=None):
+              h={'Cache-Control':'no-cache','Accept-Encoding':'identity','User-Agent':'MetStat-V117-install-check/1.0'}
+              if key:h['X-Upload-Key']=key
+              req=urllib.request.Request(origin+path,data=b'' if method=='POST' else None,headers=h,method=method)
+              with client.open(req,timeout=30) as r:
+                  b=r.read(limit+1)
+                  if len(b)>limit:raise ValueError('response limit')
+                  return b
+          report={'mode':'read-only','index':{},'asset':{},'uploader':{},'manifest':{},'ready':False}
+          try:
+              b=get('/',2*1024*1024);d=hashlib.sha256(b).hexdigest()
+              report['index']={'sha256':d,'version':{'82cd6d47ff38b03d5fffc5051bafcf16ebe4842b9f410babb99e64062cbb1b8e':'V105','7192d357b04b03d0b027cab8b47bde1e32891bbd8ef69b339870b8f4245c0db0':'V116-compatible'}.get(d,'unknown')}
+              if report['index']['version']=='V116-compatible':
+                  b=get('/assets/ms_r5_perf_core_3e2a23923400a982.js',6*1024*1024)
+                  report['asset']={'verified':hashlib.sha256(b).hexdigest()=='3e2a23923400a9828a5e1dbb04ad7cd0b027f85fbeb839aebb9dbcabb56135ee'}
+          except Exception as e:report['index']['error']=type(e).__name__
+          try:
+              key=os.environ.get('MX_KEY')
+              if not key:raise ValueError('missing configured key')
+              p=json.loads(get('/online/nwp_upload.php?a=ping',65536,'POST',key))
+              report['uploader']={'version':str(p.get('v',''))[:40],'ok':p.get('ok') is True,'world_capable':{'worldput-v1','worldsync-v1'}<=set(p.get('caps',[]))}
+          except Exception as e:report['uploader']={'error':type(e).__name__}
+          try:
+              m=json.loads(get('/online/data/manifest.json',32*1024*1024))
+              report['manifest']={'models':{k:m['models'][k]['run'] for k in ('ecmwf','gfs','icon','ukmo','gem') if k in m.get('models',{})},'world_frames':sum(i.get('r')=='world' for i in m.get('items',[]))}
+          except Exception as e:report['manifest']={'error':type(e).__name__}
+          report['ready']=report['index'].get('version')=='V116-compatible' and report['asset'].get('verified') is True and report['uploader'].get('ok') is True and report['uploader'].get('world_capable') is True and 'error' not in report['manifest']
+          Path('installed-host.json').write_text(json.dumps(report,indent=2))
+          print(json.dumps(report))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v117-installed-host
+          path: installed-host.json
+          retention-days: 3
