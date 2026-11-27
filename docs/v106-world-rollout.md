@@ -328,3 +328,22 @@ No substitute mock website or copy of the R5 demonstration engine.
   paths, reverse hierarchy, label priority, normal/fullscreen/pro/synergy,
   regression of existing ME/EU/Iran/Fars/county and export behavior.
   Finish complete R5 audit after usable model release, not before.
+
+### V114 implementation evidence
+- V112 real integrated official GDPS workflow 45932713613 passed:
+  fourteen official products at BOTH +24 and +48 h, including eleven
+  convection products; reflectivity via separately verified intermediary.
+- V113 full browser replay completed on 1440x900 and touch 390x844,
+  archived 56,548-row manifest with isolated same-run fixture insertion,
+  actual ECMWF CAPE 24/48h WebP loads, original viewer menus, square-map
+  export 954x1300 canvas and return to Middle East. No page errors.
+  This is an offline replay, not a live host test; archived regional
+  images were not replayed. The earlier timeout is resolved in replay.
+- Local V114 integrated candidate extends the archived uploader version,
+  admits original ECCC GDPS only with exact source URL, grid, lead and
+  attribution verification. Local 37 PHP HTTP assertions passed with real
+  V108 ECMWF and V112 GEM images. Corrected world subtitle resolution and
+  official attribution display. Preserve only bounded source descriptors
+  in shared public manifest; complete input provenance remains in staging.
+  Final V114 browser replay and current host baseline/readback still
+  required. No live writes or second data directory.
