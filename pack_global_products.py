@@ -3,24 +3,26 @@
 import json, hashlib, shutil, sys
 from datetime import datetime, timezone
 from pathlib import Path
+from nwp_source_policy import ECCC_DOMAIN, ECCC_LICENCE
+import world_gem_official as GO
 
 VALID_SOURCE_DOMAINS = {
     'ecmwf': {'ecmwf_ifs', 'ecmwf_ifs025'},
     'gfs': {'ncep_gfs013', 'ncep_gfs025'},
-    'gem': {'cmc_gem_gdps_15km', 'cmc_gem_gdps'},
+    'gem': {'cmc_gem_gdps_15km', 'cmc_gem_gdps', ECCC_DOMAIN},
     'icon': {'dwd_icon'},
     'ukmo': {'ukmo_global_deterministic_10km'},
 }
 SOURCE_RESOLUTION = {
     'ecmwf_ifs':'9 km','ecmwf_ifs025':'28 km',
     'ncep_gfs013':'13 km','ncep_gfs025':'28 km',
-    'cmc_gem_gdps_15km':'15 km','cmc_gem_gdps':'15 km',
+    'cmc_gem_gdps_15km':'15 km','cmc_gem_gdps':'15 km',ECCC_DOMAIN:'15 km',
     'dwd_icon':'13 km','ukmo_global_deterministic_10km':'10 km',
 }
 MODEL_LICENSE = {
     'ecmwf':'CC BY 4.0 with ECMWF/Open-Meteo attribution',
     'gfs':'Open-Meteo data CC BY 4.0; NOAA NCEP attribution',
-    'gem':'Open-Meteo data CC BY 4.0; ECCC CMC attribution',
+    'gem':'ECCC original data or Open-Meteo CC BY 4.0; see per-field source licence and attribution',
     'icon':'CC BY 4.0 with DWD/Open-Meteo attribution',
     'ukmo':'CC BY-SA 4.0 — UK Met Office; adaptations share alike',
 }
@@ -91,6 +93,19 @@ def verify_manifest_field(model, param, field, man, folder):
         raise ValueError('source raster resolution label mismatch')
     if field.get('units') != EXPECTED_UNITS[param]:
         raise ValueError('field unit mismatch')
+    if field.get('field_source_domain')==ECCC_DOMAIN:
+        refs=field.get('source_fields')
+        dependencies=field.get('input_variables') if param in CONVECTION_UNITS else [field.get('variable')]
+        if (field.get('distribution')!='producer' or field.get('source_licence')!=ECCC_LICENCE
+            or not isinstance(refs,dict) or not isinstance(dependencies,list) or not dependencies
+            or any(not isinstance(k,str) or k not in GO.FIELDS for k in dependencies)
+            or set(refs)!=set(dependencies)):
+            raise ValueError('official GDPS provenance missing')
+        for key,ref in refs.items():
+            if (not isinstance(ref,dict) or ref.get('status')!='verified'
+                or ref.get('source_url')!=GO.field_url(run,valid,key)
+                or ref.get('grid')!=[GO.NX,GO.NY] or ref.get('origin')!=[-180,-90] or ref.get('spacing')!=[.15,.15]):
+                raise ValueError('official GDPS source metadata mismatch')
     if param in CONVECTION_UNITS:
         palette={'lr75':'lr','lr85':'lr','sh85':'shr','sh06':'shr'}.get(param,param)
         if (field.get('palette')!=palette or not isinstance(field.get('calculation'),str)
