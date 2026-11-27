@@ -31,7 +31,7 @@ jobs:
               const page=await ctx.newPage();
               page.on('pageerror',e=>report.errors.push(String(e).slice(0,200)));
               page.on('response',r=>{const u=new URL(r.url());if(u.pathname.includes('/world/cape_'))report.requests.push({path:u.pathname,status:r.status()});});
-              await page.goto('https://wtafkik.ir/weather-models',{waitUntil:'domcontentloaded',timeout:60000});
+              await page.goto('https://wtafkik.ir/monitoring-forecast/weather-models/online-maps',{waitUntil:'domcontentloaded',timeout:60000});
               await page.waitForFunction(()=>typeof ON!=='undefined'&&ON.man&&Array.isArray(ON.man.items)&&typeof NV!=='undefined'&&document.getElementById('nvReg'),{},{timeout:60000});
               const current=await page.evaluate(()=>({run:ON.man.models.ecmwf?.run,frames:ON.man.items.filter(i=>i.m==='ecmwf'&&i.r==='world'&&i.p==='cape').map(i=>i.s)}));
               report.current=current;
