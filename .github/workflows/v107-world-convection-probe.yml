@@ -1,4 +1,4 @@
-name: V108 real global convection and interval weather acceptance (staging only)
+name: V109 exact-run two-frame global acceptance (staging only)
 on:
   push:
     branches: [fix/v102-same-cycle-anomaly-contract]
@@ -12,7 +12,7 @@ concurrency:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 55
     strategy:
       fail-fast: false
       max-parallel: 2
@@ -31,8 +31,14 @@ jobs:
       - run: |
           PYTHONPATH=. python -m unittest discover -s tests -p test_mm_v107_world_convection.py -v
           PYTHONPATH=. python -m unittest discover -s tests -p test_mm_v108_world_weather.py -v
-      - name: Fetch one exact lead and stage supported products only
-        run: timeout 25m python global_nwp_stage.py --model "${{ matrix.model }}" --out "stage/world-${{ matrix.model }}" --lead 24 --convection --completed-cycle
+          PYTHONPATH=. python -m unittest discover -s tests -p test_mm_v109_terrain_coverage.py -v
+      - name: Stage +24h and +48h pinned to identical cycle
+        env:
+          MODEL: ${{ matrix.model }}
+        run: |
+          timeout 20m python global_nwp_stage.py --model "$MODEL" --out "stage/world-$MODEL-24" --lead 24 --convection --completed-cycle
+          RUN=$(python -c 'import json,sys; print(json.load(open(sys.argv[1]))["init_utc"])' "stage/world-$MODEL-24/manifest.json")
+          timeout 20m python global_nwp_stage.py --model "$MODEL" --out "stage/world-$MODEL-48" --lead 48 --convection --run-utc "$RUN"
       - name: Verify staged world fields and convection coverage
         run: |
           python - <<'PY'
@@ -42,10 +48,12 @@ jobs:
           from pack_global_products import CONVECTION_UNITS
           c=package_frames(Path('stage'),Path('verified'),128*1024*1024)
           model, row=next(iter(c['models'].items()))
+          leads={p:[f['lead_hours'] for f in frames] for p,frames in row['parameters'].items()}
+          assert {h for times in leads.values() for h in times}=={24,48}, 'incomplete timeline'
           found=sorted(set(row['parameters']) & CONVECTION_UNITS.keys())
           missing=sorted(CONVECTION_UNITS.keys()-set(found))
           report=dict(model=model,run_utc=row['run_utc'],available=found,missing=missing,
-                      raster_bytes=c['raster_bytes'],deployment=False)
+                      raster_bytes=c['raster_bytes'],leads=leads,deployment=False)
           Path('coverage.json').write_text(json.dumps(report,indent=2))
           print(json.dumps(report))
           if not found: raise SystemExit('No verified convection products')
@@ -53,7 +61,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: v108-world-${{ matrix.model }}
+          name: v109-world-${{ matrix.model }}
           path: |
             coverage.json
             verified/
