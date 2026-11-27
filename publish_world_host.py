@@ -108,6 +108,15 @@ def publish(plan,transport):
         _require(transport.digest(r)==r['meta']['sha256'],'public raster readback mismatch')
     return dict(verified=len(accepted),bytes=sum(len(b) for _,b in accepted),models=sorted(runs),manifest='online/data/manifest.json')
 
+def wire_metadata(meta):
+    """V116 PHP strict integer interval enum; never round a fractional interval."""
+    result=dict(meta)
+    if result.get('variable') in ('refl','sigwx'):
+        h=result.get('interval_hours')
+        _require(type(h) in (int,float) and h in (1,3,6),'invalid native precipitation interval')
+        result['interval_hours']=int(h)
+    return result
+
 class HttpTransport:
     def __init__(self,key,root=ROOT,local_fixture=False):
         import requests
@@ -119,7 +128,16 @@ class HttpTransport:
         import requests
         try:
             with self.session.request(method,self.root+path,allow_redirects=False,stream=True,timeout=(10,45),**kwargs) as response:
-                _require(response.status_code==200,'host HTTP '+str(response.status_code))
+                if response.status_code!=200:
+                    # Report only an allowlisted server error category, never a raw
+                    # response, URL, request body or credential.
+                    category=''
+                    try:
+                        raw=next(response.iter_content(4096),b'')
+                        e=json.loads(raw).get('error','')
+                        if isinstance(e,str) and re.fullmatch(r'[a-z ]{1,48}',e):category=' / '+e
+                    except (ValueError,TypeError,AttributeError,StopIteration):pass
+                    raise PublishError('host HTTP '+str(response.status_code)+category)
                 data=bytearray()
                 for chunk in response.iter_content(65536):
                     _require(len(data)+len(chunk)<=limit,'response size limit')
@@ -130,7 +148,7 @@ class HttpTransport:
         _require(action in ('ping','worldput','worldsync'),'unsupported action')
         kw={'headers':{'X-Upload-Key':self.key}}
         if action=='worldput':
-            identity(record);kw.update(data=dict(model=record['model'],run=record['run'],file=record['file'],meta=json.dumps(record['meta'])),files={'png':('frame.webp',body,'image/webp')})
+            identity(record);kw.update(data=dict(model=record['model'],run=record['run'],file=record['file'],meta=json.dumps(wire_metadata(record['meta']))),files={'png':('frame.webp',body,'image/webp')})
         elif payload is not None:kw['json']=payload
         time.sleep(.25)
         return json.loads(self._request('POST','/nwp_upload.php?a='+action,65536,**kw))
