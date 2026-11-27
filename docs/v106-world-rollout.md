@@ -207,3 +207,53 @@ Do not delete/relocate existing host files until verified migration.
   integrated browser renderer, multi-run publication and retention,
   storage budget and readback must pass before production activation.
   Existing scheduled regional producer and all live files unchanged.
+
+## V111 — producer-first ingestion (explicit user decision)
+All current and future NWP models must extend the existing canonical
+`public_html/online/data/nwp/` tree, model IDs, run directories and shared
+`online/data/manifest.json`. World is only an additional geographic region
+of the same model. Do not create a second operational model store or a
+parallel publication system. Existing regional paths and two-run retention
+remain intact; any code needed for world products belongs to the same
+operational NWP ingestion/render/publish pipeline, not a new live website.
+Offline CI staging is not an alternative public store.
+
+Source policy, applicable to every existing and new model:
+1. Attempt the original producing center's official open-data service,
+   documented API, or producer-published official distribution first.
+2. Use an authorized intermediary (e.g. Open-Meteo data_spatial) only when
+   that requested product/grid/lead is not available or cannot be
+   legitimately retrieved from the producer after bounded checks.
+   Do not bypass access controls, terms, licensing or rate limits.
+3. Preserve existing ECMWF 9 km / GFS 13 km priority over coarse fallback
+   within the previously agreed resolution policy: check official delivery
+   for the requested resolution first, then eligible intermediary for that
+   resolution if needed. No silent resolution downgrade or fake upsampling.
+   Record actual native/effective resolution and the fallback reason.
+4. The exact initialization, validity, accumulation interval, grid, units,
+   product/level and physical semantics must agree. Derived fields must
+   use a coherent input bundle; do not blend unrelated distributions,
+   grids, model variants or cycles to fill gaps. Reject unverified values.
+5. Record producer, distribution/access tier, actual source identifier,
+   source timestamp, model variant, licence/attribution, grid, native
+   resolution and fallback reason in frame provenance. Reuse the same
+   validated official inputs for all compatible products at that frame.
+   Prefer bounded downloads, shared cache and product-level availability.
+   No speculative URLs or claims that a center exposes a specific field.
+6. Original center candidates to validate: ECMWF Open Data (IFS/AIFS),
+   NOAA/NCEP (GFS/AIGFS), DWD (ICON), ECCC/MSC (GDPS), UK Met Office
+   (UKMO), Météo-France (ARPEGE), JMA, CMA, KMA, and Google official
+   WeatherNext/GraphCast distribution where applicable. These are source
+   candidates, not a claim of verified access to every parameter.
+   New AI/national models retain four-product first-phase scope and no
+   convection or Significant Weather. Five core families retain the
+   approved global convection scope.
+
+Evidence already available: V109 official ECCC probe 45930380359 passed,
+17 meteorological input fields and terrain verified, 11 derived convection
+products calculated independently from official GRIB2. V109 two-lead
+acceptance 45930216371 passed for five families (+24/+48h). Official ECCC
+is the first verified direct-source adapter to integrate into the common
+NWP pipeline; existing fallback remains available until equivalent
+products, provenance, geometry, licence and host regression are proven.
+No new operational deployment is authorized by this documentation alone.
