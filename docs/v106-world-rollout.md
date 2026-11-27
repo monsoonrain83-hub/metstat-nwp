@@ -257,3 +257,32 @@ is the first verified direct-source adapter to integrate into the common
 NWP pipeline; existing fallback remains available until equivalent
 products, provenance, geometry, licence and host regression are proven.
 No new operational deployment is authorized by this documentation alone.
+
+## V112 — official GDPS in the shared global staging pipeline
+- global_nwp_stage now attempts official ECCC GDPS first for the exact
+  selected GEM initialization and valid hour. Original GRIB2 is decoded by
+  the previously verified reader. Existing global rendering/terrain QC
+  and thermodynamic kernels are reused. Completed products are not
+  overwritten by Open-Meteo. Derived products use a single distribution
+  and native grid. Intermediary fallback for unavailable/unverified
+  products is recorded separately. Other models explicitly report that
+  their official adapter has not yet been validated.
+- Per-field original source URLs, input records, producer, distribution
+  tier, ECCC licence link and attribution are preserved. The common
+  packager now verifies official field dependencies, exact URL identity
+  for the requested time, GDPS grid and licence. Both distributions use
+  the same GEM model key and canonical online/data/nwp deployment plan.
+- ECCC End-use Licence v2.1.1 (August 2026):
+  https://eccc-msc.github.io/open-data/licence/readme_en/
+  Preserve required data-source attribution in final maps/UI.
+- Three fixture tests, dedicated real two-lead integrated acceptance
+  workflow v112-gem-producer-first.yml. At time of entry tests pending.
+- Limits: cycle discovery still uses existing Open-Meteo metadata,
+  official native precipitation interval not yet implemented, and GEM
+  operational regional ingestion/host uploader not switched. Official
+  URLs/metadata are validated for staging only, not an assertion of
+  full production coverage. Host uploader must admit original source
+  provenance before release, and the primary viewer must render these
+  global products correctly. Other official adapters (ECMWF/NOAA/DWD/
+  UKMO and new models) remain pending. No second public tree or live
+  publishing; do not change existing schedule/retention.
