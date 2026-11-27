@@ -167,3 +167,43 @@ coverage threshold versus physically below-ground pressure levels.
   and results first. Regional engine unchanged.
 - Host integration, actual DEM corrected global rainfall and reference
   climatology remain open. No host release or live deployment in V109.
+
+## V110 — mandatory single host publication root
+User instruction: ALL current and new model products must use existing
+`public_html/online/data/` only. Canonical model frame path:
+`online/data/nwp/<logical_model>/<run>/<region>/<parameter>_<valid>.webp`.
+World is a region named `world` alongside iran/fars/me/eu. The only
+operational index is `online/data/manifest.json`; no separate public
+/world directory or parallel live model catalog. Temporary CI artifacts
+and GitHub world-data are staging only, not a second host store.
+Keep existing weekly/monthly/seasonal paths within online/data.
+Do not delete/relocate existing host files until verified migration.
+- Inspected the actual archived online/nwp_upload.php, SHA256
+  4b57c03a5498194efeec5bafc7a4a8e11885da7529563c3232d6f1ed10dcc9f9.
+  It is newer than repository root nwp_upload.php (per-model lock,
+  batching, compressed manifest, atomic writes). Never replace it with
+  the older repository copy.
+- Local candidate builds from this exact archive, adding worldput-v1 and
+  worldsync-v1 to the existing authenticated endpoint, same per-model
+  lock/state/manifest. Current model and exact current run only; no begin,
+  purge, creation of a parallel model or advancement of the regional run.
+  Immutable filename conflicts fail closed, same digest retries succeed.
+  Verify source, parameter, time, geometry, WebP, digest, terrain coverage
+  and weather interval; preserve old current/previous regional frames.
+  World sync rebuilds existing manifest once, not after every upload.
+  Local PHP HTTP test with real V108 ECMWF CAPE bytes passed 29 checks.
+- `plan_world_host.py` is an offline canonical destination planner,
+  not a live uploader. It defers current host run mismatch, unregistered
+  products and incompatible scales. Initial scope: existing convection
+  IDs on five core models, exact existing model state. All new models
+  later use same root, via approved catalog onboarding, not a second tree.
+- IMPORTANT: existing regional z500 is a RH background with height
+  contours, not a standalone height raster. Existing regional t2m uses
+  its fixed palette, unlike the old world-stage generic palette. Do not
+  register these experimental raster variants under existing product IDs
+  before harmonizing product definitions and palette. UI must understand
+  world EPSG:4326 raster metadata and geographic crop before deployment.
+- Local candidate is not a host install release. Actual host hash,
+  integrated browser renderer, multi-run publication and retention,
+  storage budget and readback must pass before production activation.
+  Existing scheduled regional producer and all live files unchanged.
