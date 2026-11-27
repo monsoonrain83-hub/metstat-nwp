@@ -17,6 +17,7 @@ FIELDS={
     'temperature_2m':('AirTemp_AGL-2m','heightAboveGround',2,('2t','t'), 'temperature'),
     'relative_humidity_2m':('RelativeHumidity_AGL-2m','heightAboveGround',2,('2r','r'), 'rh'),
     'surface_pressure':('Pressure_Sfc','surface',0,('sp','pres'), 'pressure'),
+    'orography':('GeopotentialHeight_Sfc','surface',0,('gh','hgt','orog'),'height'),
     'pressure_msl':('Pressure_MSL','meanSea',0,('msl','prmsl','pres'), 'pressure'),
     'wind_u_component_10m':('WindU_AGL-10m','heightAboveGround',10,('10u','u'), 'wind'),
     'wind_v_component_10m':('WindV_AGL-10m','heightAboveGround',10,('10v','v'), 'wind'),
