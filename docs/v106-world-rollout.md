@@ -286,3 +286,45 @@ No new operational deployment is authorized by this documentation alone.
   global products correctly. Other official adapters (ECMWF/NOAA/DWD/
   UKMO and new models) remain pending. No second public tree or live
   publishing; do not change existing schedule/retention.
+
+## V114 — post-model release geography and R5 acceptance (user priority)
+First finish usable, tested model publication and host deployment through
+the existing online/data/nwp tree. Next implement shared geographic navigation
+in the forecast viewer (normal, fullscreen, professional) and synergy.
+No substitute mock website or copy of the R5 demonstration engine.
+- Semantic hierarchy: globe -> continent -> country -> ADM1 (province/state)
+  -> ADM2 (county/equivalent). Stepwise zoom-out is the exact inverse.
+  Preserve existing Middle East and Europe/north Caspian preset extents
+  and their boundary/label layers. Regional preset menu remains available.
+- Globe: label major oceans and continents. Continent: country labels.
+  Country: ADM1 labels. ADM1: ADM2 labels. Point symbols and place names
+  follow the same hierarchy and established independent visibility toggles.
+  Use verified names, parent IDs, true geometry and interior label anchors,
+  not fabricated admin levels or arbitrary rectangular selections. Handle
+  countries without ADM2 explicitly, preserve existing Iranian boundaries
+  and national cartographic conventions. Global administrative datasets
+  require verified licensing, accuracy and boundary policy before deployment.
+- Clicking the map, plus/minus icons on the map and dependent geography
+  menus above the map all use the same hierarchical state and transitions.
+  Preserve selection when switching display modes; no duplicate controls.
+  Distinguish dragging/drawing/inspection from click-to-zoom; no skipped
+  level on plus/minus; menus synchronize ancestors and descendants.
+  Collision/priority-aware labels, scale-aware boundaries and points,
+  viewport culling and lazy per-country geometry loading. Do not download
+  all ADM2 geometry on initial page load. No new live model store.
+- R5 visual reference: user attachment OPEN_METSTAT_R5_ANDROID_FIXED(1)(1).html
+  SHA256 2792e674660f07135acb91f6cbf92f8740f4c9ff8c073e94767927b1c8dbadf9.
+  Actual reference inspected: desktop-first RTL, min width 960 in portrait,
+  compact two-column landscape, Sky #399FD4 / Paper #F8F9FD / Scarlet #DC1937,
+  five geographic selectors (geoContinent, geoRegion, geoCountry,
+  geoProvince, geoCounty), independent colored status markers, overlay
+  drawing/layer tools, palette/timeline/export controls, seven nav families.
+  Reference is an offline demo (connect-src none, sample state). Port
+  applicable visual/interaction details into actual site routes and engines;
+  never replace real authentication, data, routes or forecast functions
+  with demo code. Retain prior guest policy and horizontal existing model
+  buttons in fullscreen (user instruction overrides reference placement).
+- Acceptance: actual browser and device tests of all three zoom entry
+  paths, reverse hierarchy, label priority, normal/fullscreen/pro/synergy,
+  regression of existing ME/EU/Iran/Fars/county and export behavior.
+  Finish complete R5 audit after usable model release, not before.
