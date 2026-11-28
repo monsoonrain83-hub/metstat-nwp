@@ -45,14 +45,17 @@ def inspect_group(source, run, valid, names):
             'joint_finite_fraction': float(common.mean()), 'variables': stats,
             'units_verified': False, 'publication_eligible': False}
 
-def inventory(model, run, lead, sources):
+def inventory(model, run, lead, sources, groups=None):
     if run.utcoffset() is None or any((run.minute,run.second,run.microsecond)):
         raise ValueError('exact timezone-aware cycle required')
     if type(lead) is not int or not 0 <= lead <= 384:
         raise ValueError('invalid lead')
     valid = run + timedelta(hours=lead)
     results = {}
-    for group,names in GROUPS.items():
+    selected_groups = GROUPS if groups is None else {name: GROUPS[name] for name in groups}
+    if not selected_groups:
+        raise ValueError('at least one field group required')
+    for group,names in selected_groups.items():
         candidates = {}
         for source in sources:
             try:
@@ -83,6 +86,7 @@ def main():
     p.add_argument('--init-utc',type=parse_meta_utc,required=True)
     p.add_argument('--lead',type=int,required=True)
     p.add_argument('--out',type=Path,required=True)
+    p.add_argument('--groups',nargs='+',choices=sorted(GROUPS))
     a=p.parse_args()
     domains=[d for d,_ in SOURCE_PRIORITY[a.model]] if a.model in SOURCE_PRIORITY else [DOMAINS[a.model]]
     if a.model=='gem':
@@ -94,7 +98,7 @@ def main():
         s.full_grid=True
         s.i0,s.i1,s.j0,s.j1=0,s.nx,0,s.ny
         sources.append(s)
-    result=inventory(a.model,a.init_utc,a.lead,sources)
+    result=inventory(a.model,a.init_utc,a.lead,sources,a.groups)
     a.out.parent.mkdir(parents=True,exist_ok=True)
     with a.out.open('x',encoding='utf8') as stream:
         json.dump(result,stream,indent=2)
