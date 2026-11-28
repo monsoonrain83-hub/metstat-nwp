@@ -201,7 +201,11 @@ def cycle_candidates(*sources):
     ]
 
 
-def acquire(model, outdir, requested_lead=24):
+def acquire(model, outdir, requested_lead=24, required_run=None):
+    if required_run is not None and (required_run.tzinfo is None or required_run.utcoffset() is None):
+        raise ValueError('required_run must be timezone-aware')
+    if type(requested_lead) is not int or not 0 <= requested_lead <= 384:
+        raise ValueError('forecast lead must be an integer from 0 to 384 hours')
     import s3fs
     dom = DOMAINS[model]
     fs = s3fs.S3FileSystem(anon=True, default_block_size=65536)
@@ -223,6 +227,8 @@ def acquire(model, outdir, requested_lead=24):
     errors=[]
     for meta in runs:
         run = resolve_cycle(meta)
+        if required_run is not None and run != required_run:
+            continue
         for valid in valid_candidates(meta, run, requested_lead)[:5]:
             # Source availability is independent: a missing 0.25-degree field
             # must not prevent using a verified 9/13km field at the same cycle.
