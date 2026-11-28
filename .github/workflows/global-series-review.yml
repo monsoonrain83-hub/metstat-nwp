@@ -1,0 +1,58 @@
+name: World NWP exact-lead series review
+on:
+  push:
+    branches: [feat/world-nwp-series-20261128]
+    paths: [.github/workflows/global-series-review.yml]
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: python -m unittest -v test_global_nwp_series test_global_nwp_stage test_pack_global_products
+  real-probe:
+    needs: offline
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        include:
+          - model: ecmwf
+            init: '2026-11-27T12:00:00Z'
+            leads: '24 240 360'
+          - model: gfs
+            init: '2026-11-27T18:00:00Z'
+            leads: '24 240 360 384'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: |
+          pip install -r requirements.txt
+          pip install 'omfiles[fsspec]' s3fs
+      - name: Fetch exact native global fields (review only)
+        env:
+          MODEL: ${{ matrix.model }}
+          INIT: ${{ matrix.init }}
+          LEADS: ${{ matrix.leads }}
+        run: |
+          read -r -a hours <<< "$LEADS"
+          python global_nwp_series.py --model "$MODEL" --out "review/$MODEL" --init-utc "$INIT" --leads "${hours[@]}"
+      - name: Preserve evidence including incomplete series
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: world-series-${{ matrix.model }}
+          path: review/${{ matrix.model }}/
+          if-no-files-found: warn
+          retention-days: 3
