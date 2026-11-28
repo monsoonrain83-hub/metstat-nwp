@@ -16,9 +16,9 @@
       "source_domain": "mixed-per-field",
       "source": "Open-Meteo data_spatial / model owner",
       "license": "CC BY 4.0; attribution Open-Meteo and originating NWP center",
-      "generated_at_utc": "2026-11-27T22:44:24Z",
-      "init_utc": "2026-11-27T12:00:00Z",
-      "valid_utc": "2026-11-28T12:00:00Z",
+      "generated_at_utc": "2026-11-28T10:29:18Z",
+      "init_utc": "2026-11-28T00:00:00Z",
+      "valid_utc": "2026-11-29T00:00:00Z",
       "projection": "EPSG:4326 equirectangular",
       "bbox_wgs84": [
         -180.0,
@@ -33,10 +33,10 @@
           "file": "ecmwf/t2m.webp",
           "variable": "temperature_2m",
           "units": "°C",
-          "sha256": "ab3f5a1007bce6cc011ae2ab1c8c4007b24db5424b376816096ab4f75e211f70",
+          "sha256": "ca70973584bc440717093ffc3cc192742d296c191b2e35cc064607eb235d2c9c",
           "logical_model": "ecmwf",
-          "init_utc": "2026-11-27T12:00:00Z",
-          "valid_utc": "2026-11-28T12:00:00Z",
+          "init_utc": "2026-11-28T00:00:00Z",
+          "valid_utc": "2026-11-29T00:00:00Z",
           "lead_hours": 24,
           "source_grid_bbox_centers_wgs84": [
             -180,
@@ -62,17 +62,17 @@
           "width": 3600,
           "height": 1801,
           "finite_fraction": 1.0,
-          "min": -42.97,
-          "max": 42.12
+          "min": -44.59,
+          "max": 38.52
         },
         "z500": {
           "file": "ecmwf/z500.webp",
           "variable": "geopotential_height_500hPa",
           "units": "dam",
-          "sha256": "15e8ee019a755467fdd862670c571718c303f35816e2e920c03389284473d0e9",
+          "sha256": "383e87d380bb7e60a1e545b47ddf12a22c68d5e4d5ba4a9272b10ee5e7636c2f",
           "logical_model": "ecmwf",
-          "init_utc": "2026-11-27T12:00:00Z",
-          "valid_utc": "2026-11-28T12:00:00Z",
+          "init_utc": "2026-11-28T00:00:00Z",
+          "valid_utc": "2026-11-29T00:00:00Z",
           "lead_hours": 24,
           "source_grid_bbox_centers_wgs84": [
             -180,
@@ -98,17 +98,17 @@
           "width": 1440,
           "height": 721,
           "finite_fraction": 1.0,
-          "min": 483.3,
-          "max": 596.3
+          "min": 488.1,
+          "max": 596.9
         },
         "mslp": {
           "file": "ecmwf/mslp.webp",
           "variable": "pressure_msl",
           "units": "hPa",
-          "sha256": "9bb55e9e7e396b4ffac3d1b13389663aefc1848fdcf7308cbc4b0b2fca4ec98e",
+          "sha256": "0a4d261b33e2f5b2867fa39fe8daafa18ad3abdb5e1a2bb27b6901c762ee0b78",
           "logical_model": "ecmwf",
-          "init_utc": "2026-11-27T12:00:00Z",
-          "valid_utc": "2026-11-28T12:00:00Z",
+          "init_utc": "2026-11-28T00:00:00Z",
+          "valid_utc": "2026-11-29T00:00:00Z",
           "lead_hours": 24,
           "source_grid_bbox_centers_wgs84": [
             -180,
@@ -134,8 +134,8 @@
           "width": 3600,
           "height": 1801,
           "finite_fraction": 1.0,
-          "min": 954.4,
-          "max": 1043.6
+          "min": 957.0,
+          "max": 1045.76
         }
       },
       "full_globe": true,
@@ -148,9 +148,9 @@
       "source_domain": "cmc_gem_gdps_15km",
       "source": "Open-Meteo data_spatial / model owner",
       "license": "CC BY 4.0; attribution Open-Meteo and originating NWP center",
-      "generated_at_utc": "2026-11-27T22:44:00Z",
-      "init_utc": "2026-11-27T12:00:00Z",
-      "valid_utc": "2026-11-28T12:00:00Z",
+      "generated_at_utc": "2026-11-28T10:29:01Z",
+      "init_utc": "2026-11-28T00:00:00Z",
+      "valid_utc": "2026-11-29T00:00:00Z",
       "projection": "EPSG:4326 equirectangular",
       "bbox_wgs84": [
         -180.0,
@@ -165,10 +165,10 @@
           "file": "gem/t2m.webp",
           "variable": "temperature_2m",
           "units": "°C",
-          "sha256": "9d7e475dfa3eb0f88562f58f28663a1b4405f12a92567784ce675bc5abd61321",
+          "sha256": "1fb2eaeaf3e3af27302acdd483339c00bcffa7e05a20fe4330114f6a0ca0ebaa",
           "logical_model": "gem",
-          "init_utc": "2026-11-27T12:00:00Z",
-          "valid_utc": "2026-11-28T12:00:00Z",
+          "init_utc": "2026-11-28T00:00:00Z",
+          "valid_utc": "2026-11-29T00:00:00Z",
           "lead_hours": 24,
           "source_grid_bbox_centers_wgs84": [
             -180,
@@ -194,17 +194,17 @@
           "width": 2400,
           "height": 1201,
           "finite_fraction": 1.0,
-          "min": -42.0,
-          "max": 42.5
+          "min": -42.3,
+          "max": 38.75
         },
         "mslp": {
           "file": "gem/mslp.webp",
           "variable": "pressure_msl",
           "units": "hPa",
-          "sha256": "9d98b475bdf8bfb04e141981edd6ac3973dc4d76a7b5deb022a3c7271ff6cdec",
+          "sha256": "d60f9f67e00d838c5346e5de063cc01dbe1b52db4c4485ce9471583dea9b2cfa",
           "logical_model": "gem",
-          "init_utc": "2026-11-27T12:00:00Z",
-          "valid_utc": "2026-11-28T12:00:00Z",
+          "init_utc": "2026-11-28T00:00:00Z",
+          "valid_utc": "2026-11-29T00:00:00Z",
           "lead_hours": 24,
           "source_grid_bbox_centers_wgs84": [
             -180,
@@ -230,8 +230,8 @@
           "width": 2400,
           "height": 1201,
           "finite_fraction": 1.0,
-          "min": 955.4,
-          "max": 1048.2
+          "min": 958.3,
+          "max": 1067.1
         }
       },
       "full_globe": true,
@@ -244,9 +244,9 @@
       "source_domain": "mixed-per-field",
       "source": "Open-Meteo data_spatial / model owner",
       "license": "CC BY 4.0; attribution Open-Meteo and originating NWP center",
-      "generated_at_utc": "2026-11-27T22:44:11Z",
-      "init_utc": "2026-11-27T18:00:00Z",
-      "valid_utc": "2026-11-28T18:00:00Z",
+      "generated_at_utc": "2026-11-28T10:29:12Z",
+      "init_utc": "2026-11-28T06:00:00Z",
+      "valid_utc": "2026-11-29T06:00:00Z",
       "projection": "EPSG:4326 equirectangular",
       "bbox_wgs84": [
         -180.0,
@@ -261,10 +261,10 @@
           "file": "gfs/t2m.webp",
           "variable": "temperature_2m",
           "units": "°C",
-          "sha256": "33236de99d9de9096e28b9e945f9cb26a1f708484a2d21522787bc1b3e7cce3c",
+          "sha256": "c1475d71abdf6604e69ad11b040c708a2848a0ec711185be0e768c83bccecc04",
           "logical_model": "gfs",
-          "init_utc": "2026-11-27T18:00:00Z",
-          "valid_utc": "2026-11-28T18:00:00Z",
+          "init_utc": "2026-11-28T06:00:00Z",
+          "valid_utc": "2026-11-29T06:00:00Z",
           "lead_hours": 24,
           "source_grid_bbox_centers_wgs84": [
             -180,
@@ -290,17 +290,17 @@
           "width": 3072,
           "height": 1536,
           "finite_fraction": 1.0,
-          "min": -47.3,
-          "max": 41.25
+          "min": -42.0,
+          "max": 46.2
         },
         "z500": {
           "file": "gfs/z500.webp",
           "variable": "geopotential_height_500hPa",
           "units": "dam",
-          "sha256": "9426feb161e6169b6f070efc3213bcf167ffad0e629bdb9750a669e4eadae898",
+          "sha256": "289215352cf6cc365e20a99801b388615f50094400ddd91b50ccac428e85e7aa",
           "logical_model": "gfs",
-          "init_utc": "2026-11-27T18:00:00Z",
-          "valid_utc": "2026-11-28T18:00:00Z",
+          "init_utc": "2026-11-28T06:00:00Z",
+          "valid_utc": "2026-11-29T06:00:00Z",
           "lead_hours": 24,
           "source_grid_bbox_centers_wgs84": [
             -180,
@@ -326,17 +326,17 @@
           "width": 1440,
           "height": 721,
           "finite_fraction": 1.0,
-          "min": 485.8,
-          "max": 595.5
+          "min": 489.4,
+          "max": 595.6
         },
         "mslp": {
           "file": "gfs/mslp.webp",
           "variable": "pressure_msl",
           "units": "hPa",
-          "sha256": "40af260d4960f46e293ebc8dc8a8d0c327e282a6634241261f71f13d196e26eb",
+          "sha256": "712c07e3632d4a1a1fb927bc53c87549a1134425463d9e0f080a25ebb0f1a7b9",
           "logical_model": "gfs",
-          "init_utc": "2026-11-27T18:00:00Z",
-          "valid_utc": "2026-11-28T18:00:00Z",
+          "init_utc": "2026-11-28T06:00:00Z",
+          "valid_utc": "2026-11-29T06:00:00Z",
           "lead_hours": 24,
           "source_grid_bbox_centers_wgs84": [
             -180,
@@ -362,8 +362,8 @@
           "width": 1440,
           "height": 721,
           "finite_fraction": 1.0,
-          "min": 957.6,
-          "max": 1044.8
+          "min": 956.3,
+          "max": 1045.7
         }
       },
       "full_globe": true,
@@ -376,9 +376,9 @@
       "source_domain": "dwd_icon",
       "source": "Open-Meteo data_spatial / model owner",
       "license": "CC BY 4.0; attribution Open-Meteo and originating NWP center",
-      "generated_at_utc": "2026-11-27T22:44:40Z",
-      "init_utc": "2026-11-27T18:00:00Z",
-      "valid_utc": "2026-11-28T18:00:00Z",
+      "generated_at_utc": "2026-11-28T10:29:37Z",
+      "init_utc": "2026-11-28T06:00:00Z",
+      "valid_utc": "2026-11-29T06:00:00Z",
       "projection": "EPSG:4326 equirectangular",
       "bbox_wgs84": [
         -180.0,
@@ -393,10 +393,10 @@
           "file": "icon/t2m.webp",
           "variable": "temperature_2m",
           "units": "°C",
-          "sha256": "e5a84f0234bf9a01e8b62f5d4232539471c01379b803cbe9924103598d8c1339",
+          "sha256": "21c70735d802cab9c0d7bd1a44df2e53fd975d307f908d897840ecfb9298f333",
           "logical_model": "icon",
-          "init_utc": "2026-11-27T18:00:00Z",
-          "valid_utc": "2026-11-28T18:00:00Z",
+          "init_utc": "2026-11-28T06:00:00Z",
+          "valid_utc": "2026-11-29T06:00:00Z",
           "lead_hours": 24,
           "source_grid_bbox_centers_wgs84": [
             -180,
@@ -422,17 +422,17 @@
           "width": 2879,
           "height": 1441,
           "finite_fraction": 1.0,
-          "min": -46.55,
-          "max": 39.75
+          "min": -45.8,
+          "max": 46.5
         },
         "z500": {
           "file": "icon/z500.webp",
           "variable": "geopotential_height_500hPa",
           "units": "dam",
-          "sha256": "69630be344b8c9800ce1c7e084bf489b7665338ce3ad9070eef7ba6691668291",
+          "sha256": "5a16dadcc273c16e83241a519b2998d16a7006bd76794be810ccf9b110859dd2",
           "logical_model": "icon",
-          "init_utc": "2026-11-27T18:00:00Z",
-          "valid_utc": "2026-11-28T18:00:00Z",
+          "init_utc": "2026-11-28T06:00:00Z",
+          "valid_utc": "2026-11-29T06:00:00Z",
           "lead_hours": 24,
           "source_grid_bbox_centers_wgs84": [
             -180,
@@ -458,17 +458,17 @@
           "width": 2879,
           "height": 1441,
           "finite_fraction": 1.0,
-          "min": 486.6,
-          "max": 596.1
+          "min": 490.8,
+          "max": 596.3
         },
         "mslp": {
           "file": "icon/mslp.webp",
           "variable": "pressure_msl",
           "units": "hPa",
-          "sha256": "f23b1f50c3f5c30c5241bd3ec2e233703a56a0ad1ab80ed410973c6f669fd087",
+          "sha256": "058e0108f16e2351e6287bedfdbb548d68a5fb5961340331f05dfa7c71a583be",
           "logical_model": "icon",
-          "init_utc": "2026-11-27T18:00:00Z",
-          "valid_utc": "2026-11-28T18:00:00Z",
+          "init_utc": "2026-11-28T06:00:00Z",
+          "valid_utc": "2026-11-29T06:00:00Z",
           "lead_hours": 24,
           "source_grid_bbox_centers_wgs84": [
             -180,
@@ -494,8 +494,8 @@
           "width": 2879,
           "height": 1441,
           "finite_fraction": 1.0,
-          "min": 956.9,
-          "max": 1045.3
+          "min": 953.3,
+          "max": 1046.0
         }
       },
       "full_globe": true,
@@ -508,9 +508,9 @@
       "source_domain": "ukmo_global_deterministic_10km",
       "source": "Open-Meteo data_spatial / model owner",
       "license": "CC BY 4.0; attribution Open-Meteo and originating NWP center",
-      "generated_at_utc": "2026-11-27T22:44:51Z",
-      "init_utc": "2026-11-27T12:00:00Z",
-      "valid_utc": "2026-11-28T12:00:00Z",
+      "generated_at_utc": "2026-11-28T10:29:54Z",
+      "init_utc": "2026-11-28T00:00:00Z",
+      "valid_utc": "2026-11-29T00:00:00Z",
       "projection": "EPSG:4326 equirectangular",
       "bbox_wgs84": [
         -180.0,
@@ -525,10 +525,10 @@
           "file": "ukmo/t2m.webp",
           "variable": "temperature_2m",
           "units": "°C",
-          "sha256": "0bce981954a2bd61c0eaa7266c91d228dd8f03a02376d47da925d18d9e46074e",
+          "sha256": "94003de0b8720b414a6a878d4e97217eabf23ecdf6785e9b118960a3586c46d0",
           "logical_model": "ukmo",
-          "init_utc": "2026-11-27T12:00:00Z",
-          "valid_utc": "2026-11-28T12:00:00Z",
+          "init_utc": "2026-11-28T00:00:00Z",
+          "valid_utc": "2026-11-29T00:00:00Z",
           "lead_hours": 24,
           "source_grid_bbox_centers_wgs84": [
             -180,
@@ -554,17 +554,17 @@
           "width": 2560,
           "height": 1920,
           "finite_fraction": 1.0,
-          "min": -52.45,
-          "max": 40.75
+          "min": -51.8,
+          "max": 39.8
         },
         "z500": {
           "file": "ukmo/z500.webp",
           "variable": "geopotential_height_500hPa",
           "units": "dam",
-          "sha256": "290b4c9bc39f434213afe8d0cc8a7958e345e5fa6ecd749c0d47079690ac0c12",
+          "sha256": "16717549ccbf86eeac6a93e47686d8996fb5f828520d0f5059b9cb83a957ecba",
           "logical_model": "ukmo",
-          "init_utc": "2026-11-27T12:00:00Z",
-          "valid_utc": "2026-11-28T12:00:00Z",
+          "init_utc": "2026-11-28T00:00:00Z",
+          "valid_utc": "2026-11-29T00:00:00Z",
           "lead_hours": 24,
           "source_grid_bbox_centers_wgs84": [
             -180,
@@ -590,17 +590,17 @@
           "width": 2560,
           "height": 1920,
           "finite_fraction": 1.0,
-          "min": 484.5,
-          "max": 596.1
+          "min": 488.9,
+          "max": 596.4
         },
         "mslp": {
           "file": "ukmo/mslp.webp",
           "variable": "pressure_msl",
           "units": "hPa",
-          "sha256": "f86c3955e61edb4fd5f741fb2c2a221f6db2c4a5056723f82d075a7861bdb058",
+          "sha256": "f4cbfd0bea748de305002878137aeac3997a8460a93a0cdbf76e9253e20450e8",
           "logical_model": "ukmo",
-          "init_utc": "2026-11-27T12:00:00Z",
-          "valid_utc": "2026-11-28T12:00:00Z",
+          "init_utc": "2026-11-28T00:00:00Z",
+          "valid_utc": "2026-11-29T00:00:00Z",
           "lead_hours": 24,
           "source_grid_bbox_centers_wgs84": [
             -180,
@@ -626,8 +626,8 @@
           "width": 2560,
           "height": 1920,
           "finite_fraction": 1.0,
-          "min": 955.8,
-          "max": 1043.6
+          "min": 957.7,
+          "max": 1044.5
         }
       },
       "full_globe": true,
