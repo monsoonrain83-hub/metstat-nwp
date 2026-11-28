@@ -1,0 +1,50 @@
+name: World native field coverage review
+on:
+  push:
+    branches: [feat/world-nwp-series-20261128]
+    paths: [.github/workflows/global-field-review.yml]
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: pip install -r requirements.txt
+      - run: python -m unittest -v test_global_nwp_stage test_global_nwp_field_probe test_global_nwp_series test_pack_global_series
+  native:
+    needs: offline
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - {model: ecmwf, init: '2026-11-27T12:00:00Z'}
+          - {model: gfs, init: '2026-11-27T18:00:00Z'}
+          - {model: gem, init: '2026-11-27T12:00:00Z'}
+          - {model: icon, init: '2026-11-27T18:00:00Z'}
+          - {model: ukmo, init: '2026-11-27T12:00:00Z'}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: pip install -r requirements.txt 'omfiles[fsspec]' s3fs
+      - name: Read exact native fields, no publishing
+        env:
+          MODEL: ${{ matrix.model }}
+          INIT: ${{ matrix.init }}
+        run: |
+          python global_nwp_field_probe.py --model "$MODEL" --init-utc "$INIT" --lead 24 --groups precipitation_native wind10 wind10_native_speed z850 z700 z500 wind500 --out "field-review/$MODEL.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-fields-${{ matrix.model }}
+          path: field-review/
+          if-no-files-found: warn
+          retention-days: 3

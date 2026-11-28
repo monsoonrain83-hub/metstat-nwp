@@ -1,0 +1,27 @@
+name: World multi-lead storage safety
+on:
+  push:
+    branches: [feat/world-nwp-series-20261128]
+    paths:
+      - pack_global_series.py
+      - test_pack_global_series.py
+      - pack_global_products.py
+      - .github/workflows/global-series-storage-tests.yml
+  pull_request:
+    paths:
+      - pack_global_series.py
+      - test_pack_global_series.py
+      - .github/workflows/global-series-storage-tests.yml
+permissions:
+  contents: read
+jobs:
+  storage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install Pillow
+      - run: python -m unittest -v test_pack_global_series test_global_nwp_series

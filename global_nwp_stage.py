@@ -201,13 +201,18 @@ def cycle_candidates(*sources):
     ]
 
 
-def acquire(model, outdir, requested_lead=24):
+def acquire(model, outdir, requested_lead=24, required_run=None):
+    if required_run is not None and (required_run.tzinfo is None or required_run.utcoffset() is None):
+        raise ValueError('required_run must be timezone-aware')
+    if type(requested_lead) is not int or not 0 <= requested_lead <= 384:
+        raise ValueError('forecast lead must be an integer from 0 to 384 hours')
     import s3fs
     dom = DOMAINS[model]
     fs = s3fs.S3FileSystem(anon=True, default_block_size=65536)
     src = N.S3Source(dom, fs)
     # Intentional global override of the existing regional BBOX subsetting;
     # do NOT mutate N.BBOX or production Engine's model loops.
+    src.full_grid = True
     src.i0=0;src.i1=src.nx;src.j0=0;src.j1=src.ny
     # The native high-resolution source is optional, never a prerequisite to
     # rendering a verified 0.25-degree fallback at the SAME cycle and lead.
@@ -215,6 +220,7 @@ def acquire(model, outdir, requested_lead=24):
     if model in SOURCE_PRIORITY:
         high_domain = SOURCE_PRIORITY[model][0][0]
         hi_src = N.S3Source(high_domain, fs)
+        hi_src.full_grid = True
         hi_src.i0=0;hi_src.i1=hi_src.nx;hi_src.j0=0;hi_src.j1=hi_src.ny
     runs = cycle_candidates(src, hi_src)
     if not runs:raise RuntimeError(model+': source has no current cycle')
@@ -223,6 +229,8 @@ def acquire(model, outdir, requested_lead=24):
     errors=[]
     for meta in runs:
         run = resolve_cycle(meta)
+        if required_run is not None and run != required_run:
+            continue
         for valid in valid_candidates(meta, run, requested_lead)[:5]:
             # Source availability is independent: a missing 0.25-degree field
             # must not prevent using a verified 9/13km field at the same cycle.

@@ -112,6 +112,8 @@ def package(src:Path,dest:Path):
             raise ValueError('world manifest must carry schema-2 source provenance')
         if not isinstance(man.get('fields'), dict) or not man['fields']:
             raise ValueError('no real fields for '+model)
+        if model in models:
+            raise ValueError('duplicate model artifact: '+model)
         md=dest/model;md.mkdir(parents=True,exist_ok=True);fields={}
         for p,x in man['fields'].items():
             if p not in EXPECTED_UNITS:raise ValueError('unexpected variable '+p)
@@ -123,9 +125,15 @@ def package(src:Path,dest:Path):
         models[model]=meta
     if set(models)!=set(('gfs','ecmwf','gem','icon','ukmo')):
         raise RuntimeError('missing mandatory model from verified artifacts: '+repr(set(models)))
+    missing_fields={m:sorted(set(EXPECTED_UNITS)-set(v['fields'])) for m,v in models.items()}
+    fields_complete=not any(missing_fields.values())
     catalog={'schema':1,'source':'real model fields through Open-Meteo data_spatial / respective NWP center',
              'license':'Mixed model-specific licences; UKMO forecasts CC BY-SA 4.0; see models.source_license','world_bounds':[-180,-90,180,90],
-             'image_base':'world/','models':models,'complete':True,'mock':False}
+             'image_base':'world/','models':models,'complete':fields_complete,'models_complete':True,
+             'coverage':{'scope':'single-lead baseline fields only','expected_fields':sorted(EXPECTED_UNITS),
+                         'missing_fields':missing_fields,'fields_complete':fields_complete,
+                         'lead_hours_by_model':{m:sorted({x['lead_hours'] for x in v['fields'].values()}) for m,v in models.items()}},
+             'mock':False}
     dest.mkdir(parents=True,exist_ok=True)
     (dest/'catalog.json').write_text(json.dumps(catalog,ensure_ascii=False,indent=2),encoding='utf8')
     print('WORLD_CATALOG_PUBLISHED',json.dumps({m:list(x['fields']) for m,x in models.items()}),flush=True)
