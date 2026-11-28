@@ -110,8 +110,14 @@ def _ec46_batches(total, fetch, deadline, clock=time.monotonic, sleep=time.sleep
     from collections import deque
     todo = deque((s, min(batch_size, total - s)) for s in range(0, total, batch_size))
     accepted = []
+    cap = batch_size
+    large_failures = 0
     while todo and clock() < deadline:
         start, count = todo.popleft()
+        if count > cap:
+            todo.appendleft((start + cap, count - cap))
+            todo.appendleft((start, cap))
+            continue
         rows, limited = fetch(start, count)
         if limited:
             return None, len(accepted), True
@@ -120,6 +126,10 @@ def _ec46_batches(total, fetch, deadline, clock=time.monotonic, sleep=time.sleep
         if not isinstance(rows, list) or len(rows) != count:
             if count == 1:
                 return None, len(accepted), False
+            if count == batch_size and batch_size >= 10:
+                large_failures += 1
+                if large_failures >= 2:
+                    cap = max(5, batch_size // 2)
             half = count // 2
             todo.appendleft((start + half, count - half))
             todo.appendleft((start, half))
