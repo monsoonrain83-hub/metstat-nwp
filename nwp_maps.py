@@ -295,6 +295,7 @@ class S3Source:
         s.i0 = max(0, int(math.floor((lon0 - lo0) / dx))); s.i1 = min(nx, int(math.ceil((lon1 - lo0) / dx)) + 1)
         s.j0 = max(0, int(math.floor((lat0 - la0) / dy))); s.j1 = min(ny, int(math.ceil((lat1 - la0) / dy)) + 1)
         s._hsurf = None
+        s.full_grid = False
     def jget(s, path):
         try: return json.loads(s.fs.cat_file(f'openmeteo/data_spatial/{s.dom}/{path}'))
         except Exception: return None
@@ -402,9 +403,12 @@ class S3Source:
                     dx2, dy2 = 360.0 / nx2, 180.0 / (ny2 - 1)
                     if 0.5 < dx2 / s.dx < 2 and 0.5 < dy2 / s.dy < 2:
                         s.ny, s.nx, s.dx, s.dy, s.adapted = ny2, nx2, dx2, dy2, True
-                        lon0, lon1, lat0, lat1 = BBOX
-                        s.i0 = max(0, int(math.floor((lon0 - s.lo0) / dx2))); s.i1 = min(nx2, int(math.ceil((lon1 - s.lo0) / dx2)) + 1)
-                        s.j0 = max(0, int(math.floor((lat0 - s.la0) / dy2))); s.j1 = min(ny2, int(math.ceil((lat1 - s.la0) / dy2)) + 1)
+                        if s.full_grid:
+                            s.i0, s.i1, s.j0, s.j1 = 0, nx2, 0, ny2
+                        else:
+                            lon0, lon1, lat0, lat1 = BBOX
+                            s.i0 = max(0, int(math.floor((lon0 - s.lo0) / dx2))); s.i1 = min(nx2, int(math.ceil((lon1 - s.lo0) / dx2)) + 1)
+                            s.j0 = max(0, int(math.floor((lat0 - s.la0) / dy2))); s.j1 = min(ny2, int(math.ceil((lat1 - s.la0) / dy2)) + 1)
                         log(f'  ℹ شبکهٔ {s.dom}: ابعاد واقعی {shp} (گام {dx2:.4f}° × {dy2:.4f}°) پذیرفته شد')
                 if shp != (s.ny, s.nx):
                     if not getattr(s, 'bad', False): s.bad = True; log(f'  ⚠ شبکهٔ {s.dom} با تعریف فرق دارد: فایل {shp} ولی تعریف {(s.ny, s.nx)}؛ این دامنه کنار گذاشته می‌شود (ابعاد واقعی را برای اصلاح گزارش کنید)')
