@@ -65,7 +65,10 @@ class WorldPackagingTests(unittest.TestCase):
 
     def test_valid_real_webp_passes_through_without_change(self):
         result = package(self.src, self.dest)
-        self.assertTrue(result['complete'])
+        self.assertFalse(result['complete'])
+        self.assertTrue(result['models_complete'])
+        self.assertEqual(result['coverage']['missing_fields']['gem'], ['mslp', 'z500'])
+        self.assertEqual(result['coverage']['lead_hours_by_model']['gfs'], [24])
         self.assertEqual(set(result['models']), {'gfs', 'ecmwf', 'gem', 'icon', 'ukmo'})
         for model in result['models']:
             original = (self.src / ('world-' + model) /
