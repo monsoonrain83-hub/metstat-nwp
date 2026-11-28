@@ -106,6 +106,35 @@ class GlobalNWPTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             g.validate_global_geometry(real, np.ones((700, 1000), np.float32))
 
+    def test_adapted_ecmwf_grid_preserves_global_or_regional_mode(self):
+        from unittest.mock import patch
+        from types import SimpleNamespace
+        run = datetime(2026, 11, 21, tzinfo=timezone.utc)
+        # Different but accepted regular source dimensions. Fake reader returns
+        # only the requested slice; no external network or full allocation twice.
+        class Child:
+            shape = (1441, 2880)
+            def __getitem__(self, slices):
+                j, i = slices
+                return np.ones((j.stop-j.start, i.stop-i.start), np.float32)
+        reader = SimpleNamespace(get_child_by_name=lambda name: Child(),
+                                 close=lambda: None)
+        for full in (True, False):
+            src = g.N.S3Source('ecmwf_ifs', object())
+            src.full_grid = full
+            if full:
+                src.i0, src.i1, src.j0, src.j1 = 0, src.nx, 0, src.ny
+            with tempfile.TemporaryDirectory() as cache:
+                with patch.object(src, '_open', return_value=(reader, cache)):
+                    field = src.read(run, run, ['temperature_2m'])['temperature_2m']
+            self.assertTrue(src.adapted)
+            if full:
+                self.assertEqual(field.shape, (1441, 2880))
+                g.validate_global_geometry(src, field)
+            else:
+                self.assertLess(field.shape[0], 1441)
+                self.assertLess(field.shape[1], 2880)
+
     def test_acquire_refuses_nearest_step_even_if_data_exist(self):
         import sys
         from types import SimpleNamespace
