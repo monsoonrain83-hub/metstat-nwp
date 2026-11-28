@@ -212,6 +212,7 @@ def acquire(model, outdir, requested_lead=24, required_run=None):
     src = N.S3Source(dom, fs)
     # Intentional global override of the existing regional BBOX subsetting;
     # do NOT mutate N.BBOX or production Engine's model loops.
+    src.full_grid = True
     src.i0=0;src.i1=src.nx;src.j0=0;src.j1=src.ny
     # The native high-resolution source is optional, never a prerequisite to
     # rendering a verified 0.25-degree fallback at the SAME cycle and lead.
@@ -219,6 +220,7 @@ def acquire(model, outdir, requested_lead=24, required_run=None):
     if model in SOURCE_PRIORITY:
         high_domain = SOURCE_PRIORITY[model][0][0]
         hi_src = N.S3Source(high_domain, fs)
+        hi_src.full_grid = True
         hi_src.i0=0;hi_src.i1=hi_src.nx;hi_src.j0=0;hi_src.j1=hi_src.ny
     runs = cycle_candidates(src, hi_src)
     if not runs:raise RuntimeError(model+': source has no current cycle')
